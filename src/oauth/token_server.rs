@@ -1,15 +1,3 @@
-// example url it has to serve:
-// https://127.0.0.1:8182/?code=C0.b2F1dGgyLmNkYy5zY2h3YWI0hDl_kgCx2E_Fbt2Htffe9Q%40&session=9f1fcfe6-85da-fd0ae5c2f1c1&state=b9X-RjePuMGyhE
-// https://127.0.0.1:8182/ params: code= , session= , state=
-// What we need is the code. That is the authorization code.
-
-//! Simple HTTPS echo service based on hyper_util and rustls
-//!
-//! First parameter is the mandatory port to use.
-//! Certificate and private key are hardcoded to sample files.
-//! hyper will automatically use HTTP/2 if a client starts talking HTTP/2,
-//! otherwise HTTP/1.1 will be used.
-
 use std::collections::HashMap;
 use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::Arc;

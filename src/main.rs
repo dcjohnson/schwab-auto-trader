@@ -2,70 +2,55 @@ use oauth2::basic::BasicClient;
 use oauth2::reqwest;
 
 use oauth2::{
-    AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope, TokenUrl,
+    AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope, TokenUrl, TokenResponse,
 };
 
 use json;
-use std::{env, fs};
-
 use schwab_auto_trader::oauth::token_server;
+use serde::ser::Serialize;
+use serde_json::Serializer as jsonSer;
+use std::{env, fs};
 // use url::Url;
+
+const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    // todo: Add command line parsing, add nice logging, add a nice login web page, print out my
-    // account information, add graceful shutdown, write recieved token to file and load/refresh it
+    // todo: Add command line parsing
+    // todo: add nice logging
+    // todo: add a nice login web page
+    // todo: add graceful shutdown
+    // move client stuff to a nice module
+    // todo: write recieved token to file and load/refresh it
     // if it exists.
     let args: Vec<String> = env::args().collect();
 
     let config = json::parse(&fs::read_to_string(&args[1]).unwrap()).unwrap();
-    let tm = std::sync::Arc::new(std::sync::Mutex::new(token_server::TokenManager::new()));
-    let f = tokio::spawn(token_server::run_server(8182, tm.clone()));
-
-    // Create an OAuth2 client by specifying the client ID, client secret, authorization URL and
-    // token URL.
-    let client = BasicClient::new(ClientId::new(config["clientId"].to_string()))
-        .set_client_secret(ClientSecret::new(config["clientSecret"].to_string()))
-        .set_auth_uri(AuthUrl::new(
-            "https://api.schwabapi.com/v1/oauth/authorize".to_string(),
-        )?)
-        .set_token_uri(TokenUrl::new(
-            "https://api.schwabapi.com/v1/oauth/token".to_string(),
-        )?)
-        .set_redirect_uri(RedirectUrl::new("https://127.0.0.1:8182".to_string())?);
-
-    // Generate the full authorization URL.
-    let (auth_url, csrf_token) = client
-        .authorize_url(CsrfToken::new_random)
-        // Set the desired scopes.
-        .add_scope(Scope::new("readonly".to_string()))
-        .url();
-
-    println!("Browse to: {}", auth_url);
-
-    let mut token_receiver = tm
-        .lock()
-        .unwrap()
-        .new_token_request(csrf_token.secret().to_string())
-        .unwrap();
-    // This is the URL you should redirect the user to, in order to trigger the authorization
-    // process.
-
-    // Once the user has been redirected to the redirect URL, you'll have access to the
-    // authorization code. For security reasons, your code should verify that the `state`
-    // parameter returned by the server matches `csrf_token`.
-
-    let http_client = reqwest::Client::new();
-
-    let code = token_receiver.recv().await.unwrap();
-    println!("code: {}", code);
-    // Now you can trade it for an access token.
-    let token_result = client
-        .exchange_code(AuthorizationCode::new(code))
-        .request_async(&http_client)
-        .await?;
 
     println!("Got the token!: {:?}", token_result);
+
+    let mut token: Vec<u8> = Vec::new();
+    token_result.serialize(&mut jsonSer::pretty(&mut token))?;
+    println!("YES!");
+
+    println!(
+        "{}",
+        reqwest::Client::new()
+            .get({
+                let mut endpoint = MARKET_DATA_ENDPOINT.to_string();
+                endpoint.push_str("/voo/quotes");
+                endpoint
+            })
+            .bearer_auth(token_result.access_token().secret(),/*{
+                let s = String::from_utf8(token)?;
+                println!("{}", s);
+                s
+            }*/)
+            .send()
+            .await?
+            .text()
+            .await?
+    );
 
     f.await??;
 
