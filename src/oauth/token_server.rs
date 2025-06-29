@@ -53,10 +53,14 @@ impl TokenManager {
         Ok(())
     }
 
-    pub fn new_token_request(&mut self, state_token: String) -> mpsc::UnboundedReceiver<String> {
+    pub fn new_token_request(&mut self, state_token: String) -> Option<mpsc::UnboundedReceiver<String>> {
         let (s, r) = mpsc::unbounded_channel();
-        self.active_requests.insert(state_token, s);
-        r
+        if let None = self.active_requests.get(&state_token) {
+            self.active_requests.insert(state_token, s);
+            Some(r)
+        } else {
+        None
+        }
     }
 }
 
@@ -70,6 +74,7 @@ pub async fn run_server(
 
     let addr = SocketAddr::new(Ipv4Addr::LOCALHOST.into(), port);
 
+    // add these to the config file
     // Load public certificate.
     let certs = load_certs("test/cert/cert.pem")?;
     // Load private key.
@@ -150,27 +155,20 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     if let (Some(code_p), Some(session_p), Some(state_p)) = (code, session, state) {
                         if let Err(e) = self.tm.lock().unwrap().send_token(code_p.clone(), &state_p)
                         {
+                            println!("Error when unlocking the token manager: {}", e);
+                            std::process::exit(1);
                             // handle the error somehow
-                        }
+                        } else {
 
+                        // eventually we will have a nice HTML webpage
                         *response.body_mut() = Full::from(format!(
                             "code: '{}', session: '{}', state: '{}'",
                             code_p, session_p, state_p
                         ));
+                        }
                     }
                 }
             }
-            /*
-            // Echo service route.
-            (&Method::POST, "/echo") => {
-                *response.body_mut() = Full::from(
-                    req.into_body()
-                        .collect()
-                        .await?
-                        .to_bytes(),
-                );
-            }
-            */
             // Catch-all 404.
             _ => {
                 *response.status_mut() = StatusCode::NOT_FOUND;
