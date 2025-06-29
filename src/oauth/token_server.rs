@@ -53,13 +53,16 @@ impl TokenManager {
         Ok(())
     }
 
-    pub fn new_token_request(&mut self, state_token: String) -> Option<mpsc::UnboundedReceiver<String>> {
+    pub fn new_token_request(
+        &mut self,
+        state_token: String,
+    ) -> Option<mpsc::UnboundedReceiver<String>> {
         let (s, r) = mpsc::unbounded_channel();
         if let None = self.active_requests.get(&state_token) {
             self.active_requests.insert(state_token, s);
             Some(r)
         } else {
-        None
+            None
         }
     }
 }
@@ -159,12 +162,11 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             std::process::exit(1);
                             // handle the error somehow
                         } else {
-
-                        // eventually we will have a nice HTML webpage
-                        *response.body_mut() = Full::from(format!(
-                            "code: '{}', session: '{}', state: '{}'",
-                            code_p, session_p, state_p
-                        ));
+                            // eventually we will have a nice HTML webpage
+                            *response.body_mut() = Full::from(format!(
+                                "code: '{}', session: '{}', state: '{}'",
+                                code_p, session_p, state_p
+                            ));
                         }
                     }
                 }
