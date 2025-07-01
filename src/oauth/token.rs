@@ -85,7 +85,8 @@ impl OauthManager {
                     {
                         let mut r = receivers.lock().await;
 
-                        r = r.into_iter().fold::<Vec<TokenMessenger>, Box<dyn FnMut(Vec<TokenMessenger>, TokenMessenger) -> Vec<TokenMessenger>>>(Vec::new(), Box::new(async |acc: Vec<TokenMessenger>, v: TokenMessenger| {
+                        r = r.into_iter().fold((async || Vec::new())(), async |acc_async, v: TokenMessenger| {
+                            let mut acc: Vec<TokenMessenger> = acc_async.await;
                             match v.auth_code_receiver.try_recv() {
                                 Ok(code) => {
                                     match client
@@ -117,7 +118,7 @@ impl OauthManager {
                                 }
                             }
                             acc
-                        })).await;
+                        }).await;
                     }
                 }
             }));
