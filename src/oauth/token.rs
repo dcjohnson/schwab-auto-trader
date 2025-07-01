@@ -1,5 +1,5 @@
 use crate::oauth::token_server;
-use std::{collections, sync, error};
+use std::sync;
 use tokio::{
     sync as tSync,
 sync::oneshot,
@@ -38,7 +38,7 @@ impl TokenMessenger {
 
 pub struct OauthManager {
     token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>,
-    receivers: sync::Arc<tokio::sync::Mutex<Vec<oneshot::Receiver<String>>>>,
+    receivers: sync::Arc<tokio::sync::Mutex<Vec<TokenMessenger>>>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     client: BasicClient, 
 }
@@ -94,7 +94,14 @@ impl OauthManager {
                                         .await
                                     {
                                         Ok(token) => {
-                                            v.auth_token_sender.take().send(token);
+                                            match v.auth_token_sender.take() {
+                                                Some(ts) => {
+                                                    if let Err(e) = ts.send(token) {
+                                                        println!("Error: {}", e); 
+                                                    }
+                                                }, 
+                                                None => Ok(println!("No token sender!")),
+                                            }
                                         }
                                         Err(e) => {
                                             println!("Error exchanging token: {}", e);
