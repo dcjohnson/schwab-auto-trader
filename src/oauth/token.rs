@@ -40,19 +40,19 @@ pub struct OauthManager {
     token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>,
     receivers: sync::Arc<tokio::sync::Mutex<Vec<TokenMessenger>>>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
-    client: BasicClient, 
+    client: OauthUtils::Client, 
 }
 
 mod OauthUtils {
+    pub type Client = oauth2::basic::BasicClient<oauth2::EndpointSet, oauth2::EndpointNotSet, oauth2::EndpointNotSet, oauth2::EndpointNotSet, oauth2::EndpointSet>;
     use std::error;
-    use oauth2::basic::BasicClient;
 
 use oauth2::{
     AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
     StandardTokenResponse, TokenUrl,
 };
-    pub fn new_oauth_basic_client(clientId: String, secret: String) -> Result<BasicClient, Box<dyn error::Error + Send + Sync>> {
-        Ok(BasicClient::new(ClientId::new(clientId))
+    pub fn new_oauth_basic_client(clientId: String, secret: String) -> Result<Client, Box<dyn error::Error + Send + Sync>> {
+        Ok(oauth2::basic::BasicClient::new(ClientId::new(clientId))
             .set_client_secret(ClientSecret::new(secret))
             .set_auth_uri(AuthUrl::new(
                 "https://api.schwabapi.com/v1/oauth/authorize".to_string(),
@@ -65,7 +65,7 @@ use oauth2::{
 }
 
 impl OauthManager {
-    pub fn new(token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>, client: BasicClient) -> Self {
+    pub fn new(token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>, client: OauthUtils::Client) -> Self {
         Self {
             token_manager: token_manager,
             receivers: sync::Arc::new(tSync::Mutex::new(Vec::new())),
@@ -85,22 +85,23 @@ impl OauthManager {
                     {
                         let mut r = receivers.lock().await;
 
-                        r = r.into_iter().fold(Vec::new(), async |acc, v| {
+                        r = r.into_iter().fold::<Vec<TokenMessenger>, Box<dyn FnMut(Vec<TokenMessenger>, TokenMessenger) -> Vec<TokenMessenger>>>(Vec::new(), Box::new(async |acc: Vec<TokenMessenger>, v: TokenMessenger| {
                             match v.auth_code_receiver.try_recv() {
                                 Ok(code) => {
                                     match client
                                         .exchange_code(AuthorizationCode::new(code))
-                                        .request_async(reqwest::Client::new())
+                                        .request_async(&reqwest::Client::new())
                                         .await
                                     {
                                         Ok(token) => {
                                             match v.auth_token_sender.take() {
                                                 Some(ts) => {
-                                                    if let Err(e) = ts.send(token) {
-                                                        println!("Error: {}", e); 
+                                                    if let Err(_) = ts.send(token) {
+                                                        println!("Error sending token"); 
                                                     }
+                                                    
                                                 }, 
-                                                None => Ok(println!("No token sender!")),
+                                                None => println!("No token sender!"),
                                             }
                                         }
                                         Err(e) => {
@@ -116,7 +117,7 @@ impl OauthManager {
                                 }
                             }
                             acc
-                        });
+                        })).await;
                     }
                 }
             }));
@@ -150,7 +151,7 @@ impl OauthManager {
             .await
             .push(TokenMessenger::new(auth_code_receiver, token_sender));
 
-        (auth_url, token_receiver)
+        (auth_url.to_string(), token_receiver)
     }
 
     //async pub fn exchange_token( /* csrf_token */ ) /* The outputs of token result */ {
