@@ -11,7 +11,7 @@ use hyper_util::server::conn::auto::Builder;
 use rustls::ServerConfig;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use tokio::net::TcpListener;
-use tokio::sync::mpsc;
+use tokio::sync::oneshot;
 use tokio_rustls::TlsAcceptor;
 use url::Url;
 
@@ -20,7 +20,7 @@ fn error(err: String) -> io::Error {
 }
 
 pub struct TokenManager {
-    active_requests: HashMap<String, mpsc::UnboundedSender<String>>,
+    active_requests: HashMap<String, oneshot::Sender<String>>,
 }
 
 impl TokenManager {
@@ -44,8 +44,8 @@ impl TokenManager {
     pub fn new_token_request(
         &mut self,
         state_token: String,
-    ) -> Option<mpsc::UnboundedReceiver<String>> {
-        let (s, r) = mpsc::unbounded_channel();
+    ) -> Option<oneshot::Receiver<String>> {
+        let (s, r) = oneshot::channel();
         if let None = self.active_requests.get(&state_token) {
             self.active_requests.insert(state_token, s);
             Some(r)

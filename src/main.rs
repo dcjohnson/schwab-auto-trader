@@ -2,7 +2,8 @@ use oauth2::basic::BasicClient;
 use oauth2::reqwest;
 
 use oauth2::{
-    AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope, TokenUrl, TokenResponse,
+    AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
+    TokenResponse, TokenUrl,
 };
 
 use json;
@@ -41,11 +42,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 endpoint.push_str("/voo/quotes");
                 endpoint
             })
-            .bearer_auth(token_result.access_token().secret(),/*{
-                let s = String::from_utf8(token)?;
-                println!("{}", s);
-                s
-            }*/)
+            .bearer_auth(
+                token_result.access_token().secret(), /*{
+                                                          let s = String::from_utf8(token)?;
+                                                          println!("{}", s);
+                                                          s
+                                                      }*/
+            )
             .send()
             .await?
             .text()

@@ -1,75 +1,172 @@
-use std::sync;
 use crate::oauth::token_server;
+use std::{collections, sync, error};
+use tokio::{
+    sync as tSync,
+sync::oneshot,
+time as tTime,
+};
+
+use oauth2::basic::BasicClient;
+use oauth2::reqwest;
+
+use oauth2::{
+    AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
+    StandardTokenResponse, TokenUrl,
+};
 
 const AUTHORIZE_ENDPOINT: &str = "https://api.schwabapi.com/v1/oauth/authorize";
 const TOKEN_ENDPOINT: &str = "https://api.schwabapi.com/v1/oauth/token";
 
-pub struct OauthManager { 
-    token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>, 
+type OauthTokenResponse = oauth2::StandardTokenResponse<oauth2::EmptyExtraTokenFields, oauth2::basic::BasicTokenType>;
 
-    // manage the token receivers internally
+struct TokenMessenger {
+    auth_code_receiver: oneshot::Receiver<String>,
+    auth_token_sender: Option<oneshot::Sender<OauthTokenResponse>>,
+}
+
+impl TokenMessenger {
+    fn new(
+        auth_code_receiver: oneshot::Receiver<String>,
+        auth_token_sender: oneshot::Sender<OauthTokenResponse>,
+    ) -> Self {
+        Self {
+            auth_code_receiver: auth_code_receiver,
+            auth_token_sender: Some(auth_token_sender),
+        }
+    }
+}
+
+pub struct OauthManager {
+    token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>,
+    receivers: sync::Arc<tokio::sync::Mutex<Vec<oneshot::Receiver<String>>>>,
+    token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
+    client: BasicClient, 
+}
+
+mod OauthUtils {
+    use std::error;
+    use oauth2::basic::BasicClient;
+
+use oauth2::{
+    AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
+    StandardTokenResponse, TokenUrl,
+};
+    pub fn new_oauth_basic_client(clientId: String, secret: String) -> Result<BasicClient, Box<dyn error::Error + Send + Sync>> {
+        Ok(BasicClient::new(ClientId::new(clientId))
+            .set_client_secret(ClientSecret::new(secret))
+            .set_auth_uri(AuthUrl::new(
+                "https://api.schwabapi.com/v1/oauth/authorize".to_string(),
+            )?)
+            .set_token_uri(TokenUrl::new(
+                "https://api.schwabapi.com/v1/oauth/token".to_string(),
+            )?)
+            .set_redirect_uri(RedirectUrl::new("https://127.0.0.1:8182".to_string())?))
+    }
 }
 
 impl OauthManager {
-    pub fn new(token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>) -> Self {
-        Self { token_manager }
+    pub fn new(token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>, client: BasicClient) -> Self {
+        Self {
+            token_manager: token_manager,
+            receivers: sync::Arc::new(tSync::Mutex::new(Vec::new())),
+            token_receiver_manager_join_handle: None,
+            client: client,
+        }
     }
 
-    pub fn auth_url(client_id: String, client_secret: String) /* returns auth_url */ {
+    pub async fn spawn_token_receiver(&mut self, period: core::time::Duration) -> () {
+        if self.token_receiver_manager_join_handle.is_none() {
+            let mut receivers = self.receivers.clone();
+            let mut client = self.client.clone();
+            self.token_receiver_manager_join_handle = Some(tokio::spawn(async move {
+                loop {
+                    tTime::sleep(period).await;
 
-        /*
-    // Create an OAuth2 client by specifying the client ID, client secret, authorization URL and
-    // token URL.
-    let client = BasicClient::new(ClientId::new(config["clientId"].to_string()))
-        .set_client_secret(ClientSecret::new(config["clientSecret"].to_string()))
-        .set_auth_uri(AuthUrl::new(
-            "https://api.schwabapi.com/v1/oauth/authorize".to_string(),
-        )?)
-        .set_token_uri(TokenUrl::new(
-            "https://api.schwabapi.com/v1/oauth/token".to_string(),
-        )?)
-        .set_redirect_uri(RedirectUrl::new("https://127.0.0.1:8182".to_string())?);
+                    {
+                        let mut r = receivers.lock().await;
 
-    // Generate the full authorization URL.
-    let (auth_url, csrf_token) = client
-        .authorize_url(CsrfToken::new_random)
-        // Set the desired scopes.
-        .add_scope(Scope::new("readonly".to_string()))
-        .url();
-
-
-
-    let mut token_receiver = tm
-        .lock()
-        .unwrap()
-        .new_token_request(csrf_token.secret().to_string())
-        .unwrap();
-        */
+                        r = r.into_iter().fold(Vec::new(), async |acc, v| {
+                            match v.auth_code_receiver.try_recv() {
+                                Ok(code) => {
+                                    match client
+                                        .exchange_code(AuthorizationCode::new(code))
+                                        .request_async(reqwest::Client::new())
+                                        .await
+                                    {
+                                        Ok(token) => {
+                                            v.auth_token_sender.take().send(token);
+                                        }
+                                        Err(e) => {
+                                            println!("Error exchanging token: {}", e);
+                                        }
+                                    }
+                                }
+                                Err(oneshot::error::TryRecvError::Empty) => {
+                                    acc.push(v);
+                                }
+                                Err(oneshot::error::TryRecvError::Closed) => {
+                                    // log an error saying that the receiver is closed
+                                }
+                            }
+                            acc
+                        });
+                    }
+                }
+            }));
+        }
     }
 
-    async pub fn exchange_token( /* csrf_token */ ) /* The outputs of token result */ {
+    // returns auth url and token receiver one shot
+    pub async fn auth_url(
+        &mut self,
+        client_id: String,
+        client_secret: String,
+    ) -> (String, oneshot::Receiver<OauthTokenResponse>) {
 
-        /*
-    let http_client = reqwest::Client::new();
+        // Generate the full authorization URL.
+        let (auth_url, csrf_token) = self.client
+            .authorize_url(CsrfToken::new_random)
+            // Set the desired scopes.
+            .add_scope(Scope::new("readonly".to_string()))
+            .url();
 
-    let code = token_receiver.recv().await.unwrap();
-    println!("code: {}", code);
-    // Now you can trade it for an access token.
-    let token_result = client
-        .exchange_code(AuthorizationCode::new(code))
-        .request_async(&http_client)
-        .await?;
+        let mut auth_code_receiver = self.token_manager
+            .lock()
+            .unwrap()
+            .new_token_request(csrf_token.secret().to_string())
+            .unwrap();
 
-token_result is the access token
-*/ 
+        let (token_sender, token_receiver) = oneshot::channel();
+
+        self.receivers
+            .lock()
+            .await
+            .push(TokenMessenger::new(auth_code_receiver, token_sender));
+
+        (auth_url, token_receiver)
     }
 
+    //async pub fn exchange_token( /* csrf_token */ ) /* The outputs of token result */ {
 
+    /*
+        let http_client = reqwest::Client::new();
+
+        let code = token_receiver.recv().await.unwrap();
+        println!("code: {}", code);
+        // Now you can trade it for an access token.
+        let token_result = client
+            .exchange_code(AuthorizationCode::new(code))
+            .request_async(&http_client)
+            .await?;
+
+    token_result is the access token
+    */
+    //}
 }
 /*
     let tm = std::sync::Arc::new(std::sync::Mutex::new(token_server::TokenManager::new()));
-    
-    // THIS PART should be launched outside of the oauth flow. 
+
+    // THIS PART should be launched outside of the oauth flow.
     let f = tokio::spawn(token_server::run_server(8182, tm.clone()));
 
     // Create an OAuth2 client by specifying the client ID, client secret, authorization URL and
