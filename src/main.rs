@@ -1,7 +1,7 @@
 use oauth2::{TokenResponse, reqwest};
 
 use json;
-use schwab_auto_trader::oauth::{token, token_server, utils};
+use schwab_auto_trader::{server::server, oauth::{token, utils}};
 use serde::ser::Serialize;
 use serde_json::Serializer as jsonSer;
 use std::{env, fs};
@@ -26,9 +26,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         config["redirectAddress"].to_string(),
     )?;
 
-    let tm = std::sync::Arc::new(std::sync::Mutex::new(token_server::TokenManager::new()));
+    let tm = std::sync::Arc::new(std::sync::Mutex::new(server::TokenManager::new()));
 
-    let f = tokio::spawn(token_server::run_server(8182, tm.clone()));
+    let f = tokio::spawn(server::run_server(8182, tm.clone()));
 
     let mut oauth_manager = token::OauthManager::new(tm.clone(), oauth_client);
 

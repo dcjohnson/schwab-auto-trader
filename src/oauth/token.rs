@@ -1,4 +1,4 @@
-use crate::oauth::{token_server, utils};
+use crate::{server::server, oauth::utils};
 use oauth2::{AuthorizationCode, CsrfToken, Scope, reqwest};
 use std::sync;
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
@@ -24,7 +24,7 @@ impl TokenMessenger {
 }
 
 pub struct OauthManager {
-    token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>,
+    token_manager: sync::Arc<sync::Mutex<server::TokenManager>>,
     receivers: sync::Arc<tokio::sync::Mutex<Vec<TokenMessenger>>>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     client: utils::oauth_utils::Client,
@@ -32,7 +32,7 @@ pub struct OauthManager {
 
 impl OauthManager {
     pub fn new(
-        token_manager: sync::Arc<sync::Mutex<token_server::TokenManager>>,
+        token_manager: sync::Arc<sync::Mutex<server::TokenManager>>,
         client: utils::oauth_utils::Client,
     ) -> Self {
         Self {
