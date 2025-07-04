@@ -1,7 +1,10 @@
 use oauth2::{TokenResponse, reqwest};
 
 use json;
-use schwab_auto_trader::{server::server, oauth::{token, utils}};
+use schwab_auto_trader::{
+    oauth::{token, utils},
+    server::server,
+};
 use serde::ser::Serialize;
 use serde_json::Serializer as jsonSer;
 use std::{env, fs};

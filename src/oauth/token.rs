@@ -1,4 +1,4 @@
-use crate::{server::server, oauth::utils};
+use crate::{oauth::utils, server::server};
 use oauth2::{AuthorizationCode, CsrfToken, Scope, reqwest};
 use std::sync;
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
