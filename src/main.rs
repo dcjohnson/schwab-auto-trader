@@ -7,7 +7,7 @@ use oauth2::{
 };
 
 use json;
-use schwab_auto_trader::oauth::token_server;
+use schwab_auto_trader::oauth::{token, token_server};
 use serde::ser::Serialize;
 use serde_json::Serializer as jsonSer;
 use std::{env, fs};
@@ -28,6 +28,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let config = json::parse(&fs::read_to_string(&args[1]).unwrap()).unwrap();
 
+    let mut oauth_client =
+        token::OauthUtils::new_oauth_basic_client(config["clientId"].to_string(), config["clientSecret"].to_string())?;
+
+    let tm = std::sync::Arc::new(std::sync::Mutex::new(token_server::TokenManager::new()));
+
+
+    let f = tokio::spawn(token_server::run_server(8182, tm.clone()));
+
+    let mut oauth_manager = token::OauthManager::new(tm.clone(), oauth_client);
+
+
+    let (auth_url, token_receiver) = oauth_manager.auth_url();
+
+    let token_result = token_receiver.recv();
     println!("Got the token!: {:?}", token_result);
 
     let mut token: Vec<u8> = Vec::new();

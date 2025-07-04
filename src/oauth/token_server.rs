@@ -41,10 +41,7 @@ impl TokenManager {
         Ok(())
     }
 
-    pub fn new_token_request(
-        &mut self,
-        state_token: String,
-    ) -> Option<oneshot::Receiver<String>> {
+    pub fn new_token_request(&mut self, state_token: String) -> Option<oneshot::Receiver<String>> {
         let (s, r) = oneshot::channel();
         if let None = self.active_requests.get(&state_token) {
             self.active_requests.insert(state_token, s);
