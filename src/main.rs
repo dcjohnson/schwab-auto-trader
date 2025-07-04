@@ -1,9 +1,6 @@
-use oauth2::basic::BasicClient;
-use oauth2::reqwest;
-
 use oauth2::{
-    AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope,
-    TokenResponse, TokenUrl,
+reqwest,
+TokenResponse,
 };
 
 use json;
@@ -11,7 +8,6 @@ use schwab_auto_trader::oauth::{token, token_server};
 use serde::ser::Serialize;
 use serde_json::Serializer as jsonSer;
 use std::{env, fs};
-// use url::Url;
 
 const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
 
@@ -21,15 +17,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // todo: add nice logging
     // todo: add a nice login web page
     // todo: add graceful shutdown
-    // move client stuff to a nice module
     // todo: write recieved token to file and load/refresh it
     // if it exists.
     let args: Vec<String> = env::args().collect();
 
     let config = json::parse(&fs::read_to_string(&args[1]).unwrap()).unwrap();
 
-    let mut oauth_client =
-        token::OauthUtils::new_oauth_basic_client(config["clientId"].to_string(), config["clientSecret"].to_string())?;
+    let oauth_client =
+        token::oauth_utils::new_oauth_basic_client(config["clientId"].to_string(), config["clientSecret"].to_string())?;
 
     let tm = std::sync::Arc::new(std::sync::Mutex::new(token_server::TokenManager::new()));
 
@@ -39,9 +34,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut oauth_manager = token::OauthManager::new(tm.clone(), oauth_client);
 
 
-    let (auth_url, token_receiver) = oauth_manager.auth_url();
+    let (auth_url, mut token_receiver) = oauth_manager.auth_url().await;
 
-    let token_result = token_receiver.recv();
+    println!("Auth URL: {}", auth_url);
+
+    let token_result = token_receiver.try_recv()?;
     println!("Got the token!: {:?}", token_result);
 
     let mut token: Vec<u8> = Vec::new();
@@ -57,11 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 endpoint
             })
             .bearer_auth(
-                token_result.access_token().secret(), /*{
-                                                          let s = String::from_utf8(token)?;
-                                                          println!("{}", s);
-                                                          s
-                                                      }*/
+                token_result.access_token().secret(),
             )
             .send()
             .await?
