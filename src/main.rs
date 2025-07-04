@@ -1,10 +1,7 @@
-use oauth2::{
-reqwest,
-TokenResponse,
-};
+use oauth2::{TokenResponse, reqwest};
 
 use json;
-use schwab_auto_trader::oauth::{token, token_server};
+use schwab_auto_trader::oauth::{token, token_server, utils};
 use serde::ser::Serialize;
 use serde_json::Serializer as jsonSer;
 use std::{env, fs};
@@ -23,16 +20,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let config = json::parse(&fs::read_to_string(&args[1]).unwrap()).unwrap();
 
-    let oauth_client =
-        token::oauth_utils::new_oauth_basic_client(config["clientId"].to_string(), config["clientSecret"].to_string())?;
+    let oauth_client = utils::oauth_utils::new_oauth_basic_client(
+        config["clientId"].to_string(),
+        config["clientSecret"].to_string(),
+        config["redirectAddress"].to_string(),
+    )?;
 
     let tm = std::sync::Arc::new(std::sync::Mutex::new(token_server::TokenManager::new()));
-
 
     let f = tokio::spawn(token_server::run_server(8182, tm.clone()));
 
     let mut oauth_manager = token::OauthManager::new(tm.clone(), oauth_client);
-
 
     let (auth_url, mut token_receiver) = oauth_manager.auth_url().await;
 
@@ -53,9 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 endpoint.push_str("/voo/quotes");
                 endpoint
             })
-            .bearer_auth(
-                token_result.access_token().secret(),
-            )
+            .bearer_auth(token_result.access_token().secret())
             .send()
             .await?
             .text()
