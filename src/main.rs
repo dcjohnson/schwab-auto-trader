@@ -34,12 +34,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let f = tokio::spawn(server::run_server(8182, tm.clone()));
 
     let mut oauth_manager = token::OauthManager::new(tm.clone(), oauth_client);
-
+    oauth_manager.spawn_token_receiver(core::time::Duration::from_millis(500)).await;
     let (auth_url, mut token_receiver) = oauth_manager.auth_url().await;
 
     println!("Auth URL: {}", auth_url);
 
-    let token_result = token_receiver.try_recv()?;
+    let token_result = loop {
+        match token_receiver.try_recv() {
+            Ok(v) => break Ok(v),
+            Err(tokio::sync::oneshot::error::TryRecvError::Empty) => tokio::time::sleep(core::time::Duration::from_secs(1)).await,
+            Err(tokio::sync::oneshot::error::TryRecvError::Closed) => break Err(tokio::sync::oneshot::error::TryRecvError::Closed),
+        }
+    }?;
     println!("Got the token!: {:?}", token_result);
 
     let mut token: Vec<u8> = Vec::new();
