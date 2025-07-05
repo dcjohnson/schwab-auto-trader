@@ -8,6 +8,8 @@ use schwab_auto_trader::{
 use serde::ser::Serialize;
 use serde_json::Serializer as jsonSer;
 use std::{env, fs};
+use core::time as cTime;
+use tokio::{sync, time as tTime};
 
 const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
 
@@ -42,14 +44,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let token_result = loop {
         match token_receiver.try_recv() {
             Ok(v) => break Ok(v),
-            Err(tokio::sync::oneshot::error::TryRecvError::Empty) => tokio::time::sleep(core::time::Duration::from_secs(1)).await,
-            Err(tokio::sync::oneshot::error::TryRecvError::Closed) => break Err(tokio::sync::oneshot::error::TryRecvError::Closed),
+            Err(sync::oneshot::error::TryRecvError::Empty) => tTime::sleep(cTime::Duration::from_secs(1)).await,
+            Err(sync::oneshot::error::TryRecvError::Closed) => break Err(sync::oneshot::error::TryRecvError::Closed),
         }
     }?;
     println!("Got the token!: {:?}", token_result);
 
     let mut token: Vec<u8> = Vec::new();
     token_result.serialize(&mut jsonSer::pretty(&mut token))?;
+    println!("TOKEN: {}\n", String::from_utf8(token)?);
     println!("YES!");
 
     println!(
