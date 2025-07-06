@@ -4,6 +4,7 @@ use json;
 use schwab_auto_trader::{
     oauth::{token, utils},
     server::server,
+    Error
 };
 use serde::ser::Serialize;
 use serde_json::Serializer as jsonSer;
@@ -13,8 +14,19 @@ use tokio::{sync, time as tTime};
 
 const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
 
+
+async fn recieve_wait<T>(r: &mut sync::oneshot::Receiver<T>, d: cTime::Duration) -> Result<T, sync::oneshot::error::TryRecvError> {
+    loop {
+        match r.try_recv() {
+            Ok(v) => break Ok(v),
+            Err(sync::oneshot::error::TryRecvError::Empty) => tTime::sleep(d).await,
+            e => break e,
+        }
+    }
+}
+
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), Error> {
     // todo: Add command line parsing
     // todo: add nice logging
     // todo: add a nice login web page
@@ -41,18 +53,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     println!("Auth URL: {}", auth_url);
 
-    let token_result = loop {
-        match token_receiver.try_recv() {
-            Ok(v) => break Ok(v),
-            Err(sync::oneshot::error::TryRecvError::Empty) => tTime::sleep(cTime::Duration::from_secs(1)).await,
-            Err(sync::oneshot::error::TryRecvError::Closed) => break Err(sync::oneshot::error::TryRecvError::Closed),
-        }
-    }?;
+    let token_result = recieve_wait(&mut token_receiver, cTime::Duration::from_secs(1)).await?;
     println!("Got the token!: {:?}", token_result);
 
     let mut token: Vec<u8> = Vec::new();
     token_result.serialize(&mut jsonSer::pretty(&mut token))?;
     println!("TOKEN: {}\n", String::from_utf8(token)?);
+
     println!("YES!");
 
     println!(

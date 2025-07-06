@@ -3,7 +3,7 @@ use oauth2::{AuthorizationCode, CsrfToken, Scope, reqwest};
 use std::sync;
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
 
-type OauthTokenResponse =
+pub type OauthTokenResponse =
     oauth2::StandardTokenResponse<oauth2::EmptyExtraTokenFields, oauth2::basic::BasicTokenType>;
 
 struct TokenMessenger {
