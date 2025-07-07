@@ -28,6 +28,14 @@ pub struct StorageBackend {
     tokens: HashMap<String, String>,
 }
 
+impl StorageBackend {
+    fn new() -> Self {
+        Self {
+            tokens: HashMap::new(), 
+        }
+    }
+}
+
 pub struct TokenStorage {
         path: String, 
         backend: StorageBackend,
@@ -36,6 +44,10 @@ pub struct TokenStorage {
 impl TokenStorage {
     pub fn new(path: String, backend: StorageBackend) -> Self {
         Self { path, backend }
+    }
+
+    pub fn load(path: String) -> Result<Self, Error> {
+        
     }
 
     pub fn set_token(&mut self, id: String, token: &OauthTokenResponse) -> Result<(), Error> {
