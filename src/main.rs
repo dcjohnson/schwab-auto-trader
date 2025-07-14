@@ -2,27 +2,23 @@ use oauth2::{TokenResponse, reqwest};
 
 use json;
 use schwab_auto_trader::{
+    Error,
     oauth::{token, utils},
     server::server,
-    Error
 };
-use serde::{
-    ser::Serialize,
-    de::Deserialize,
-};
+use serde::{de::Deserialize, ser::Serialize};
 
-use serde_json::{
-    Serializer as jsonSer,
-    Deserializer as jsonDe,
-};
-use std::{env, fs};
 use core::time as cTime;
+use serde_json::{Deserializer as jsonDe, Serializer as jsonSer};
+use std::{env, fs};
 use tokio::{sync, time as tTime};
 
 const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
 
-
-async fn recieve_wait<T>(r: &mut sync::oneshot::Receiver<T>, d: cTime::Duration) -> Result<T, sync::oneshot::error::TryRecvError> {
+async fn recieve_wait<T>(
+    r: &mut sync::oneshot::Receiver<T>,
+    d: cTime::Duration,
+) -> Result<T, sync::oneshot::error::TryRecvError> {
     loop {
         match r.try_recv() {
             Ok(v) => break Ok(v),
@@ -56,7 +52,9 @@ async fn main() -> Result<(), Error> {
     let f = tokio::spawn(server::run_server(8182, tm.clone()));
 
     let mut oauth_manager = token::OauthManager::new(tm.clone(), oauth_client);
-    oauth_manager.spawn_token_receiver(core::time::Duration::from_millis(500)).await;
+    oauth_manager
+        .spawn_token_receiver(core::time::Duration::from_millis(500))
+        .await;
     let (auth_url, mut token_receiver) = oauth_manager.auth_url().await;
 
     println!("Auth URL: {}", auth_url);
@@ -67,10 +65,7 @@ async fn main() -> Result<(), Error> {
     let mut token: Vec<u8> = Vec::new();
     token_result.serialize(&mut jsonSer::pretty(&mut token))?;
 
-
-
     // OauthTokenResponse::deserialize(
-
 
     println!("TOKEN: {}\n", String::from_utf8(token)?);
 
