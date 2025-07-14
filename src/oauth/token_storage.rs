@@ -1,5 +1,5 @@
 use std::{
-    fs::File,
+    fs,
     collections::HashMap,
 };
 
@@ -14,7 +14,7 @@ use serde::{
 };
 
 use serde_json::{
-    de::{SliceRead, Read},
+    de::SliceRead,
     Serializer as jsonSer,
     Deserializer as jsonDe,
 };
@@ -28,14 +28,6 @@ pub struct StorageBackend {
     tokens: HashMap<String, String>,
 }
 
-impl StorageBackend {
-    fn new() -> Self {
-        Self {
-            tokens: HashMap::new(), 
-        }
-    }
-}
-
 pub struct TokenStorage {
         path: String, 
         backend: StorageBackend,
@@ -47,7 +39,13 @@ impl TokenStorage {
     }
 
     pub fn load(path: String) -> Result<Self, Error> {
+        Ok(Self { backend: StorageBackend::deserialize(&mut jsonDe::from_reader(fs::File::open(&path)?))? , path  })
+    }
+
+    pub fn safe(&mut self) -> Result<(), Error> {
         
+
+        Ok(())
     }
 
     pub fn set_token(&mut self, id: String, token: &OauthTokenResponse) -> Result<(), Error> {
