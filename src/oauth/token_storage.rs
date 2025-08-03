@@ -29,7 +29,7 @@ impl TokenStorage {
         })
     }
 
-    pub fn safe(&mut self) -> Result<(), Error> {
+    pub fn save(&mut self) -> Result<(), Error> {
         Ok(())
     }
 
