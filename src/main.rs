@@ -34,7 +34,8 @@ async fn main() -> Result<(), Error> {
     // todo: add nice logging
     // todo: add a nice login web page
     // todo: add graceful shutdown
-    // todo: write recieved token to file and load/refresh it
+    // todo: write recieved token to file and load/refresh it,
+    // todo: implement token generation from within the server.
     // if it exists.
     let args: Vec<String> = env::args().collect();
 
@@ -57,8 +58,12 @@ async fn main() -> Result<(), Error> {
         oauth_client.clone(),
         ts.clone(),
         config["clientId"].to_string(),
-    ));
+    ))
+    .await??;
 
+    Ok(())
+
+    /*
     let mut oauth_manager = token::OauthManager::new(tm.clone(), oauth_client);
     oauth_manager
         .spawn_token_receiver(core::time::Duration::from_millis(500))
@@ -95,4 +100,5 @@ async fn main() -> Result<(), Error> {
     f.await??;
 
     Ok(())
+    */
 }
