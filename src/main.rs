@@ -3,7 +3,7 @@ use oauth2::{TokenResponse, reqwest};
 use json;
 use schwab_auto_trader::{
     Error,
-    oauth::{token, utils},
+    oauth::{token, token_storage, utils},
     server::server,
 };
 use serde::{de::Deserialize, ser::Serialize};
@@ -40,16 +40,17 @@ async fn main() -> Result<(), Error> {
 
     let config = json::parse(&fs::read_to_string(&args[1]).unwrap()).unwrap();
 
-    let tokenFilePath = config["tokenFilePath"].to_string();
     let oauth_client = utils::oauth_utils::new_oauth_basic_client(
         config["clientId"].to_string(),
         config["clientSecret"].to_string(),
         config["redirectAddress"].to_string(),
     )?;
 
+    
+let ts = std::sync::Arc::new(std::sync::Mutex::new(token_storage::TokenStorage::load(config["tokenFilePath"].to_string())?));
     let tm = std::sync::Arc::new(std::sync::Mutex::new(server::TokenManager::new()));
 
-    let f = tokio::spawn(server::run_server(8182, tm.clone()));
+    let f = tokio::spawn(server::run_server(8182, tm.clone(), oauth_client.clone(), ts.clone(), config["clientId"].to_string()));
 
     let mut oauth_manager = token::OauthManager::new(tm.clone(), oauth_client);
     oauth_manager
@@ -64,8 +65,6 @@ async fn main() -> Result<(), Error> {
 
     let mut token: Vec<u8> = Vec::new();
     token_result.serialize(&mut jsonSer::pretty(&mut token))?;
-
-    // OauthTokenResponse::deserialize(
 
     println!("TOKEN: {}\n", String::from_utf8(token)?);
 

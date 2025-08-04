@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, io::Write};
 
 use crate::{Error, oauth::token::OauthTokenResponse};
 
@@ -30,6 +30,7 @@ impl TokenStorage {
     }
 
     pub fn save(&mut self) -> Result<(), Error> {
+        fs::File::create(self.path.clone())?.write_all(&serde_json::to_vec(&self.backend)?)?;
         Ok(())
     }
 
@@ -40,6 +41,10 @@ impl TokenStorage {
             .tokens
             .insert(id, general_purpose::STANDARD.encode(token_bytes));
         Ok(())
+    }
+
+    pub fn has_token(&self, id: &String) -> bool {
+        self.backend.tokens.contains_key(id)
     }
 
     pub fn get_token(&self, id: &String) -> Option<Result<OauthTokenResponse, Error>> {
