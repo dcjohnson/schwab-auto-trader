@@ -12,6 +12,14 @@ pub struct StorageBackend {
     tokens: HashMap<String, String>,
 }
 
+impl StorageBackend {
+    pub fn new() -> Self {
+        Self {
+            tokens: HashMap::new(),
+        }
+    }
+}
+
 pub struct TokenStorage {
     path: String,
     backend: StorageBackend,
@@ -24,7 +32,12 @@ impl TokenStorage {
 
     pub fn load(path: String) -> Result<Self, Error> {
         Ok(Self {
-            backend: StorageBackend::deserialize(&mut jsonDe::from_reader(fs::File::open(&path)?))?,
+            backend: match StorageBackend::deserialize(&mut jsonDe::from_reader(fs::File::open(
+                &path,
+            )?)) {
+                Ok(b) => b,
+                Err(_) => StorageBackend::new(),
+            },
             path,
         })
     }

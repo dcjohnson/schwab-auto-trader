@@ -6,7 +6,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::oauth::{utils::oauth_utils, token_storage, token::OauthManager};
+use crate::oauth::{token::OauthManager, token_storage, utils::oauth_utils};
 
 use http_body_util::Full;
 use hyper::{
@@ -94,7 +94,10 @@ pub async fn run_server(
     server_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec(), b"http/1.0".to_vec()];
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
 
-    let om = std::sync::Arc::new(std::sync::Mutex::new(   OauthManager::new(tm.clone(),  o_client)));
+    let om = std::sync::Arc::new(std::sync::Mutex::new(OauthManager::new(
+        tm.clone(),
+        o_client,
+    )));
 
     loop {
         let (tcp_stream, _remote_addr) = incoming.accept().await?;
@@ -113,7 +116,10 @@ pub async fn run_server(
                 }
             };
             if let Err(err) = Builder::new(TokioExecutor::new())
-                .serve_connection(TokioIo::new(tls_stream), Svc::new(tm_clone, om_clone, ts_clone, client_id_clone ))
+                .serve_connection(
+                    TokioIo::new(tls_stream),
+                    Svc::new(tm_clone, om_clone, ts_clone, client_id_clone),
+                )
                 .await
             {
                 eprintln!("failed to serve connection: {err:#}");
@@ -124,17 +130,24 @@ pub async fn run_server(
 
 struct Svc {
     tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
-   om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
-   ts: std::sync::Arc<std::sync::Mutex<token_storage::TokenStorage>>, 
-   client_id: String,
+    om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
+    ts: std::sync::Arc<std::sync::Mutex<token_storage::TokenStorage>>,
+    client_id: String,
 }
 
 impl Svc {
-    pub fn new(tm: std::sync::Arc<std::sync::Mutex<TokenManager>>, om: std::sync::Arc<std::sync::Mutex<OauthManager>>, 
-    ts: std::sync::Arc<std::sync::Mutex<token_storage::TokenStorage>>,
-    client_id: String,
-        ) -> Self {
-        Self { tm  , om , ts, client_id }
+    pub fn new(
+        tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
+        om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
+        ts: std::sync::Arc<std::sync::Mutex<token_storage::TokenStorage>>,
+        client_id: String,
+    ) -> Self {
+        Self {
+            tm,
+            om,
+            ts,
+            client_id,
+        }
     }
 }
 
@@ -150,7 +163,8 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         match (req.method(), req.uri().path()) {
             (&Method::GET, "/") => {
                 *response.body_mut() = Full::from(format!(
-                        "hello!"
+                    "has token?: {}",
+                    self.ts.lock().unwrap().has_token(&self.client_id),
                 ));
             }
             (&Method::GET, "/oauth") => {
