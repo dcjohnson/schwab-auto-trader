@@ -28,12 +28,14 @@ pub struct OauthManager {
     receivers: sync::Arc<tokio::sync::Mutex<Vec<TokenMessenger>>>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     client: utils::oauth_utils::Client,
+    token_storage: sync::Arc<sync::Mutex<token_storage::TokenStorage>>,
 }
 
 impl OauthManager {
     pub fn new(
         token_manager: sync::Arc<sync::Mutex<server::TokenManager>>,
         client: utils::oauth_utils::Client,
+        token_storage: sync::Arc<sync::Mutex<token_storage::TokenStorage>>,
     ) -> Self {
         Self {
             token_manager: token_manager,
@@ -65,6 +67,11 @@ impl OauthManager {
                                     {
                                         Ok(token) => match r[i].auth_token_sender.take() {
                                             Some(ts) => {
+                                                // TOKEN NEEDS TO BE ADDED TO STORAGE HERE
+                                                // We can replace the endpoint oneshot with a stage
+                                                // that adds it to the storage backend. The
+                                                // StorageBackend should be managed as a part of
+                                                // the OauthManager.
                                                 if let Err(_) = ts.send(token) {
                                                     println!("Error sending token");
                                                 }
