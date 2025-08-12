@@ -42,6 +42,7 @@ impl OauthManager {
             receivers: sync::Arc::new(tSync::Mutex::new(Vec::new())),
             token_receiver_manager_join_handle: None,
             client: client,
+            token_storage: token_storage,
         }
     }
 
@@ -49,6 +50,7 @@ impl OauthManager {
         if self.token_receiver_manager_join_handle.is_none() {
             let receivers = self.receivers.clone();
             let client = self.client.clone();
+            let token_storage = self.token_storage.clone();
             self.token_receiver_manager_join_handle = Some(tokio::spawn(async move {
                 loop {
                     tTime::sleep(period).await;
@@ -72,6 +74,12 @@ impl OauthManager {
                                                 // that adds it to the storage backend. The
                                                 // StorageBackend should be managed as a part of
                                                 // the OauthManager.
+                                                //
+
+                                                if let Err(e) = token_storage.lock().await.set_token("what is the ID? For the account?", token) {
+                                                    // handle error
+                                                }
+
                                                 if let Err(_) = ts.send(token) {
                                                     println!("Error sending token");
                                                 }
