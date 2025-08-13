@@ -9,13 +9,13 @@ use serde_json::{Deserializer as jsonDe, Serializer as jsonSer, de::SliceRead};
 
 #[derive(Serialize, Deserialize)]
 pub struct StorageBackend {
-    tokens: HashMap<String, String>,
+    token: Option<String>,
 }
 
 impl StorageBackend {
     pub fn new() -> Self {
         Self {
-            tokens: HashMap::new(),
+            token: None,
         }
     }
 }
@@ -47,23 +47,23 @@ impl TokenStorage {
         Ok(())
     }
 
-    pub fn set_token(&mut self, id: String, token: &OauthTokenResponse) -> Result<(), Error> {
+    pub fn set_token( token: &OauthTokenResponse) -> Result<(), Error> {
         let mut token_bytes: Vec<u8> = Vec::new();
         token.serialize(&mut jsonSer::pretty(&mut token_bytes))?;
-        self.backend
-            .tokens
-            .insert(id, general_purpose::STANDARD.encode(token_bytes));
+        self.token = Some( general_purpose::STANDARD.encode(token_bytes));
         Ok(())
     }
 
-    pub fn has_token(&self, id: &String) -> bool {
-        self.backend.tokens.contains_key(id)
+    pub fn has_token(&self) -> bool {
+        match self.backend.token {
+            None => false, 
+            Some(_) => true,
+        }
     }
 
-    pub fn get_token(&self, id: &String) -> Option<Result<OauthTokenResponse, Error>> {
-        match self.backend.tokens.get(id) {
-            None => None,
-            Some(b64t) => Some({
+    pub fn get_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
+        self.token.map(|b64t| {
+            Some({
                 match general_purpose::STANDARD.decode(b64t) {
                     Ok(bytes) => match OauthTokenResponse::deserialize(
                         &mut jsonDe::<SliceRead>::from_slice(&bytes),
@@ -73,7 +73,7 @@ impl TokenStorage {
                     },
                     Err(e) => Err(Box::new(e)),
                 }
-            }),
-        }
+            })
+        })
     }
 }

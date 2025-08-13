@@ -76,7 +76,7 @@ impl OauthManager {
                                                 // the OauthManager.
                                                 //
 
-                                                if let Err(e) = token_storage.lock().await.set_token("what is the ID? For the account?", token) {
+                                                if let Err(e) = token_storage.lock().await.set_token( token) {
                                                     // handle error
                                                 }
 
