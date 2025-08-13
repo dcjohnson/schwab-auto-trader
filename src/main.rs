@@ -47,16 +47,26 @@ async fn main() -> Result<(), Error> {
         config["redirectAddress"].to_string(),
     )?;
 
+
     let ts = std::sync::Arc::new(std::sync::Mutex::new(token_storage::TokenStorage::load(
         config["tokenFilePath"].to_string(),
     )?));
+
     let tm = std::sync::Arc::new(std::sync::Mutex::new(server::TokenManager::new()));
+
+
+
+    let om = std::sync::Arc::new(std::sync::Mutex::new(token::OauthManager::new(
+        tm.clone(),
+        oauth_client.clone(),
+        ts.clone(),
+    )));
 
     let f = tokio::spawn(server::run_server(
         8182,
         tm.clone(),
         oauth_client.clone(),
-        ts.clone(),
+        om.clone(),
         config["clientId"].to_string(),
     ))
     .await??;

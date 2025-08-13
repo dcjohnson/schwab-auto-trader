@@ -1,4 +1,4 @@
-use crate::{oauth::utils, server::server};
+use crate::{Error, oauth::{utils, token_storage}, server::server};
 use oauth2::{AuthorizationCode, CsrfToken, Scope, reqwest};
 use std::sync;
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
@@ -46,6 +46,18 @@ impl OauthManager {
         }
     }
 
+    pub fn has_token(&self) -> bool {
+        if let Ok(lr) = self.token_storage.lock() {
+            lr.has_token()
+        } else {
+            false
+        }
+    }
+
+    pub fn get_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
+        self.token_storage.lock().ok()?.get_token()
+    }
+
     pub async fn spawn_token_receiver(&mut self, period: core::time::Duration) -> () {
         if self.token_receiver_manager_join_handle.is_none() {
             let receivers = self.receivers.clone();
@@ -69,17 +81,13 @@ impl OauthManager {
                                     {
                                         Ok(token) => match r[i].auth_token_sender.take() {
                                             Some(ts) => {
-                                                // TOKEN NEEDS TO BE ADDED TO STORAGE HERE
-                                                // We can replace the endpoint oneshot with a stage
-                                                // that adds it to the storage backend. The
-                                                // StorageBackend should be managed as a part of
-                                                // the OauthManager.
-                                                //
-
-                                                if let Err(e) = token_storage.lock().await.set_token( token) {
+                                                if let Ok(mut token_storage_handle) = token_storage.lock() {
+                                                if let Err(e) = token_storage_handle.set_token( &token) {
                                                     // handle error
                                                 }
+                                                }
 
+                                                // Get rid of this auth token sender
                                                 if let Err(_) = ts.send(token) {
                                                     println!("Error sending token");
                                                 }

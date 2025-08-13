@@ -66,7 +66,7 @@ pub async fn run_server(
     port: u16,
     tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
     o_client: oauth_utils::Client,
-    ts: std::sync::Arc<std::sync::Mutex<token_storage::TokenStorage>>,
+    oauth_manager: std::sync::Arc<std::sync::Mutex<OauthManager>>,
     client_id: String,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Set a process wide default crypto provider.
@@ -94,18 +94,13 @@ pub async fn run_server(
     server_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec(), b"http/1.0".to_vec()];
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
 
-    let om = std::sync::Arc::new(std::sync::Mutex::new(OauthManager::new(
-        tm.clone(),
-        o_client,
-    )));
 
     loop {
         let (tcp_stream, _remote_addr) = incoming.accept().await?;
 
         let tls_acceptor = tls_acceptor.clone();
         let tm_clone = tm.clone();
-        let om_clone = om.clone();
-        let ts_clone = ts.clone();
+        let om_clone = oauth_manager.clone();
         let client_id_clone = client_id.clone();
         tokio::spawn(async move {
             let tls_stream = match tls_acceptor.accept(tcp_stream).await {
@@ -118,7 +113,7 @@ pub async fn run_server(
             if let Err(err) = Builder::new(TokioExecutor::new())
                 .serve_connection(
                     TokioIo::new(tls_stream),
-                    Svc::new(tm_clone, om_clone, ts_clone, client_id_clone),
+                    Svc::new(tm_clone, om_clone,  client_id_clone),
                 )
                 .await
             {
@@ -131,7 +126,6 @@ pub async fn run_server(
 struct Svc {
     tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
     om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
-    ts: std::sync::Arc<std::sync::Mutex<token_storage::TokenStorage>>,
     client_id: String,
 }
 
@@ -139,13 +133,11 @@ impl Svc {
     pub fn new(
         tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
         om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
-        ts: std::sync::Arc<std::sync::Mutex<token_storage::TokenStorage>>,
         client_id: String,
     ) -> Self {
         Self {
             tm,
             om,
-            ts,
             client_id,
         }
     }
@@ -164,7 +156,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
             (&Method::GET, "/") => {
                 *response.body_mut() = Full::from(format!(
                     "has token?: {}",
-                    self.ts.lock().unwrap().has_token(&self.client_id),
+                    self.om.lock().unwrap().has_token(),
                 ));
             }
             (&Method::GET, "/oauth") => {

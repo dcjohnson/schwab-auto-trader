@@ -47,10 +47,10 @@ impl TokenStorage {
         Ok(())
     }
 
-    pub fn set_token( token: &OauthTokenResponse) -> Result<(), Error> {
+    pub fn set_token( &mut self, token: &OauthTokenResponse) -> Result<(), Error> {
         let mut token_bytes: Vec<u8> = Vec::new();
         token.serialize(&mut jsonSer::pretty(&mut token_bytes))?;
-        self.token = Some( general_purpose::STANDARD.encode(token_bytes));
+        self.backend.token = Some( general_purpose::STANDARD.encode(token_bytes));
         Ok(())
     }
 
@@ -62,18 +62,18 @@ impl TokenStorage {
     }
 
     pub fn get_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
-        self.token.map(|b64t| {
+        self.backend.token.clone().map(|b64t| {
             Some({
                 match general_purpose::STANDARD.decode(b64t) {
                     Ok(bytes) => match OauthTokenResponse::deserialize(
                         &mut jsonDe::<SliceRead>::from_slice(&bytes),
                     ) {
                         Ok(t) => Ok(t),
-                        Err(e) => Err(Box::new(e)),
+                        Err(e) => Err(Box::new(e) as Error),
                     },
-                    Err(e) => Err(Box::new(e)),
+                    Err(e) => Err(Box::new(e) as Error ),
                 }
             })
-        })
+        })?
     }
 }
