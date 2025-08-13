@@ -65,9 +65,7 @@ impl TokenManager {
 pub async fn run_server(
     port: u16,
     tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
-    o_client: oauth_utils::Client,
     oauth_manager: std::sync::Arc<std::sync::Mutex<OauthManager>>,
-    client_id: String,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Set a process wide default crypto provider.
     let _ = rustls::crypto::ring::default_provider().install_default();
@@ -94,14 +92,12 @@ pub async fn run_server(
     server_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec(), b"http/1.0".to_vec()];
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
 
-
     loop {
         let (tcp_stream, _remote_addr) = incoming.accept().await?;
 
         let tls_acceptor = tls_acceptor.clone();
         let tm_clone = tm.clone();
         let om_clone = oauth_manager.clone();
-        let client_id_clone = client_id.clone();
         tokio::spawn(async move {
             let tls_stream = match tls_acceptor.accept(tcp_stream).await {
                 Ok(tls_stream) => tls_stream,
@@ -111,10 +107,7 @@ pub async fn run_server(
                 }
             };
             if let Err(err) = Builder::new(TokioExecutor::new())
-                .serve_connection(
-                    TokioIo::new(tls_stream),
-                    Svc::new(tm_clone, om_clone,  client_id_clone),
-                )
+                .serve_connection(TokioIo::new(tls_stream), Svc::new(tm_clone, om_clone))
                 .await
             {
                 eprintln!("failed to serve connection: {err:#}");
@@ -126,20 +119,14 @@ pub async fn run_server(
 struct Svc {
     tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
     om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
-    client_id: String,
 }
 
 impl Svc {
     pub fn new(
         tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
         om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
-        client_id: String,
     ) -> Self {
-        Self {
-            tm,
-            om,
-            client_id,
-        }
+        Self { tm, om }
     }
 }
 
@@ -154,6 +141,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         let mut response = Response::new(Full::default());
         match (req.method(), req.uri().path()) {
             (&Method::GET, "/") => {
+                // here I need to generate the oauth url if I don't have a token
                 *response.body_mut() = Full::from(format!(
                     "has token?: {}",
                     self.om.lock().unwrap().has_token(),

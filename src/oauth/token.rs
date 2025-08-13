@@ -1,4 +1,8 @@
-use crate::{Error, oauth::{utils, token_storage}, server::server};
+use crate::{
+    Error,
+    oauth::{token_storage, utils},
+    server::server,
+};
 use oauth2::{AuthorizationCode, CsrfToken, Scope, reqwest};
 use std::sync;
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
@@ -81,10 +85,14 @@ impl OauthManager {
                                     {
                                         Ok(token) => match r[i].auth_token_sender.take() {
                                             Some(ts) => {
-                                                if let Ok(mut token_storage_handle) = token_storage.lock() {
-                                                if let Err(e) = token_storage_handle.set_token( &token) {
-                                                    // handle error
-                                                }
+                                                if let Ok(mut token_storage_handle) =
+                                                    token_storage.lock()
+                                                {
+                                                    if let Err(e) =
+                                                        token_storage_handle.set_token(&token)
+                                                    {
+                                                        // handle error
+                                                    }
                                                 }
 
                                                 // Get rid of this auth token sender

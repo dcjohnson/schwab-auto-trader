@@ -14,9 +14,7 @@ pub struct StorageBackend {
 
 impl StorageBackend {
     pub fn new() -> Self {
-        Self {
-            token: None,
-        }
+        Self { token: None }
     }
 }
 
@@ -47,16 +45,16 @@ impl TokenStorage {
         Ok(())
     }
 
-    pub fn set_token( &mut self, token: &OauthTokenResponse) -> Result<(), Error> {
+    pub fn set_token(&mut self, token: &OauthTokenResponse) -> Result<(), Error> {
         let mut token_bytes: Vec<u8> = Vec::new();
         token.serialize(&mut jsonSer::pretty(&mut token_bytes))?;
-        self.backend.token = Some( general_purpose::STANDARD.encode(token_bytes));
+        self.backend.token = Some(general_purpose::STANDARD.encode(token_bytes));
         Ok(())
     }
 
     pub fn has_token(&self) -> bool {
         match self.backend.token {
-            None => false, 
+            None => false,
             Some(_) => true,
         }
     }
@@ -71,7 +69,7 @@ impl TokenStorage {
                         Ok(t) => Ok(t),
                         Err(e) => Err(Box::new(e) as Error),
                     },
-                    Err(e) => Err(Box::new(e) as Error ),
+                    Err(e) => Err(Box::new(e) as Error),
                 }
             })
         })?
