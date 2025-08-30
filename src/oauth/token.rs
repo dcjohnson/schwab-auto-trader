@@ -12,7 +12,6 @@ pub type OauthTokenResponse =
 
 struct TokenMessenger {
     auth_code_receiver: oneshot::Receiver<String>,
-    auth_token_sender: Option<oneshot::Sender<OauthTokenResponse>>,
 }
 
 impl TokenMessenger {
@@ -29,7 +28,7 @@ impl TokenMessenger {
 
 pub struct OauthManager {
     token_manager: sync::Arc<sync::Mutex<server::TokenManager>>,
-    receivers: sync::Arc<tokio::sync::Mutex<Vec<TokenMessenger>>>,
+    receivers: sync::Arc<tokio::sync::Mutex<Option<TokenMessenger>>>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     client: utils::oauth_utils::Client,
     token_storage: sync::Arc<sync::Mutex<token_storage::TokenStorage>>,
@@ -43,7 +42,7 @@ impl OauthManager {
     ) -> Self {
         Self {
             token_manager: token_manager,
-            receivers: sync::Arc::new(tSync::Mutex::new(Vec::new())),
+            receivers: sync::Arc::new(tSync::Mutex::new(None)),
             token_receiver_manager_join_handle: None,
             client: client,
             token_storage: token_storage,
@@ -142,10 +141,7 @@ impl OauthManager {
 
         let (token_sender, token_receiver) = oneshot::channel();
 
-        self.receivers
-            .lock()
-            .await
-            .push(TokenMessenger::new(auth_code_receiver, token_sender));
+        *self.receivers.lock().await = Some(TokenMessenger::new(auth_code_receiver, token_sender));
 
         (auth_url.to_string(), token_receiver)
     }

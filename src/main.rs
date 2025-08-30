@@ -13,8 +13,9 @@ use serde_json::{Deserializer as jsonDe, Serializer as jsonSer};
 use std::{env, fs};
 use tokio::{sync, time as tTime};
 
-const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
+// const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
 
+/*
 async fn recieve_wait<T>(
     r: &mut sync::oneshot::Receiver<T>,
     d: cTime::Duration,
@@ -27,6 +28,7 @@ async fn recieve_wait<T>(
         }
     }
 }
+*/
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
