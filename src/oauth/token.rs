@@ -15,9 +15,7 @@ struct TokenMessenger {
 }
 
 impl TokenMessenger {
-    fn new(
-        auth_code_receiver: oneshot::Receiver<String>,
-    ) -> Self {
+    fn new(auth_code_receiver: oneshot::Receiver<String>) -> Self {
         Self {
             auth_code_receiver: auth_code_receiver,
         }
@@ -60,57 +58,48 @@ impl OauthManager {
     }
 
     pub async fn spawn_token_receiver(&mut self, period: core::time::Duration) -> () {
-        if self.token_receiver_manager_join_handle.is_none() {
+        if self.token_receiver_manager_join_handle.is_none() {}
+
+        let receivers = self.receivers.clone();
+        let client = self.client.clone();
+        let token_storage = self.token_storage.clone();
+        self.token_receiver_manager_join_handle = Some(tokio::spawn(async move {
+            loop {
+                tTime::sleep(period).await;
+
+                {
+                    if let Some(mut r) = receivers.lock().await {
+                        match r.auth_code_receiver.try_recv() {
+                            Ok(code) => {
+                                match client
+                                    .exchange_code(AuthorizationCode::new(code))
+                                    .request_async(&reqwest::Client::new())
+                                    .await
+                                {
+                                    Ok(token) => {
+                                        if let Ok(mut token_storage_handle) = token_storage.lock() {
+                                            if let Err(e) = token_storage_handle.set_token(&token) {
+                                                // handle error
                                             }
-
-
-
-            let receivers = self.receivers.clone();
-            let client = self.client.clone();
-            let token_storage = self.token_storage.clone();
-            self.token_receiver_manager_join_handle = Some(tokio::spawn(async move {
-                loop {
-                    tTime::sleep(period).await;
-
-                    {
-                        if let Some(mut r)  = receivers.lock().await {
-
-                            match r.auth_code_receiver.try_recv() {
-                                Ok(code) => {
-                                    match client
-                                        .exchange_code(AuthorizationCode::new(code))
-                                        .request_async(&reqwest::Client::new())
-                                        .await
-                                    {
-                                        Ok(token) => {
-                                                if let Ok(mut token_storage_handle) =
-                                                    token_storage.lock()
-                                                {
-                                                    if let Err(e) =
-                                                        token_storage_handle.set_token(&token)
-                                                    {
-                                                        // handle error
-                                                    }
-                                                }
-
-                                        },
-                                        Err(e) => {
-                                            println!("Error exchanging token: {}", e);
                                         }
                                     }
+                                    Err(e) => {
+                                        println!("Error exchanging token: {}", e);
+                                    }
                                 }
-                                Err(oneshot::error::TryRecvError::Empty) => {
-                                // log
-                                }
-                                Err(oneshot::error::TryRecvError::Closed) => {
-                                    // log an error saying that the receiver is closed
                             }
+                            Err(oneshot::error::TryRecvError::Empty) => {
+                                // log
+                            }
+                            Err(oneshot::error::TryRecvError::Closed) => {
+                                // log an error saying that the receiver is closed
                             }
                         }
                     }
                 }
-            }));
-        }
+            }
+        }));
+    }
 
     // returns auth url and token receiver one shot
     pub async fn auth_url(&mut self) -> String {
