@@ -17,11 +17,9 @@ struct TokenMessenger {
 impl TokenMessenger {
     fn new(
         auth_code_receiver: oneshot::Receiver<String>,
-        auth_token_sender: oneshot::Sender<OauthTokenResponse>,
     ) -> Self {
         Self {
             auth_code_receiver: auth_code_receiver,
-            auth_token_sender: Some(auth_token_sender),
         }
     }
 }
@@ -63,6 +61,10 @@ impl OauthManager {
 
     pub async fn spawn_token_receiver(&mut self, period: core::time::Duration) -> () {
         if self.token_receiver_manager_join_handle.is_none() {
+                                            }
+
+
+
             let receivers = self.receivers.clone();
             let client = self.client.clone();
             let token_storage = self.token_storage.clone();
@@ -71,19 +73,16 @@ impl OauthManager {
                     tTime::sleep(period).await;
 
                     {
-                        let mut r = receivers.lock().await;
+                        if let Some(mut r)  = receivers.lock().await {
 
-                        let mut i = 0;
-                        while i < r.len() {
-                            match r[i].auth_code_receiver.try_recv() {
+                            match r.auth_code_receiver.try_recv() {
                                 Ok(code) => {
                                     match client
                                         .exchange_code(AuthorizationCode::new(code))
                                         .request_async(&reqwest::Client::new())
                                         .await
                                     {
-                                        Ok(token) => match r[i].auth_token_sender.take() {
-                                            Some(ts) => {
+                                        Ok(token) => {
                                                 if let Ok(mut token_storage_handle) =
                                                     token_storage.lock()
                                                 {
@@ -94,36 +93,27 @@ impl OauthManager {
                                                     }
                                                 }
 
-                                                // Get rid of this auth token sender
-                                                if let Err(_) = ts.send(token) {
-                                                    println!("Error sending token");
-                                                }
-                                            }
-                                            None => println!("No token sender!"),
                                         },
                                         Err(e) => {
                                             println!("Error exchanging token: {}", e);
                                         }
                                     }
-                                    r.remove(i);
                                 }
                                 Err(oneshot::error::TryRecvError::Empty) => {
-                                    i += 1;
+                                // log
                                 }
                                 Err(oneshot::error::TryRecvError::Closed) => {
-                                    r.remove(i);
                                     // log an error saying that the receiver is closed
-                                }
+                            }
                             }
                         }
                     }
                 }
             }));
         }
-    }
 
     // returns auth url and token receiver one shot
-    pub async fn auth_url(&mut self) -> (String, oneshot::Receiver<OauthTokenResponse>) {
+    pub async fn auth_url(&mut self) -> String {
         // Generate the full authorization URL.
         let (auth_url, csrf_token) = self
             .client
@@ -139,10 +129,8 @@ impl OauthManager {
             .new_token_request(csrf_token.secret().to_string())
             .unwrap();
 
-        let (token_sender, token_receiver) = oneshot::channel();
+        *self.receivers.lock().await = Some(TokenMessenger::new(auth_code_receiver));
 
-        *self.receivers.lock().await = Some(TokenMessenger::new(auth_code_receiver, token_sender));
-
-        (auth_url.to_string(), token_receiver)
+        auth_url.to_string()
     }
 }
