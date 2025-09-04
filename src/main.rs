@@ -1,4 +1,3 @@
-use oauth2::{TokenResponse, reqwest};
 
 use json;
 use schwab_auto_trader::{
@@ -6,12 +5,8 @@ use schwab_auto_trader::{
     oauth::{token, token_storage, utils},
     server::server,
 };
-use serde::{de::Deserialize, ser::Serialize};
 
-use core::time as cTime;
-use serde_json::{Deserializer as jsonDe, Serializer as jsonSer};
 use std::{env, fs};
-use tokio::{sync, time as tTime};
 
 // const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, io::Write};
+use std::{fs, io::Write};
 
 use crate::{Error, oauth::token::OauthTokenResponse};
 
