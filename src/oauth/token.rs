@@ -68,7 +68,7 @@ impl OauthManager {
                 tTime::sleep(period).await;
 
                 {
-                    if let Some(mut r) = receivers.lock().await {
+                    if let Some(r) = receivers.lock().await.as_mut() {
                         match r.auth_code_receiver.try_recv() {
                             Ok(code) => {
                                 match client
@@ -101,7 +101,7 @@ impl OauthManager {
         }));
     }
 
-    // returns auth url and token receiver one shot
+    // returns auth url
     pub async fn auth_url(&mut self) -> String {
         // Generate the full authorization URL.
         let (auth_url, csrf_token) = self
