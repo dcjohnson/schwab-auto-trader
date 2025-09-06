@@ -114,10 +114,10 @@ impl OauthManager {
     }
 
     pub fn token_manager(&mut self) -> &mut server::TokenManager {
-        &mut self.token_manager 
+        &mut self.token_manager
     }
 
-    pub fn get_auth_url(& self) -> Option<String> {
+    pub fn get_auth_url(&self) -> Option<String> {
         self.current_auth_url.clone()
     }
 
@@ -138,8 +138,7 @@ impl OauthManager {
 
         *self.receivers.lock().await = Some(TokenMessenger::new(auth_code_receiver));
 
-
-        self.current_auth_url = Some(auth_url.to_string()); 
+        self.current_auth_url = Some(auth_url.to_string());
         auth_url.to_string()
     }
 }

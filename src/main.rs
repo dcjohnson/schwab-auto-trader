@@ -53,15 +53,13 @@ async fn main() -> Result<(), Error> {
         config["redirectAddress"].to_string(),
     )?;
 
-
-
     // todo next: move everything possible under the oauth manager and remove extra arcs and
     // mutexes that aren't needed. Figure out how to reduce the surface area to the server.
     let om = std::sync::Arc::new(std::sync::Mutex::new(token::OauthManager::new(
         server::TokenManager::new(),
         oauth_client.clone(),
         std::sync::Arc::new(std::sync::Mutex::new(token_storage::TokenStorage::load(
-                    config["tokenFilePath"].to_string(),
+            config["tokenFilePath"].to_string(),
         )?)),
     )));
 

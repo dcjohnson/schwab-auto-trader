@@ -105,7 +105,7 @@ pub async fn run_server(
                 }
             };
             if let Err(err) = Builder::new(TokioExecutor::new())
-                .serve_connection(TokioIo::new(tls_stream), Svc::new( om_clone))
+                .serve_connection(TokioIo::new(tls_stream), Svc::new(om_clone))
                 .await
             {
                 eprintln!("failed to serve connection: {err:#}");
@@ -119,9 +119,7 @@ struct Svc {
 }
 
 impl Svc {
-    pub fn new(
-        om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
-    ) -> Self {
+    pub fn new(om: std::sync::Arc<std::sync::Mutex<OauthManager>>) -> Self {
         Self { om }
     }
 }
@@ -159,7 +157,12 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     }
 
                     if let (Some(code_p), Some(session_p), Some(state_p)) = (code, session, state) {
-                        if let Err(e) = self.om.lock().unwrap().token_manager().send_token(code_p.clone(), &state_p)
+                        if let Err(e) = self
+                            .om
+                            .lock()
+                            .unwrap()
+                            .token_manager()
+                            .send_token(code_p.clone(), &state_p)
                         {
                             println!("Error when unlocking the token manager: {}", e);
                             std::process::exit(1);
