@@ -67,6 +67,7 @@ impl OauthManager {
         let token_storage = self.token_storage.clone();
         self.token_receiver_manager_join_handle = Some(tokio::spawn(async move {
             loop {
+                println!("looping on the receivers");
                 tTime::sleep(period).await;
 
                 {
@@ -74,6 +75,7 @@ impl OauthManager {
                     if let Some(r) = receivers.lock().await.as_mut() {
                         match r.auth_code_receiver.try_recv() {
                             Ok(code) => {
+                                println!("GOT A TOKEN!");
                                 match client
                                     .exchange_code(AuthorizationCode::new(code))
                                     .request_async(&reqwest::Client::new())
@@ -131,6 +133,7 @@ impl OauthManager {
             .add_scope(Scope::new("readonly".to_string()))
             .url();
 
+        println!("new url: {}", csrf_token.secret().to_string());
         let auth_code_receiver = self
             .token_manager
             .new_token_request(csrf_token.secret().to_string())

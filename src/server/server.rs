@@ -40,7 +40,9 @@ impl TokenManager {
         auth_token: String,
         state_token: &String,
     ) -> Result<(), Box<dyn std::error::Error>> {
+        println!("received tokens: {} {}", auth_token, state_token);
         if let Some(s) = self.active_requests.remove(state_token) {
+            println!("SENDING!");
             s.send(auth_token)?;
         }
         Ok(())
@@ -201,6 +203,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             std::process::exit(1);
                             // handle the error somehow
                         } else {
+                            println!("sending token");
                             if let Err(_) = self
                                 .om
                                 .lock()
@@ -213,8 +216,9 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             } else {
                                 // eventually we will have a nice HTML webpage
                                 *response.body_mut() = Full::from(format!(
-                                    "code: '{}', session: '{}', state: '{}'",
-                                    code_p, session_p, state_p
+                                    "Sent the token!",
+                                    //"code: '{}', session: '{}', state: '{}'",
+                                    //code_p, session_p, state_p
                                 ));
                             }
                         }
