@@ -1,3 +1,14 @@
+use crate::oauth::token::OauthManager;
+use http_body_util::Full;
+use hyper::{
+    Method, Request, Response, StatusCode,
+    body::{Bytes, Incoming},
+};
+use hyper_util::rt::TokioIo;
+use rustls::{
+    ServerConfig,
+    pki_types::{CertificateDer, PrivateKeyDer},
+};
 use std::{
     collections::HashMap,
     fs, io,
@@ -5,26 +16,7 @@ use std::{
     ops::Deref,
     sync::Arc,
 };
-
-use crate::oauth::token::OauthManager;
-
-use http_body_util::Full;
-
-use hyper::body::Bytes;
-use hyper::{Request, Response};
-use tokio::net::TcpListener;
-
-use hyper::{Method, StatusCode};
-use hyper::{
-    body::Incoming,
-    //http::{Method, Request, Response, StatusCode},
-};
-use hyper_util::rt::TokioIo;
-use rustls::{
-    ServerConfig,
-    pki_types::{CertificateDer, PrivateKeyDer},
-};
-use tokio::sync::oneshot;
+use tokio::{net::TcpListener, sync::oneshot};
 use tokio_rustls::TlsAcceptor;
 use url::Url;
 
