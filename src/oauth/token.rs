@@ -23,16 +23,17 @@ impl TokenMessenger {
 }
 
 pub struct OauthManager {
-    token_manager: sync::Arc<sync::Mutex<server::TokenManager>>,
+    token_manager: server::TokenManager,
     receivers: sync::Arc<tokio::sync::Mutex<Option<TokenMessenger>>>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     client: utils::oauth_utils::Client,
     token_storage: sync::Arc<sync::Mutex<token_storage::TokenStorage>>,
+    current_auth_url: Option<String>,
 }
 
 impl OauthManager {
     pub fn new(
-        token_manager: sync::Arc<sync::Mutex<server::TokenManager>>,
+        token_manager: server::TokenManager,
         client: utils::oauth_utils::Client,
         token_storage: sync::Arc<sync::Mutex<token_storage::TokenStorage>>,
     ) -> Self {
@@ -42,6 +43,7 @@ impl OauthManager {
             token_receiver_manager_join_handle: None,
             client: client,
             token_storage: token_storage,
+            current_auth_url: None,
         }
     }
 
@@ -111,8 +113,16 @@ impl OauthManager {
         }));
     }
 
+    pub fn token_manager(&mut self) -> &mut server::TokenManager {
+        &mut self.token_manager 
+    }
+
+    pub fn get_auth_url(& self) -> Option<String> {
+        self.current_auth_url.clone()
+    }
+
     // returns auth url
-    pub async fn auth_url(&mut self) -> String {
+    pub async fn reset_auth_url(&mut self) -> String {
         // Generate the full authorization URL.
         let (auth_url, csrf_token) = self
             .client
@@ -123,13 +133,13 @@ impl OauthManager {
 
         let auth_code_receiver = self
             .token_manager
-            .lock()
-            .unwrap()
             .new_token_request(csrf_token.secret().to_string())
             .unwrap();
 
         *self.receivers.lock().await = Some(TokenMessenger::new(auth_code_receiver));
 
+
+        self.current_auth_url = Some(auth_url.to_string()); 
         auth_url.to_string()
     }
 }

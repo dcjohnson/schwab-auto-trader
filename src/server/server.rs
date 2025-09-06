@@ -64,7 +64,6 @@ impl TokenManager {
 
 pub async fn run_server(
     port: u16,
-    tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
     oauth_manager: std::sync::Arc<std::sync::Mutex<OauthManager>>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Set a process wide default crypto provider.
@@ -96,7 +95,6 @@ pub async fn run_server(
         let (tcp_stream, _remote_addr) = incoming.accept().await?;
 
         let tls_acceptor = tls_acceptor.clone();
-        let tm_clone = tm.clone();
         let om_clone = oauth_manager.clone();
         tokio::spawn(async move {
             let tls_stream = match tls_acceptor.accept(tcp_stream).await {
@@ -107,7 +105,7 @@ pub async fn run_server(
                 }
             };
             if let Err(err) = Builder::new(TokioExecutor::new())
-                .serve_connection(TokioIo::new(tls_stream), Svc::new(tm_clone, om_clone))
+                .serve_connection(TokioIo::new(tls_stream), Svc::new( om_clone))
                 .await
             {
                 eprintln!("failed to serve connection: {err:#}");
@@ -117,16 +115,14 @@ pub async fn run_server(
 }
 
 struct Svc {
-    tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
     om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
 }
 
 impl Svc {
     pub fn new(
-        tm: std::sync::Arc<std::sync::Mutex<TokenManager>>,
         om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
     ) -> Self {
-        Self { tm, om }
+        Self { om }
     }
 }
 
@@ -163,7 +159,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     }
 
                     if let (Some(code_p), Some(session_p), Some(state_p)) = (code, session, state) {
-                        if let Err(e) = self.tm.lock().unwrap().send_token(code_p.clone(), &state_p)
+                        if let Err(e) = self.om.lock().unwrap().token_manager().send_token(code_p.clone(), &state_p)
                         {
                             println!("Error when unlocking the token manager: {}", e);
                             std::process::exit(1);

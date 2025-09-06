@@ -53,21 +53,19 @@ async fn main() -> Result<(), Error> {
         config["redirectAddress"].to_string(),
     )?;
 
-    let ts = std::sync::Arc::new(std::sync::Mutex::new(token_storage::TokenStorage::load(
-        config["tokenFilePath"].to_string(),
-    )?));
 
-    let tm = std::sync::Arc::new(std::sync::Mutex::new(server::TokenManager::new()));
 
     // todo next: move everything possible under the oauth manager and remove extra arcs and
     // mutexes that aren't needed. Figure out how to reduce the surface area to the server.
     let om = std::sync::Arc::new(std::sync::Mutex::new(token::OauthManager::new(
-        tm.clone(),
+        server::TokenManager::new(),
         oauth_client.clone(),
-        ts.clone(),
+        std::sync::Arc::new(std::sync::Mutex::new(token_storage::TokenStorage::load(
+                    config["tokenFilePath"].to_string(),
+        )?)),
     )));
 
-    let jh = tokio::spawn(server::run_server(8182, tm.clone(), om.clone()));
+    let jh = tokio::spawn(server::run_server(8182, om.clone()));
 
     let mut quit_signal = signal(SignalKind::quit())?;
     let mut terminate_signal = signal(SignalKind::terminate())?;
