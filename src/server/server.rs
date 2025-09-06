@@ -11,8 +11,6 @@ use crate::oauth::token::OauthManager;
 use http_body_util::Full;
 
 use hyper::body::Bytes;
-use hyper::server::conn::http2;
-use hyper::service::service_fn;
 use hyper::{Request, Response};
 use tokio::net::TcpListener;
 
@@ -21,15 +19,11 @@ use hyper::{
     body::Incoming,
     //http::{Method, Request, Response, StatusCode},
 };
-use hyper_util::{
-    rt::{TokioIo, TokioTimer},
-    server::conn::auto::Builder,
-};
+use hyper_util::rt::TokioIo;
 use rustls::{
     ServerConfig,
     pki_types::{CertificateDer, PrivateKeyDer},
 };
-use std::convert::Infallible;
 use tokio::sync::oneshot;
 use tokio_rustls::TlsAcceptor;
 use url::Url;
@@ -143,9 +137,6 @@ pub async fn run_server(
             },
         };
     }
-
-    Ok(())
-
 }
 
 struct Svc {
