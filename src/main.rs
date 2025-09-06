@@ -47,22 +47,21 @@ async fn main() -> Result<(), Error> {
     let config = json::parse(&fs::read_to_string(&args.config_file_path).unwrap()).unwrap();
     let cancellation_token = tokio_util::sync::CancellationToken::new();
 
-    let jh = tokio::spawn(server::run_server(8182, 
-
-std::sync::Arc::new(std::sync::Mutex::new(token::OauthManager::new(
-        server::TokenManager::new(),
-        utils::oauth_utils::new_oauth_basic_client(
-            config["clientId"].to_string(),
-            config["clientSecret"].to_string(),
-            config["redirectAddress"].to_string(),
-        )?,
-        std::sync::Arc::new(std::sync::Mutex::new(token_storage::TokenStorage::load(
-            config["tokenFilePath"].to_string(),
-        )?)),
-    ))),
-
-
-             cancellation_token.clone()));
+    let jh = tokio::spawn(server::run_server(
+        8182,
+        std::sync::Arc::new(std::sync::Mutex::new(token::OauthManager::new(
+            server::TokenManager::new(),
+            utils::oauth_utils::new_oauth_basic_client(
+                config["clientId"].to_string(),
+                config["clientSecret"].to_string(),
+                config["redirectAddress"].to_string(),
+            )?,
+            std::sync::Arc::new(std::sync::Mutex::new(token_storage::TokenStorage::load(
+                config["tokenFilePath"].to_string(),
+            )?)),
+        ))),
+        cancellation_token.clone(),
+    ));
     let mut quit_signal = signal(SignalKind::quit())?;
     let mut terminate_signal = signal(SignalKind::terminate())?;
 
