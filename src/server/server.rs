@@ -65,6 +65,7 @@ impl TokenManager {
 pub async fn run_server(
     port: u16,
     oauth_manager: std::sync::Arc<std::sync::Mutex<OauthManager>>,
+    cancel_token: tokio_util::sync::CancellationToken,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Set a process wide default crypto provider.
     let _ = rustls::crypto::ring::default_provider().install_default();
@@ -92,6 +93,34 @@ pub async fn run_server(
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
 
     loop {
+        tokio::select! {
+            _ = cancel_token.cancelled() => return Ok(()),
+            connection = incoming.accept() => {
+                let (tcp_stream, _remote_addr) = connection?;
+
+        let tls_acceptor = tls_acceptor.clone();
+        let om_clone = oauth_manager.clone();
+        tokio::spawn(async move {
+            let tls_stream = match tls_acceptor.accept(tcp_stream).await {
+                Ok(tls_stream) => tls_stream,
+                Err(err) => {
+                    eprintln!("failed to perform tls handshake: {err:#}");
+                    return;
+                }
+            };
+            if let Err(err) = Builder::new(TokioExecutor::new())
+                .serve_connection(TokioIo::new(tls_stream), Svc::new(om_clone))
+                .await
+            {
+                eprintln!("failed to serve connection: {err:#}");
+            }
+        });
+
+
+            },
+        }
+
+        /*
         let (tcp_stream, _remote_addr) = incoming.accept().await?;
 
         let tls_acceptor = tls_acceptor.clone();
@@ -111,6 +140,7 @@ pub async fn run_server(
                 eprintln!("failed to serve connection: {err:#}");
             }
         });
+        */
     }
 }
 

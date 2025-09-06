@@ -44,12 +44,12 @@ async fn main() -> Result<(), Error> {
     // if it exists.
 
     let args = Args::parse();
-
     let config = json::parse(&fs::read_to_string(&args.config_file_path).unwrap()).unwrap();
+    let cancellation_token = tokio_util::sync::CancellationToken::new();
 
-    // todo next: move everything possible under the oauth manager and remove extra arcs and
-    // mutexes that aren't needed. Figure out how to reduce the surface area to the server.
-    let om = std::sync::Arc::new(std::sync::Mutex::new(token::OauthManager::new(
+    let jh = tokio::spawn(server::run_server(8182, 
+
+std::sync::Arc::new(std::sync::Mutex::new(token::OauthManager::new(
         server::TokenManager::new(),
         utils::oauth_utils::new_oauth_basic_client(
             config["clientId"].to_string(),
@@ -59,10 +59,10 @@ async fn main() -> Result<(), Error> {
         std::sync::Arc::new(std::sync::Mutex::new(token_storage::TokenStorage::load(
             config["tokenFilePath"].to_string(),
         )?)),
-    )));
+    ))),
 
-    let jh = tokio::spawn(server::run_server(8182, om.clone()));
 
+             cancellation_token.clone()));
     let mut quit_signal = signal(SignalKind::quit())?;
     let mut terminate_signal = signal(SignalKind::terminate())?;
 
@@ -71,6 +71,8 @@ async fn main() -> Result<(), Error> {
         _ = quit_signal.recv() => {},
         _ = terminate_signal.recv() => {},
     };
+
+    cancellation_token.cancel();
 
     jh.await??;
 

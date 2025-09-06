@@ -20,3 +20,4 @@ serde = "1.0.219"
 base64 = "0.22.1"
 tracing = "0.1.41"
 clap = { version = "4.5.47", features = ["derive"] }
+tokio-util = "0.7.16"
