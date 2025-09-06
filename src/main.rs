@@ -1,12 +1,15 @@
-
+use clap::Parser;
 use json;
 use schwab_auto_trader::{
     Error,
     oauth::{token, token_storage, utils},
     server::server,
 };
-
-use std::{env, fs};
+use std::fs;
+use tokio::signal::{
+    ctrl_c,
+    unix::{SignalKind, signal},
+};
 
 // const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
 
@@ -25,18 +28,24 @@ async fn recieve_wait<T>(
 }
 */
 
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    #[arg(short, long)]
+    config_file_path: String,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    // todo: Add command line parsing
-    // todo: add nice logging
     // todo: add a nice login web page
     // todo: add graceful shutdown
     // todo: write recieved token to file and load/refresh it,
     // todo: implement token generation from within the server.
     // if it exists.
-    let args: Vec<String> = env::args().collect();
 
-    let config = json::parse(&fs::read_to_string(&args[1]).unwrap()).unwrap();
+    let args = Args::parse();
+
+    let config = json::parse(&fs::read_to_string(&args.config_file_path).unwrap()).unwrap();
 
     let oauth_client = utils::oauth_utils::new_oauth_basic_client(
         config["clientId"].to_string(),
@@ -60,11 +69,11 @@ async fn main() -> Result<(), Error> {
 
     let jh = tokio::spawn(server::run_server(8182, tm.clone(), om.clone()));
 
-    let mut quit_signal = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::quit())?;
-    let mut terminate_signal = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
+    let mut quit_signal = signal(SignalKind::quit())?;
+    let mut terminate_signal = signal(SignalKind::terminate())?;
 
-    tokio::select!{
-        _ = tokio::signal::ctrl_c() => {}, 
+    tokio::select! {
+        _ = ctrl_c() => {},
         _ = quit_signal.recv() => {},
         _ = terminate_signal.recv() => {},
     };
