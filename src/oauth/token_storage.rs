@@ -49,6 +49,7 @@ impl TokenStorage {
         let mut token_bytes: Vec<u8> = Vec::new();
         token.serialize(&mut jsonSer::pretty(&mut token_bytes))?;
         self.backend.token = Some(general_purpose::STANDARD.encode(token_bytes));
+        self.save()?;
         Ok(())
     }
 
