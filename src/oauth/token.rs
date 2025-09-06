@@ -68,6 +68,7 @@ impl OauthManager {
                 tTime::sleep(period).await;
 
                 {
+                    let mut cleanup = false;
                     if let Some(r) = receivers.lock().await.as_mut() {
                         match r.auth_code_receiver.try_recv() {
                             Ok(code) => {
@@ -79,7 +80,7 @@ impl OauthManager {
                                     Ok(token) => {
                                         if let Ok(mut token_storage_handle) = token_storage.lock() {
                                             if let Err(e) = token_storage_handle.set_token(&token) {
-                                                // handle error
+                                                tracing::info!("Failed to set the received oauth token: {}", e);
                                             }
                                         }
                                     }
@@ -89,12 +90,16 @@ impl OauthManager {
                                 }
                             }
                             Err(oneshot::error::TryRecvError::Empty) => {
-                                // log
+                                tracing::info!("No oauth code has been received yet");
                             }
                             Err(oneshot::error::TryRecvError::Closed) => {
-                                // log an error saying that the receiver is closed
+                                tracing::debug!("Current oauth code receiver channel is closed, removing...");
+                                cleanup = true;
                             }
                         }
+                    }
+                    if cleanup {
+                        *receivers.lock().await = None;
                     }
                 }
             }

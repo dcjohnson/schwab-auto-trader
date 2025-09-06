@@ -58,7 +58,18 @@ async fn main() -> Result<(), Error> {
         ts.clone(),
     )));
 
-    let f = tokio::spawn(server::run_server(8182, tm.clone(), om.clone())).await??;
+    let jh = tokio::spawn(server::run_server(8182, tm.clone(), om.clone()));
+
+    let mut quit_signal = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::quit())?;
+    let mut terminate_signal = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())?;
+
+    tokio::select!{
+        _ = tokio::signal::ctrl_c() => {}, 
+        _ = quit_signal.recv() => {},
+        _ = terminate_signal.recv() => {},
+    };
+
+    jh.await??;
 
     Ok(())
 
