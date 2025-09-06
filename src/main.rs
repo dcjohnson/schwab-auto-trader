@@ -51,7 +51,7 @@ async fn main() -> Result<(), Error> {
     let config = json::parse(&fs::read_to_string(&args.config_file_path).unwrap()).unwrap();
     let cancellation_token = tokio_util::sync::CancellationToken::new();
 
-    let mut om = std::sync::Arc::new(std::sync::Mutex::new(token::OauthManager::new(
+    let om = std::sync::Arc::new(std::sync::Mutex::new(token::OauthManager::new(
         server::TokenManager::new(),
         utils::oauth_utils::new_oauth_basic_client(
             config["clientId"].to_string(),

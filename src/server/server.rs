@@ -40,9 +40,7 @@ impl TokenManager {
         auth_token: String,
         state_token: &String,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        println!("received tokens: {} {}", auth_token, state_token);
         if let Some(s) = self.active_requests.remove(state_token) {
-            println!("SENDING!");
             s.send(auth_token)?;
         }
         Ok(())
@@ -94,8 +92,6 @@ pub async fn run_server(
     // Load private key.
     let key = load_private_key("test/cert/key.pem")?;
 
-    println!("Starting to serve on https://{}", addr);
-
     // Create a TCP listener via tokio.
     let incoming = TcpListener::bind(&addr).await?;
 
@@ -123,9 +119,8 @@ pub async fn run_server(
                 tokio::task::spawn(async move {
                     if let Err(err) = hyper::server::conn::http2::Builder::new(TokioExecutor)
                         .serve_connection(io, Svc::new(om))
-                        .await
-                    {
-                        eprintln!("Error serving connection: {}", err);
+                        .await {
+                        tracing::warn!("Error serving connection: {}", err);
                     }
                 });
             },
@@ -178,20 +173,18 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
             }
             (&Method::GET, "/oauth") => {
                 let mut code = None;
-                let mut session = None;
                 let mut state = None; // state must match the csrf_token
 
                 if let Ok(qp) = Url::parse(&req.uri().to_string()) {
                     for (key, value) in qp.query_pairs() {
                         match key.deref() {
                             "code" => code = Some(value.to_string()),
-                            "session" => session = Some(value.to_string()),
                             "state" => state = Some(value.to_string()),
                             &_ => (),
                         }
                     }
 
-                    if let (Some(code_p), Some(session_p), Some(state_p)) = (code, session, state) {
+                    if let (Some(code_p), Some(state_p)) = (code, state) {
                         if let Err(e) = self
                             .om
                             .lock()
@@ -203,7 +196,6 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             std::process::exit(1);
                             // handle the error somehow
                         } else {
-                            println!("sending token");
                             if let Err(_) = self
                                 .om
                                 .lock()
