@@ -9,19 +9,28 @@ use std::{
 use crate::oauth::token::OauthManager;
 
 use http_body_util::Full;
+
+use hyper::body::Bytes;
+use hyper::server::conn::http2;
+use hyper::service::service_fn;
+use hyper::{Request, Response};
+use tokio::net::TcpListener;
+
+use std::convert::Infallible;
+use hyper::{ StatusCode, Method};
 use hyper::{
-    body::{Bytes, Incoming},
-    http::{Method, Request, Response, StatusCode},
+    body::{ Incoming},
+    //http::{Method, Request, Response, StatusCode},
 };
 use hyper_util::{
-    rt::{TokioExecutor, TokioIo},
+    rt::{ TokioIo, TokioTimer},
     server::conn::auto::Builder,
 };
 use rustls::{
     ServerConfig,
     pki_types::{CertificateDer, PrivateKeyDer},
 };
-use tokio::{net::TcpListener, sync::oneshot};
+use tokio::{ sync::oneshot};
 use tokio_rustls::TlsAcceptor;
 use url::Url;
 
@@ -62,6 +71,36 @@ impl TokenManager {
     }
 }
 
+
+
+
+
+
+async fn hello(_: Request<hyper::body::Incoming>) -> Result<Response<Full<Bytes>>, Infallible> {
+    Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
+}
+
+#[derive(Clone)]
+// An Executor that uses the tokio runtime.
+pub struct TokioExecutor;
+
+// Implement the `hyper::rt::Executor` trait for `TokioExecutor` so that it can be used to spawn
+// tasks in the hyper runtime.
+// An Executor allows us to manage execution of tasks which can help us improve the efficiency and
+// scalability of the server.
+impl<F> hyper::rt::Executor<F> for TokioExecutor
+where
+    F: std::future::Future + Send + 'static,
+    F::Output: Send + 'static,
+{
+    fn execute(&self, fut: F) {
+        tokio::task::spawn(fut);
+    }
+}
+
+
+
+
 pub async fn run_server(
     port: u16,
     oauth_manager: std::sync::Arc<std::sync::Mutex<OauthManager>>,
@@ -92,56 +131,88 @@ pub async fn run_server(
     server_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec(), b"http/1.0".to_vec()];
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
 
+
+
+
+
+
+// Bind to the port and listen for incoming TCP connections
+   // let listener = TcpListener::bind(addr).await?;
+
+    loop {
+        // When an incoming TCP connection is received grab a TCP stream for
+        // client-server communication.
+        //
+        // Note, this is a .await point, this loop will loop forever but is not a busy loop. The
+        // .await point allows the Tokio runtime to pull the task off of the thread until the task
+        // has work to do. In this case, a connection arrives on the port we are listening on and
+        // the task is woken up, at which point the task is then put back on a thread, and is
+        // driven forward by the runtime, eventually yielding a TCP stream.
+        let (stream, _) = incoming.accept().await?;
+
+        let tls_stream = tls_acceptor.accept(stream).await?;
+        // Use an adapter to access something implementing `tokio::io` traits as if they implement
+        // `hyper::rt` IO traits.
+        let io = TokioIo::new(tls_stream);
+
+        // Spin up a new task in Tokio so we can continue to listen for new TCP connection on the
+        // current task without waiting for the processing of the HTTP/2 connection we just received
+        // to finish
+        tokio::task::spawn(async move {
+            // Handle the connection from the client using HTTP/2 with an executor and pass any
+            // HTTP requests received on that connection to the `hello` function
+            if let Err(err) = hyper::server::conn::http2::Builder::new(TokioExecutor)
+                .serve_connection(io, service_fn(async |_: Request<hyper::body::Incoming>| -> Result<Response<Full<Bytes>>, Infallible> {
+    Ok(Response::new(Full::new(Bytes::from("Hello, World!"))))
+}))
+
+
+                //.serve_connection(io, service_fn(hello))
+                .await
+            {
+                eprintln!("Error serving connection: {}", err);
+            }
+        });
+    }
+
+
+
+
+
+
+ Ok(())
+
+
+
+
+/*
+
     loop {
         tokio::select! {
             _ = cancel_token.cancelled() => return Ok(()),
             connection = incoming.accept() => {
                 let (tcp_stream, _remote_addr) = connection?;
-
-        let tls_acceptor = tls_acceptor.clone();
-        let om_clone = oauth_manager.clone();
-        tokio::spawn(async move {
-            let tls_stream = match tls_acceptor.accept(tcp_stream).await {
-                Ok(tls_stream) => tls_stream,
-                Err(err) => {
-                    eprintln!("failed to perform tls handshake: {err:#}");
-                    return;
-                }
-            };
-            if let Err(err) = Builder::new(TokioExecutor::new())
-                .serve_connection(TokioIo::new(tls_stream), Svc::new(om_clone))
-                .await
-            {
-                eprintln!("failed to serve connection: {err:#}");
-            }
-        });
-
-
+                let tls_acceptor = tls_acceptor.clone();
+                let om_clone = oauth_manager.clone();
+                tokio::spawn(async move {
+                    let tls_stream = match tls_acceptor.accept(tcp_stream).await {
+                        Ok(tls_stream) => tls_stream,
+                        Err(err) => {
+                            eprintln!("failed to perform tls handshake: {err:#}");
+                            return;
+                        }
+                    };
+                    if let Err(err) = Builder::new(TokioExecutor::new())
+                        .serve_connection(TokioIo::new(tls_stream), Svc::new(om_clone))
+                        .await
+                    {
+                        eprintln!("failed to serve connection: {err:#}");
+                    }
+                });
             },
         }
-
-        /*
-        let (tcp_stream, _remote_addr) = incoming.accept().await?;
-
-        let tls_acceptor = tls_acceptor.clone();
-        let om_clone = oauth_manager.clone();
-        tokio::spawn(async move {
-            let tls_stream = match tls_acceptor.accept(tcp_stream).await {
-                Ok(tls_stream) => tls_stream,
-                Err(err) => {
-                    eprintln!("failed to perform tls handshake: {err:#}");
-                    return;
-                }
-            };
-            if let Err(err) = Builder::new(TokioExecutor::new())
-                .serve_connection(TokioIo::new(tls_stream), Svc::new(om_clone))
-                .await
-            {
-                eprintln!("failed to serve connection: {err:#}");
-            }
-        });
-        */
     }
+*/
 }
 
 struct Svc {
@@ -166,10 +237,19 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         match (req.method(), req.uri().path()) {
             (&Method::GET, "/") => {
                 // here I need to generate the oauth url if I don't have a token
-                *response.body_mut() = Full::from(format!(
-                    "has token?: {}",
-                    self.om.lock().unwrap().has_token(),
-                ));
+                //
+
+                let mut unwrapped_om = self.om.lock().unwrap();
+
+                if unwrapped_om.has_token() {
+                    *response.body_mut() = Full::from(format!(
+                        "we have a token!",
+                    ));
+                } else {
+                    *response.body_mut() = Full::from(format!(
+                            "auth: ", //unwrapped_om.reset_auth_url().await, 
+                    ));
+                }
             }
             (&Method::GET, "/oauth") => {
                 let mut code = None;
