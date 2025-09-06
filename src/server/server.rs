@@ -71,7 +71,6 @@ impl TokenManager {
     }
 }
 
-
 #[derive(Clone)]
 // An Executor that uses the tokio runtime.
 pub struct TokioExecutor;
@@ -147,34 +146,6 @@ pub async fn run_server(
 
     Ok(())
 
-    /*
-
-        loop {
-            tokio::select! {
-                _ = cancel_token.cancelled() => return Ok(()),
-                connection = incoming.accept() => {
-                    let (tcp_stream, _remote_addr) = connection?;
-                    let tls_acceptor = tls_acceptor.clone();
-                    let om_clone = oauth_manager.clone();
-                    tokio::spawn(async move {
-                        let tls_stream = match tls_acceptor.accept(tcp_stream).await {
-                            Ok(tls_stream) => tls_stream,
-                            Err(err) => {
-                                eprintln!("failed to perform tls handshake: {err:#}");
-                                return;
-                            }
-                        };
-                        if let Err(err) = Builder::new(TokioExecutor::new())
-                            .serve_connection(TokioIo::new(tls_stream), Svc::new(om_clone))
-                            .await
-                        {
-                            eprintln!("failed to serve connection: {err:#}");
-                        }
-                    });
-                },
-            }
-        }
-    */
 }
 
 struct Svc {
@@ -203,27 +174,21 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                 if unwrapped_om.has_token() {
                     *response.body_mut() = Full::from(format!("we have a token!",));
                 } else {
-
                     let auth_url = {
-                       
-                    let mut ctx = std::task::Context::from_waker(std::task::Waker::noop());
-                    let mut t = std::pin::pin!(unwrapped_om.reset_auth_url());
-
-
+                        let mut ctx = std::task::Context::from_waker(std::task::Waker::noop());
+                        let mut t = std::pin::pin!(unwrapped_om.reset_auth_url());
 
                         loop {
-                        match t.as_mut().poll(&mut ctx) {
-                            std::task::Poll::Ready(v) => break v,
-                            std::task::Poll::Pending => {
-                             tracing::info!("Waiting on new auth url");
-                                continue;
-                            },
+                            match t.as_mut().poll(&mut ctx) {
+                                std::task::Poll::Ready(v) => break v,
+                                std::task::Poll::Pending => {
+                                    tracing::info!("Waiting on new auth url");
+                                    continue;
+                                }
+                            }
                         }
-                    }
                     };
-                    *response.body_mut() = Full::from(format!(
-                        "auth: {}", auth_url, 
-                    ));
+                    *response.body_mut() = Full::from(format!("auth: {}", auth_url,));
                 }
             }
             (&Method::GET, "/oauth") => {
@@ -249,22 +214,26 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             .token_manager()
                             .send_token(code_p.clone(), &state_p)
                         {
-                            println!("Error when unlocking the token manager: {}", e);
+                            tracing::error!("Error when unlocking the token manager: {}", e);
                             std::process::exit(1);
                             // handle the error somehow
                         } else {
-
-                    if let Err(_) = self.om.lock().unwrap().token_manager().send_token(code_p.clone(), & state_p) {
-                        *response.body_mut() = Full::from(format!(
-                                "Failed to store token",
-                        ));
-                    } else {
-                            // eventually we will have a nice HTML webpage
-                            *response.body_mut() = Full::from(format!(
-                                "code: '{}', session: '{}', state: '{}'",
-                                code_p, session_p, state_p
-                            ));
-                        }
+                            if let Err(_) = self
+                                .om
+                                .lock()
+                                .unwrap()
+                                .token_manager()
+                                .send_token(code_p.clone(), &state_p)
+                            {
+                                *response.body_mut() =
+                                    Full::from(format!("Failed to store token",));
+                            } else {
+                                // eventually we will have a nice HTML webpage
+                                *response.body_mut() = Full::from(format!(
+                                    "code: '{}', session: '{}', state: '{}'",
+                                    code_p, session_p, state_p
+                                ));
+                            }
                         }
                     }
                 }
