@@ -25,12 +25,12 @@
           with pkgs;
           mkShell {
             buildInputs = [
-	    openssl.dev
+              openssl.dev
               cargo
               cargo-shear
               rustc
               rustfmt
-	      pkg-config
+              pkg-config
               pre-commit
               rustPackages.clippy
             ];

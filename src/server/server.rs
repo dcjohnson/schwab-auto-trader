@@ -139,82 +139,85 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         // let mut response = Response::new(Full::default());
         let mut om_c = self.om.clone();
 
-        Box::pin( async move {
+        Box::pin(async move {
+            match (req.method(), req.uri().path()) {
+                (&Method::GET, "/") => {
+                    let mut unwrapped_om = om_c.lock().await;
 
-        match (req.method(), req.uri().path()) {
-            (&Method::GET, "/") => {
-                let mut unwrapped_om = om_c.lock().await;
-
-                if unwrapped_om.has_token() && let Some(Ok(token)) = unwrapped_om.get_token() {
-                       return Ok( Response::new(Full::from(format!(
+                    if unwrapped_om.has_token()
+                        && let Some(Ok(token)) = unwrapped_om.get_token()
+                    {
+                        return Ok(Response::new(Full::from(format!(
                             "VOO: {:?}",
                             SchwabClient::new(token).get_quotes("VOO").await.unwrap(),
-                        ))) );
-                } else {
-                  return  Ok( Response::new( Full::from(format!("auth: {}", unwrapped_om.reset_auth_url().await)) ));
-                }
-                
-            }
-            (&Method::GET, "/oauth") => {
-                let mut code = None;
-                let mut state = None; // state must match the csrf_token
-
-                if let Ok(qp) = Url::parse(&req.uri().to_string()) {
-                    for (key, value) in qp.query_pairs() {
-                        match key.deref() {
-                            "code" => code = Some(value.to_string()),
-                            "state" => state = Some(value.to_string()),
-                            &_ => (),
-                        }
+                        ))));
+                    } else {
+                        return Ok(Response::new(Full::from(format!(
+                            "auth: {}",
+                            unwrapped_om.reset_auth_url().await
+                        ))));
                     }
+                }
+                (&Method::GET, "/oauth") => {
+                    let mut code = None;
+                    let mut state = None; // state must match the csrf_token
 
-                    if let (Some(code_p), Some(state_p)) = (code, state) {
-                        if let Err(e) = om_c
-                            .lock()
-                            .await
-                            .token_manager()
-                            .send_token(code_p.clone(), &state_p)
-                        {
-                            log::error!("Error when unlocking the token manager: {}", e);
-                            std::process::exit(1);
-                            // handle the error somehow
-                        } else {
-                            if let Err(_) = om_c
+                    if let Ok(qp) = Url::parse(&req.uri().to_string()) {
+                        for (key, value) in qp.query_pairs() {
+                            match key.deref() {
+                                "code" => code = Some(value.to_string()),
+                                "state" => state = Some(value.to_string()),
+                                &_ => (),
+                            }
+                        }
+
+                        if let (Some(code_p), Some(state_p)) = (code, state) {
+                            if let Err(e) = om_c
                                 .lock()
                                 .await
                                 .token_manager()
                                 .send_token(code_p.clone(), &state_p)
                             {
-                                 return Ok(Response::new( Full::from(format!("Failed to store token"))));
+                                log::error!("Error when unlocking the token manager: {}", e);
+                                std::process::exit(1);
+                                // handle the error somehow
                             } else {
-                                // eventually we will have a nice HTML webpage
-                                return  Ok(Response::new( Full::from(format!(
-                                    "Sent the token!",
-                                    //"code: '{}', session: '{}', state: '{}'",
-                                    //code_p, session_p, state_p
-                                ))) );
+                                if let Err(_) = om_c
+                                    .lock()
+                                    .await
+                                    .token_manager()
+                                    .send_token(code_p.clone(), &state_p)
+                                {
+                                    return Ok(Response::new(Full::from(format!(
+                                        "Failed to store token"
+                                    ))));
+                                } else {
+                                    // eventually we will have a nice HTML webpage
+                                    return Ok(Response::new(Full::from(format!(
+                                        "Sent the token!",
+                                        //"code: '{}', session: '{}', state: '{}'",
+                                        //code_p, session_p, state_p
+                                    ))));
+                                }
                             }
                         }
                     }
+
+                    return Ok(Response::new(Full::from(format!(
+                        "some token error happened"
+                    ))));
                 }
-
-                return Ok(Response::new(Full::from(format!("some token error happened"))));
-
+                // Catch-all 404.
+                _ => {
+                    return {
+                        let mut r = Response::new(Full::default());
+                        *r.status_mut() = StatusCode::NOT_FOUND;
+                        Ok(r)
+                    };
+                }
             }
-            // Catch-all 404.
-            _ => {
-                return {
-                   
-                    let mut r = Response::new(Full::default());
-                    *r.status_mut() = StatusCode::NOT_FOUND; 
-                    Ok(r)
-                };
 
-            
-        }
-        }
-
-       Ok( Response::new(Full::default()  ) )
+            Ok(Response::new(Full::default()))
         })
     }
 }
