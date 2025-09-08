@@ -46,7 +46,8 @@ async fn main() -> Result<(), Error> {
     //
     //
 
-    // CURRENTLY NOT WRITING TOKEN TO FILE. Fix it!
+
+    env_logger::init();
 
     let args = Args::parse();
     let config = json::parse(&fs::read_to_string(&args.config_file_path).unwrap()).unwrap();

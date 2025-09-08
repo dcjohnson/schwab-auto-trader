@@ -84,7 +84,7 @@ pub async fn run_server(
     // Load private key.
     let key = load_private_key("test/cert/key.pem")?;
 
-    tracing::info!("Serving on: {}", addr.to_string());
+    log::info!("Serving on: https://{}", addr.to_string());
     // Create a TCP listener via tokio.
     let incoming = TcpListener::bind(&addr).await?;
 
@@ -110,7 +110,7 @@ pub async fn run_server(
                     if let Err(err) = hyper::server::conn::http2::Builder::new(TokioExecutor)
                         .serve_connection(io, Svc::new(om))
                         .await {
-                        tracing::warn!("Error serving connection: {}", err);
+                        log::warn!("Error serving connection: {}", err);
                     }
                 });
             },
@@ -152,7 +152,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             match t.as_mut().poll(&mut ctx) {
                                 std::task::Poll::Ready(v) => break v,
                                 std::task::Poll::Pending => {
-                                    tracing::info!("Waiting on new auth url");
+                                    log::info!("Waiting on new auth url");
                                     continue;
                                 }
                             }
@@ -182,7 +182,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             .token_manager()
                             .send_token(code_p.clone(), &state_p)
                         {
-                            tracing::error!("Error when unlocking the token manager: {}", e);
+                            log::error!("Error when unlocking the token manager: {}", e);
                             std::process::exit(1);
                             // handle the error somehow
                         } else {

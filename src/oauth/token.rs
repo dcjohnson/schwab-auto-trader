@@ -82,7 +82,7 @@ impl OauthManager {
                                     Ok(token) => {
                                         if let Ok(mut token_storage_handle) = token_storage.lock() {
                                             if let Err(e) = token_storage_handle.set_token(&token) {
-                                                tracing::info!(
+                                                log::info!(
                                                     "Failed to set the received oauth token: {}",
                                                     e
                                                 );
@@ -90,15 +90,15 @@ impl OauthManager {
                                         }
                                     }
                                     Err(e) => {
-                                        tracing::warn!("error exchanging a token: {}", e);
+                                        log::warn!("error exchanging a token: {}", e);
                                     }
                                 }
                             }
                             Err(oneshot::error::TryRecvError::Empty) => {
-                                tracing::info!("No oauth code has been received yet");
+                                log::info!("No oauth code has been received yet");
                             }
                             Err(oneshot::error::TryRecvError::Closed) => {
-                                tracing::debug!(
+                                log::debug!(
                                     "Current oauth code receiver channel is closed, removing..."
                                 );
                                 cleanup = true;
