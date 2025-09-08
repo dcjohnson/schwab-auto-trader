@@ -30,6 +30,7 @@
               cargo-shear
               rustc
               rustfmt
+	      pkg-config
               pre-commit
               rustPackages.clippy
             ];

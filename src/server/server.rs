@@ -71,7 +71,7 @@ where
 
 pub async fn run_server(
     addr: SocketAddr,
-    oauth_manager: std::sync::Arc<std::sync::Mutex<OauthManager>>,
+    oauth_manager: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     cancel_token: tokio_util::sync::CancellationToken,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Set a process wide default crypto provider.
@@ -119,11 +119,11 @@ pub async fn run_server(
 }
 
 struct Svc {
-    om: std::sync::Arc<std::sync::Mutex<OauthManager>>,
+    om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
 }
 
 impl Svc {
-    pub fn new(om: std::sync::Arc<std::sync::Mutex<OauthManager>>) -> Self {
+    pub fn new(om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>) -> Self {
         Self { om }
     }
 }
@@ -136,35 +136,24 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
     >;
 
     fn call(&self, req: Request<Incoming>) -> Self::Future {
-        let mut response = Response::new(Full::default());
+        // let mut response = Response::new(Full::default());
+        let mut om_c = self.om.clone();
+
+        Box::pin( async move {
+
         match (req.method(), req.uri().path()) {
             (&Method::GET, "/") => {
-                let mut unwrapped_om = self.om.lock().unwrap();
+                let mut unwrapped_om = om_c.lock().await;
 
-                if unwrapped_om.has_token() {
-                    if let Some(Ok(token)) = unwrapped_om.get_token() {
-                        *response.body_mut() = Full::from(format!(
-                            "VOO: {}",
-                            SchwabClient::new(token).get_quotes("voo").unwrap()
-                        ));
-                    }
+                if unwrapped_om.has_token() && let Some(Ok(token)) = unwrapped_om.get_token() {
+                       return Ok( Response::new(Full::from(format!(
+                            "VOO: {:?}",
+                            SchwabClient::new(token).get_quotes("VOO").await.unwrap(),
+                        ))) );
                 } else {
-                    let auth_url = {
-                        let mut ctx = std::task::Context::from_waker(std::task::Waker::noop());
-                        let mut t = std::pin::pin!(unwrapped_om.reset_auth_url());
-
-                        loop {
-                            match t.as_mut().poll(&mut ctx) {
-                                std::task::Poll::Ready(v) => break v,
-                                std::task::Poll::Pending => {
-                                    log::info!("Waiting on new auth url");
-                                    continue;
-                                }
-                            }
-                        }
-                    };
-                    *response.body_mut() = Full::from(format!("auth: {}", auth_url,));
+                  return  Ok( Response::new( Full::from(format!("auth: {}", unwrapped_om.reset_auth_url().await)) ));
                 }
+                
             }
             (&Method::GET, "/oauth") => {
                 let mut code = None;
@@ -180,10 +169,9 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     }
 
                     if let (Some(code_p), Some(state_p)) = (code, state) {
-                        if let Err(e) = self
-                            .om
+                        if let Err(e) = om_c
                             .lock()
-                            .unwrap()
+                            .await
                             .token_manager()
                             .send_token(code_p.clone(), &state_p)
                         {
@@ -191,34 +179,43 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             std::process::exit(1);
                             // handle the error somehow
                         } else {
-                            if let Err(_) = self
-                                .om
+                            if let Err(_) = om_c
                                 .lock()
-                                .unwrap()
+                                .await
                                 .token_manager()
                                 .send_token(code_p.clone(), &state_p)
                             {
-                                *response.body_mut() =
-                                    Full::from(format!("Failed to store token",));
+                                 return Ok(Response::new( Full::from(format!("Failed to store token"))));
                             } else {
                                 // eventually we will have a nice HTML webpage
-                                *response.body_mut() = Full::from(format!(
+                                return  Ok(Response::new( Full::from(format!(
                                     "Sent the token!",
                                     //"code: '{}', session: '{}', state: '{}'",
                                     //code_p, session_p, state_p
-                                ));
+                                ))) );
                             }
                         }
                     }
                 }
+
+                return Ok(Response::new(Full::from(format!("some token error happened"))));
+
             }
             // Catch-all 404.
             _ => {
-                *response.status_mut() = StatusCode::NOT_FOUND;
-            }
-        };
+                return {
+                   
+                    let mut r = Response::new(Full::default());
+                    *r.status_mut() = StatusCode::NOT_FOUND; 
+                    Ok(r)
+                };
 
-        Box::pin(async { Ok(response) })
+            
+        }
+        }
+
+       Ok( Response::new(Full::default()  ) )
+        })
     }
 }
 
