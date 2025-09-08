@@ -14,14 +14,11 @@ impl SchwabClient {
         }
     }
 
-    pub async fn get_quotes(&mut self, ticker: &str) -> Result<String, Error> {
-        Ok(self
-            .client
+    pub fn get_quotes(&mut self, ticker: &str) -> Result<String, Error> {
+        Ok(reqwest::blocking::Client::new()
             .get(endpoints::ticker_quotes_data(ticker))
             .bearer_auth(self.auth_token.access_token().secret())
-            .send()
-            .await?
-            .text()
-            .await?)
+            .send()?
+            .text()?)
     }
 }

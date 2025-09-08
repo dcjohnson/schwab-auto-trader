@@ -25,6 +25,7 @@
           with pkgs;
           mkShell {
             buildInputs = [
+	    openssl.dev
               cargo
               cargo-shear
               rustc

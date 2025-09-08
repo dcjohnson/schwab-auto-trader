@@ -1,4 +1,4 @@
-use crate::oauth::token::OauthManager;
+use crate::{oauth::token::OauthManager, schwab::client::SchwabClient};
 use http_body_util::Full;
 use hyper::{
     Method, Request, Response, StatusCode,
@@ -142,7 +142,12 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                 let mut unwrapped_om = self.om.lock().unwrap();
 
                 if unwrapped_om.has_token() {
-                    *response.body_mut() = Full::from(format!("we have a token!",));
+                    if let Some(Ok(token)) = unwrapped_om.get_token() {
+                        *response.body_mut() = Full::from(format!(
+                            "VOO: {}",
+                            SchwabClient::new(token).get_quotes("voo").unwrap()
+                        ));
+                    }
                 } else {
                     let auth_url = {
                         let mut ctx = std::task::Context::from_waker(std::task::Waker::noop());

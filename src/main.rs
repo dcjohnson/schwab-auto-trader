@@ -46,7 +46,6 @@ async fn main() -> Result<(), Error> {
     //
     //
 
-
     env_logger::init();
 
     let args = Args::parse();
