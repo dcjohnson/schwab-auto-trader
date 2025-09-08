@@ -29,10 +29,24 @@ impl TokenStorage {
     }
 
     pub fn load(path: String) -> Result<Self, Error> {
+        // open file, if file doesn't exist, create it and then return an empty StorageBackend
+        let fd = match fs::File::open(&path) {
+            Ok(file) => file,
+            Err(e) => match e.kind() {
+                std::io::ErrorKind::NotFound => {
+                    // create file
+                    fs::File::create(&path)?;
+                    return Ok(Self {
+                        backend: StorageBackend::new(),
+                        path,
+                    });
+                }
+                _ => return Err(e.into()),
+            },
+        };
+
         Ok(Self {
-            backend: match StorageBackend::deserialize(&mut jsonDe::from_reader(fs::File::open(
-                &path,
-            )?)) {
+            backend: match StorageBackend::deserialize(&mut jsonDe::from_reader(fd)) {
                 Ok(b) => b,
                 Err(_) => StorageBackend::new(),
             },

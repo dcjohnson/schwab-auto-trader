@@ -9,13 +9,7 @@ use rustls::{
     ServerConfig,
     pki_types::{CertificateDer, PrivateKeyDer},
 };
-use std::{
-    collections::HashMap,
-    fs, io,
-    net::{Ipv4Addr, SocketAddr},
-    ops::Deref,
-    sync::Arc,
-};
+use std::{collections::HashMap, fs, io, net::SocketAddr, ops::Deref, sync::Arc};
 use tokio::{net::TcpListener, sync::oneshot};
 use tokio_rustls::TlsAcceptor;
 use url::Url;
@@ -76,7 +70,7 @@ where
 }
 
 pub async fn run_server(
-    port: u16,
+    addr: SocketAddr,
     oauth_manager: std::sync::Arc<std::sync::Mutex<OauthManager>>,
     cancel_token: tokio_util::sync::CancellationToken,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -84,14 +78,13 @@ pub async fn run_server(
     let _ = rustls::crypto::ring::default_provider().install_default();
     let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
 
-    let addr = SocketAddr::new(Ipv4Addr::LOCALHOST.into(), port);
-
     // add these to the config file
     // Load public certificate.
     let certs = load_certs("test/cert/cert.pem")?;
     // Load private key.
     let key = load_private_key("test/cert/key.pem")?;
 
+    tracing::info!("Serving on: {}", addr.to_string());
     // Create a TCP listener via tokio.
     let incoming = TcpListener::bind(&addr).await?;
 
@@ -102,9 +95,6 @@ pub async fn run_server(
         .map_err(|e| error(e.to_string()))?;
     server_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec(), b"http/1.0".to_vec()];
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
-
-    // Bind to the port and listen for incoming TCP connections
-    // let listener = TcpListener::bind(addr).await?;
 
     loop {
         tokio::select! {

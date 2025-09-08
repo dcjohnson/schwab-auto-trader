@@ -5,7 +5,10 @@ use schwab_auto_trader::{
     oauth::{token, token_storage, utils},
     server::server,
 };
-use std::fs;
+use std::{
+    fs,
+    net::{Ipv4Addr, SocketAddr},
+};
 use tokio::signal::{
     ctrl_c,
     unix::{SignalKind, signal},
@@ -38,9 +41,7 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     // todo: add a nice login web page
-    // todo: add graceful shutdown
-    // todo: write recieved token to file and load/refresh it,
-    // todo: implement token generation from within the server.
+    // todo: Implement token refresh for expiring tokens.
     // if it exists.
     //
     //
@@ -68,7 +69,11 @@ async fn main() -> Result<(), Error> {
         .spawn_token_receiver(core::time::Duration::from_millis(500))
         .await;
 
-    let jh = tokio::spawn(server::run_server(8182, om, cancellation_token.clone()));
+    let jh = tokio::spawn(server::run_server(
+        SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 8182),
+        om,
+        cancellation_token.clone(),
+    ));
 
     let mut quit_signal = signal(SignalKind::quit())?;
     let mut terminate_signal = signal(SignalKind::terminate())?;
