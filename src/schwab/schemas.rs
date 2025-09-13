@@ -1,10 +1,14 @@
 use serde::Deserialize;
 
+pub type Accounts = Vec<Account>;
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Account {
-    accounts: Vec<SecuritiesAccount>,
+    securities_account: SecuritiesAccount,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SecuritiesAccount {
     account_number: String,

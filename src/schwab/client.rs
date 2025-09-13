@@ -1,4 +1,8 @@
-use crate::{Error, oauth::token, schwab::endpoints};
+use crate::{
+    Error,
+    oauth::token,
+    schwab::{endpoints, schemas},
+};
 use oauth2::{TokenResponse, reqwest};
 
 pub struct SchwabClient {
@@ -25,8 +29,16 @@ impl SchwabClient {
             .await?)
     }
 
-    pub async fn get_accounts(&mut self) -> Result<String, Error> {
-        self.get(endpoints::accounts()).await
+    pub async fn get_json<T>(&mut self, endpoint: String) -> Result<T, Error> {
+        Ok(serde_json::from_str(&self.get(endpoint).await?)?)
+    }
+
+    pub async fn get_accounts(&mut self) -> Result<schemas::Accounts, Error> {
+        let s = self.get(endpoints::accounts()).await?;
+        println!("{}", s);
+        let j = serde_json::from_str(&s)?;
+
+        Ok(j)
     }
 
     pub async fn get_quotes(&mut self, ticker: &str) -> Result<String, Error> {
