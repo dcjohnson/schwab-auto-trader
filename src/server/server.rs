@@ -136,9 +136,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
     >;
 
     fn call(&self, req: Request<Incoming>) -> Self::Future {
-        // let mut response = Response::new(Full::default());
-        let mut om_c = self.om.clone();
-
+        let om_c = self.om.clone();
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
@@ -149,7 +147,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     {
                         return Ok(Response::new(Full::from(format!(
                             "VOO: {:?}",
-                            SchwabClient::new(token).get_quotes("VOO").await.unwrap(),
+                            SchwabClient::new(token).get_accounts().await.unwrap(),
                         ))));
                     } else {
                         return Ok(Response::new(Full::from(format!(
@@ -216,8 +214,6 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     };
                 }
             }
-
-            Ok(Response::new(Full::default()))
         })
     }
 }

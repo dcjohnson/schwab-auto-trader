@@ -14,14 +14,22 @@ impl SchwabClient {
         }
     }
 
-    pub async fn get_quotes(&mut self, ticker: &str) -> Result<String, Error> {
+    pub async fn get(&mut self, endpoint: String) -> Result<String, Error> {
         Ok(self
             .client
-            .get(endpoints::ticker_quotes_data(ticker))
+            .get(endpoint)
             .bearer_auth(self.auth_token.access_token().secret())
             .send()
             .await?
             .text()
             .await?)
+    }
+
+    pub async fn get_accounts(&mut self) -> Result<String, Error> {
+        self.get(endpoints::accounts()).await
+    }
+
+    pub async fn get_quotes(&mut self, ticker: &str) -> Result<String, Error> {
+        self.get(endpoints::ticker_quotes_data(ticker)).await
     }
 }
