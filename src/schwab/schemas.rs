@@ -53,13 +53,21 @@ pub enum AccountInstrument {
         description: String,
         instrument_id: i64,
         net_change: f64,
-
         option_deliveries: Vec<AccountApiOptionDeliverable>,
         put_call: String,
         option_multiplier: i32,
         r#type: String,
         underlying_symbol: String,
     },
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountApiOptionDeliverable {
+    symbol: String,
+    deliverable_units: f64,
+    api_currency_type: String,
+    asset_type: String,
 }
 
 #[derive(Deserialize, Debug)]
