@@ -1,12 +1,13 @@
 #![allow(dead_code)]
 use serde::Deserialize;
 
-pub type Accounts = Vec<Account>;
+pub type Accounts = Vec<AccountTypes>;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Account {
-    securities_account: SecuritiesAccount,
+pub struct AccountTypes {
+    securities_account: Option<SecuritiesAccount>,
+    cash_account: Option<CashAccount>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -140,13 +141,6 @@ pub struct MarginBalance {
     is_in_call: Option<bool>,
     stock_buying_power: Option<f64>,
     option_buying_power: Option<f64>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(untagged)]
-pub enum AccountTypes {
-    SecuritiesAccount(SecuritiesAccount),
-    CashAccount(CashAccount),
 }
 
 #[derive(Deserialize, Debug)]
