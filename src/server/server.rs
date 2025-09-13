@@ -73,7 +73,7 @@ pub async fn run_server(
     addr: SocketAddr,
     oauth_manager: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     cancel_token: tokio_util::sync::CancellationToken,
-    cert_path: String, 
+    cert_path: String,
     key_path: String,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Set a process wide default crypto provider.
