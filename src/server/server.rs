@@ -73,6 +73,8 @@ pub async fn run_server(
     addr: SocketAddr,
     oauth_manager: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     cancel_token: tokio_util::sync::CancellationToken,
+    cert_path: String, 
+    key_path: String,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Set a process wide default crypto provider.
     let _ = rustls::crypto::ring::default_provider().install_default();
@@ -80,9 +82,9 @@ pub async fn run_server(
 
     // add these to the config file
     // Load public certificate.
-    let certs = load_certs("test/cert/cert.pem")?;
+    let certs = load_certs(&cert_path)?;
     // Load private key.
-    let key = load_private_key("test/cert/key.pem")?;
+    let key = load_private_key(&key_path)?;
 
     log::info!("Serving on: https://{}", addr.to_string());
     // Create a TCP listener via tokio.
@@ -147,7 +149,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     {
                         return Ok(Response::new(Full::from(format!(
                             "VOO: {:?}",
-                            SchwabClient::new(token).get_accounts().await.unwrap(),
+                            SchwabClient::new(token).get_accounts().await,
                         ))));
                     } else {
                         return Ok(Response::new(Full::from(format!(

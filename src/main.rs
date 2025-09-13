@@ -56,6 +56,8 @@ async fn main() -> Result<(), Error> {
         SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 8182),
         om,
         cancellation_token.clone(),
+        config["certPath"].to_string(), 
+        config["keyPath"].to_string(),
     ));
 
     let mut quit_signal = signal(SignalKind::quit())?;
