@@ -9,7 +9,6 @@ pub struct Account {
     securities_account: SecuritiesAccount,
 }
 
-// merge all these fields into one and then use asset_type and r#type to distinguish
 #[derive(Deserialize, Debug)]
 #[serde(tag = "assetType")]
 pub enum AccountInstrument {
