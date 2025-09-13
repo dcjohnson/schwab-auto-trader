@@ -9,9 +9,11 @@ pub struct Account {
     securities_account: SecuritiesAccount,
 }
 
+// merge all these fields into one and then use asset_type and r#type to distinguish
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase", untagged)]
-pub enum AccountInstrument {
+#[serde(rename_all = "camelCase")]
+pub struct AccountInstrument {
+    /*
     AccountCashEquivalent {
         asset_type: String,
         cusip: String,
@@ -61,6 +63,7 @@ pub enum AccountInstrument {
         r#type: String,
         underlying_symbol: String,
     },
+    */
 }
 
 #[derive(Deserialize, Debug)]
