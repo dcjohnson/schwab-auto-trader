@@ -38,7 +38,7 @@ impl SchwabClient {
         Ok(serde_json::from_str(&self.get(endpoint).await?)?)
     }
 
-    pub async fn get_accounts(&mut self) -> Result<schemas::Accounts, Error> {
+    pub async fn get_accounts(&mut self) -> Result<schemas::accounts_and_trading::accounts::Accounts, Error> {
         self.get_json(endpoints::accounts()).await
     }
 
