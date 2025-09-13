@@ -11,59 +11,40 @@ pub struct Account {
 
 // merge all these fields into one and then use asset_type and r#type to distinguish
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct AccountInstrument {
-    /*
-    AccountCashEquivalent {
-        asset_type: String,
+#[serde(tag = "assetType")]
+pub enum AccountInstrument {
+    #[serde(rename(deserialize = "COLLECTIVE_INVESTMENT"))]
+    CollectiveInvestment {
         cusip: String,
         symbol: String,
         description: String,
-        instrument_id: i64,
-        net_change: f64,
         r#type: String,
     },
-    AccountEquity {
-        asset_type: String,
+
+    #[serde(rename(deserialize = "OPTION"))]
+    Option {
         cusip: String,
         symbol: String,
         description: String,
-        instrument_id: i64,
+        #[serde(rename(deserialize = "netChange"))]
         net_change: f64,
-    },
-    AccountFixedIncome {
-        asset_type: String,
-        cusip: String,
-        symbol: String,
-        description: String,
-        instrument_id: i64,
-        net_change: f64,
-        maturity_date: String,
-        factor: f64,
-        variable_rate: f64,
-    },
-    AccountMutualFund {
-        asset_type: String,
-        cusip: String,
-        symbol: String,
-        description: String,
-        instrument_id: i64,
-        net_change: f64,
-    },
-    AccountOption {
-        asset_type: String,
-        cusip: String,
-        symbol: String,
-        description: String,
-        instrument_id: i64,
-        net_change: f64,
-        option_deliveries: Vec<AccountApiOptionDeliverable>,
+        r#type: String,
+
+        #[serde(rename(deserialize = "putCall"))]
         put_call: String,
-        option_multiplier: i32,
-        r#type: String,
+
+        #[serde(rename(deserialize = "underlyingSymbol"))]
         underlying_symbol: String,
     },
-    */
+
+    #[serde(rename(deserialize = "EQUITY"))]
+    Equity {
+        cusip: String,
+        symbol: String,
+
+        #[serde(rename(deserialize = "netChange"))]
+        net_change: f64,
+    },
 }
 
 #[derive(Deserialize, Debug)]
@@ -85,18 +66,18 @@ pub struct Position {
     long_quantity: f64,
     settled_long_quantity: f64,
     settled_short_quantity: f64,
-    aged_quantity: f64,
+    aged_quantity: Option<f64>,
     instrument: AccountInstrument,
     market_value: f64,
     maintenance_requirement: Option<f64>,
-    average_long_price: f64,
-    average_short_price: f64,
-    tax_log_average_price: f64,
-    tax_log_average_short_price: f64,
-    long_open_profit_loss: f64,
-    short_open_profit_loss: f64,
-    previous_session_long_quantity: f64,
-    previous_session_short_quantity: f64,
+    average_long_price: Option<f64>,
+    average_short_price: Option<f64>,
+    tax_log_average_price: Option<f64>,
+    tax_log_average_short_price: Option<f64>,
+    long_open_profit_loss: Option<f64>,
+    short_open_profit_loss: Option<f64>,
+    previous_session_long_quantity: Option<f64>,
+    previous_session_short_quantity: Option<f64>,
     current_day_cost: f64,
 }
 
