@@ -5,6 +5,8 @@ use crate::{
 };
 use oauth2::{TokenResponse, reqwest};
 
+use serde::de::Deserialize;
+
 pub struct SchwabClient {
     client: reqwest::Client,
     auth_token: token::OauthTokenResponse,
@@ -29,16 +31,15 @@ impl SchwabClient {
             .await?)
     }
 
-    pub async fn get_json<T>(&mut self, endpoint: String) -> Result<T, Error> {
+    pub async fn get_json<T: for<'a> Deserialize<'a>>(
+        &mut self,
+        endpoint: String,
+    ) -> Result<T, Error> {
         Ok(serde_json::from_str(&self.get(endpoint).await?)?)
     }
 
     pub async fn get_accounts(&mut self) -> Result<schemas::Accounts, Error> {
-        let s = self.get(endpoints::accounts()).await?;
-        println!("{}", s);
-        let j = serde_json::from_str(&s)?;
-
-        Ok(j)
+        self.get_json(endpoints::accounts()).await
     }
 
     pub async fn get_quotes(&mut self, ticker: &str) -> Result<String, Error> {
