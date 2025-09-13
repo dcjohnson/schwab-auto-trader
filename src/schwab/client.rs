@@ -4,7 +4,6 @@ use crate::{
     schwab::{endpoints, schemas},
 };
 use oauth2::{TokenResponse, reqwest};
-
 use serde::de::Deserialize;
 
 pub struct SchwabClient {
@@ -35,7 +34,9 @@ impl SchwabClient {
         &mut self,
         endpoint: String,
     ) -> Result<T, Error> {
-        Ok(serde_json::from_str(&self.get(endpoint).await?)?)
+        let json = self.get(endpoint.clone()).await?;
+        log::debug!("get_json for endpoint: {} , json: {}", endpoint, json);
+        Ok(serde_json::from_str(&json)?)
     }
 
     pub async fn get_accounts(
