@@ -182,31 +182,21 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                         }
 
                         if let (Some(code_p), Some(state_p)) = (code, state) {
-                            if let Err(e) = om_c
+                            match om_c
                                 .lock()
                                 .await
                                 .token_manager()
                                 .send_token(code_p.clone(), &state_p)
                             {
-                                log::error!("Error when unlocking the token manager: {}", e);
-                                std::process::exit(1);
-                                // handle the error somehow
-                            } else {
-                                if let Err(_) = om_c
-                                    .lock()
-                                    .await
-                                    .token_manager()
-                                    .send_token(code_p.clone(), &state_p)
-                                {
+                                Ok(()) => {
                                     return Ok(Response::new(Full::from(format!(
-                                        "Failed to store token"
+                                        "Sent the token"
                                     ))));
-                                } else {
-                                    // eventually we will have a nice HTML webpage
+                                }
+                                Err(e) => {
                                     return Ok(Response::new(Full::from(format!(
-                                        "Sent the token!",
-                                        //"code: '{}', session: '{}', state: '{}'",
-                                        //code_p, session_p, state_p
+                                        "Failed to store token: {}",
+                                        e
                                     ))));
                                 }
                             }
