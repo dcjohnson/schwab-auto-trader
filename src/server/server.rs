@@ -9,7 +9,7 @@ use rustls::{
     ServerConfig,
     pki_types::{CertificateDer, PrivateKeyDer},
 };
-use std::{collections::HashMap, fs, io, net::SocketAddr, ops::Deref, sync::Arc};
+use std::{fs, io, net::SocketAddr, ops::Deref, sync::Arc};
 use tokio::{net::TcpListener, sync::oneshot};
 use tokio_rustls::TlsAcceptor;
 use url::Url;
@@ -19,13 +19,15 @@ fn error(err: String) -> io::Error {
 }
 
 pub struct TokenManager {
-    active_requests: HashMap<String, oneshot::Sender<String>>,
+    state_token: Option<String>,
+    sender: Option<oneshot::Sender<String>>,
 }
 
 impl TokenManager {
     pub fn new() -> Self {
         Self {
-            active_requests: HashMap::new(),
+            state_token: None,
+            sender: None,
         }
     }
 
@@ -34,20 +36,28 @@ impl TokenManager {
         auth_token: String,
         state_token: &String,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(s) = self.active_requests.remove(state_token) {
-            s.send(auth_token)?;
+        if let Some(cached_state_token) = self.state_token.as_ref()
+            && cached_state_token == state_token
+        {
+            match self.sender.take() {
+                Some(sender) => {
+                    sender.send(auth_token)?;
+                    Ok(())
+                }
+                None => Err("No sender for state token".to_string().into()),
+            }
+        } else {
+            Err("State Tokens didn't match".to_string().into())
         }
-        Ok(())
     }
 
-    pub fn new_token_request(&mut self, state_token: String) -> Option<oneshot::Receiver<String>> {
+    pub fn new_token_request(&mut self, state_token: String) -> oneshot::Receiver<String> {
         let (s, r) = oneshot::channel();
-        if let None = self.active_requests.get(&state_token) {
-            self.active_requests.insert(state_token, s);
-            Some(r)
-        } else {
-            None
-        }
+
+        self.state_token = Some(state_token);
+        self.sender = Some(s);
+
+        r
     }
 }
 

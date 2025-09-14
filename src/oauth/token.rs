@@ -133,8 +133,7 @@ impl OauthManager {
 
         let auth_code_receiver = self
             .token_manager
-            .new_token_request(csrf_token.secret().to_string())
-            .unwrap();
+            .new_token_request(csrf_token.secret().to_string());
 
         *self.receivers.lock().await = Some(TokenMessenger::new(auth_code_receiver));
 
