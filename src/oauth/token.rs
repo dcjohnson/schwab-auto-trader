@@ -26,6 +26,7 @@ pub struct OauthManager {
     token_manager: server::TokenManager,
     receivers: sync::Arc<tokio::sync::Mutex<Option<TokenMessenger>>>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
+    token_refresh_manager_join_handle: Option<tokio::task::JoinHandle<()>>, 
     client: utils::oauth_utils::Client,
     token_storage: sync::Arc<sync::Mutex<token_storage::TokenStorage>>,
     current_auth_url: Option<String>,
@@ -59,9 +60,16 @@ impl OauthManager {
         self.token_storage.lock().ok()?.get_token()
     }
 
-    pub async fn spawn_token_receiver(&mut self, period: core::time::Duration) -> () {
-        if self.token_receiver_manager_join_handle.is_none() {}
+    pub async fn spawn_token_refresher(&mut self, period: core::time::Duration) -> () {
+       
+        let receivers = self.receivers.clone();
+        let client = self.client.clone();
+        let token_storage = self.token_storage.clone();
 
+    }
+
+    pub async fn spawn_token_receiver(&mut self, period: core::time::Duration) -> () {
+        if self.token_receiver_manager_join_handle.is_none() {
         let receivers = self.receivers.clone();
         let client = self.client.clone();
         let token_storage = self.token_storage.clone();
@@ -111,6 +119,7 @@ impl OauthManager {
                 }
             }
         }));
+        }
     }
 
     pub fn token_manager(&mut self) -> &mut server::TokenManager {
