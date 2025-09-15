@@ -69,6 +69,11 @@ impl OauthManager {
             self.token_refresh_manager_join_handle = Some(tokio::spawn(async move {
                 loop {
                     tTime::sleep(period).await;
+
+                    if let Some(Ok(token)) = token_storage.lock().ok()?.get_token() {
+                        // check if it is out of date.
+                        // use the client to do an exchange
+                    }
                 }
             }));
         }
