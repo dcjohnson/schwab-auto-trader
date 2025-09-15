@@ -52,6 +52,11 @@ async fn main() -> Result<(), Error> {
         .spawn_token_receiver(core::time::Duration::from_millis(500))
         .await;
 
+    om.lock()
+        .await
+        .spawn_token_refresher(core::time::Duration::from_millis(5000))
+        .await;
+
     let jh = tokio::spawn(server::run_server(
         SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 8182),
         om,

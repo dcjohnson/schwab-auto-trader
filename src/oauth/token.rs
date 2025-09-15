@@ -26,7 +26,7 @@ pub struct OauthManager {
     token_manager: server::TokenManager,
     receivers: sync::Arc<tokio::sync::Mutex<Option<TokenMessenger>>>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
-    token_refresh_manager_join_handle: Option<tokio::task::JoinHandle<()>>, 
+    token_refresh_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     client: utils::oauth_utils::Client,
     token_storage: sync::Arc<sync::Mutex<token_storage::TokenStorage>>,
     current_auth_url: Option<String>,
@@ -42,6 +42,7 @@ impl OauthManager {
             token_manager: token_manager,
             receivers: sync::Arc::new(tSync::Mutex::new(None)),
             token_receiver_manager_join_handle: None,
+            token_refresh_manager_join_handle: None,
             client: client,
             token_storage: token_storage,
             current_auth_url: None,
@@ -61,64 +62,73 @@ impl OauthManager {
     }
 
     pub async fn spawn_token_refresher(&mut self, period: core::time::Duration) -> () {
-       
-        let receivers = self.receivers.clone();
-        let client = self.client.clone();
-        let token_storage = self.token_storage.clone();
-
+        if self.token_refresh_manager_join_handle.is_none() {
+            let receivers = self.receivers.clone();
+            let client = self.client.clone();
+            let token_storage = self.token_storage.clone();
+            self.token_refresh_manager_join_handle = Some(tokio::spawn(async move {
+                loop {
+                    tTime::sleep(period).await;
+                }
+            }));
+        }
     }
 
     pub async fn spawn_token_receiver(&mut self, period: core::time::Duration) -> () {
         if self.token_receiver_manager_join_handle.is_none() {
-        let receivers = self.receivers.clone();
-        let client = self.client.clone();
-        let token_storage = self.token_storage.clone();
-        self.token_receiver_manager_join_handle = Some(tokio::spawn(async move {
-            loop {
-                tTime::sleep(period).await;
+            let receivers = self.receivers.clone();
+            let client = self.client.clone();
+            let token_storage = self.token_storage.clone();
+            self.token_receiver_manager_join_handle = Some(tokio::spawn(async move {
+                loop {
+                    tTime::sleep(period).await;
 
-                {
-                    let mut cleanup = false;
-                    if let Some(r) = receivers.lock().await.as_mut() {
-                        match r.auth_code_receiver.try_recv() {
-                            Ok(code) => {
-                                match client
-                                    .exchange_code(AuthorizationCode::new(code))
-                                    .request_async(&reqwest::Client::new())
-                                    .await
-                                {
-                                    Ok(token) => {
-                                        if let Ok(mut token_storage_handle) = token_storage.lock() {
-                                            if let Err(e) = token_storage_handle.set_token(&token) {
-                                                log::info!(
-                                                    "Failed to set the received oauth token: {}",
-                                                    e
-                                                );
+                    {
+                        let mut cleanup = false;
+                        if let Some(r) = receivers.lock().await.as_mut() {
+                            match r.auth_code_receiver.try_recv() {
+                                Ok(code) => {
+                                    match client
+                                        .exchange_code(AuthorizationCode::new(code))
+                                        .request_async(&reqwest::Client::new())
+                                        .await
+                                    {
+                                        Ok(token) => {
+                                            if let Ok(mut token_storage_handle) =
+                                                token_storage.lock()
+                                            {
+                                                if let Err(e) =
+                                                    token_storage_handle.set_token(&token)
+                                                {
+                                                    log::info!(
+                                                        "Failed to set the received oauth token: {}",
+                                                        e
+                                                    );
+                                                }
                                             }
                                         }
-                                    }
-                                    Err(e) => {
-                                        log::warn!("error exchanging a token: {}", e);
+                                        Err(e) => {
+                                            log::warn!("error exchanging a token: {}", e);
+                                        }
                                     }
                                 }
-                            }
-                            Err(oneshot::error::TryRecvError::Empty) => {
-                                log::info!("No oauth code has been received yet");
-                            }
-                            Err(oneshot::error::TryRecvError::Closed) => {
-                                log::debug!(
-                                    "Current oauth code receiver channel is closed, removing..."
-                                );
-                                cleanup = true;
+                                Err(oneshot::error::TryRecvError::Empty) => {
+                                    log::info!("No oauth code has been received yet");
+                                }
+                                Err(oneshot::error::TryRecvError::Closed) => {
+                                    log::debug!(
+                                        "Current oauth code receiver channel is closed, removing..."
+                                    );
+                                    cleanup = true;
+                                }
                             }
                         }
-                    }
-                    if cleanup {
-                        *receivers.lock().await = None;
+                        if cleanup {
+                            *receivers.lock().await = None;
+                        }
                     }
                 }
-            }
-        }));
+            }));
         }
     }
 
