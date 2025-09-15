@@ -1,15 +1,13 @@
-use std::{fs, io::Write};
-
+use std::{fs, io::Write, time as sTime};
 use crate::{Error, oauth::token::OauthTokenResponse};
-
 use serde::{Deserialize, Serialize};
-
 use base64::{Engine, engine::general_purpose};
 use serde_json::{Deserializer as jsonDe, Serializer as jsonSer, de::SliceRead};
 
 #[derive(Serialize, Deserialize)]
 pub struct StorageBackend {
     token: Option<String>,
+    expiration_timestamp: String,
 }
 
 impl StorageBackend {
@@ -59,7 +57,7 @@ impl TokenStorage {
         Ok(())
     }
 
-    pub fn set_token(&mut self, token: &OauthTokenResponse) -> Result<(), Error> {
+    pub fn set_token(&mut self, token: &OauthTokenResponse, expiration: sTime::SystemTime) -> Result<(), Error> {
         let mut token_bytes: Vec<u8> = Vec::new();
         token.serialize(&mut jsonSer::pretty(&mut token_bytes))?;
         self.backend.token = Some(general_purpose::STANDARD.encode(token_bytes));
