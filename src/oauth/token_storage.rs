@@ -104,4 +104,16 @@ impl TokenStorage {
             })
         })?
     }
+
+    pub fn get_token_and_expiration(
+        &self,
+    ) -> Option<Result<(OauthTokenResponse, DateTime<Utc>), Error>> {
+        match (self.get_token(), self.get_expiration()) {
+            (Some(Ok(token)), Some(Ok(expir))) => Some(Ok((token, expir))),
+            (None, _) => None,
+            (_, None) => None,
+            (Some(Err(e)), _) => Some(Err(e)),
+            (_, Some(Err(e))) => Some(Err(e)),
+        }
+    }
 }

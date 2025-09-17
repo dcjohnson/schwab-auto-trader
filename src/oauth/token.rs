@@ -72,13 +72,13 @@ impl OauthManager {
                     tTime::sleep(period).await;
 
                     if let Ok(token_storage_handle) = token_storage.lock() {
-                        if let Some(Ok(token)) = token_storage_handle.get_token() {
+                        if let Some(Ok((token, expir))) =
+                            token_storage_handle.get_token_and_expiration()
+                        {
                             // check if it is out of date.
                             // use the client to do an exchange
-                            //if let Some(expires_in) = token.expires_in() {
-                            //}
-                            let refresh_token = token.refresh_token();
-                            let expires_in = token.expires_in();
+
+                            let _refresh_token = token.refresh_token();
                         }
                     }
                 }
