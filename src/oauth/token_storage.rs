@@ -1,18 +1,22 @@
-use std::{fs, io::Write, time as sTime};
 use crate::{Error, oauth::token::OauthTokenResponse};
-use serde::{Deserialize, Serialize};
 use base64::{Engine, engine::general_purpose};
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use serde_json::{Deserializer as jsonDe, Serializer as jsonSer, de::SliceRead};
+use std::{fs, io::Write, time as sTime};
 
 #[derive(Serialize, Deserialize)]
 pub struct StorageBackend {
     token: Option<String>,
-    expiration_timestamp: String,
+    expiration_timestamp: Option<String>,
 }
 
 impl StorageBackend {
     pub fn new() -> Self {
-        Self { token: None }
+        Self {
+            token: None,
+            expiration_timestamp: None,
+        }
     }
 }
 
@@ -33,6 +37,7 @@ impl TokenStorage {
             Err(e) => match e.kind() {
                 std::io::ErrorKind::NotFound => {
                     // create file
+
                     fs::File::create(&path)?;
                     return Ok(Self {
                         backend: StorageBackend::new(),
@@ -57,10 +62,15 @@ impl TokenStorage {
         Ok(())
     }
 
-    pub fn set_token(&mut self, token: &OauthTokenResponse, expiration: sTime::SystemTime) -> Result<(), Error> {
+    pub fn set_token(
+        &mut self,
+        token: &OauthTokenResponse,
+        expiration: DateTime<Utc>,
+    ) -> Result<(), Error> {
         let mut token_bytes: Vec<u8> = Vec::new();
         token.serialize(&mut jsonSer::pretty(&mut token_bytes))?;
         self.backend.token = Some(general_purpose::STANDARD.encode(token_bytes));
+        self.backend.expiration_timestamp = Some(expiration.to_rfc3339());
         self.save()?;
         Ok(())
     }
@@ -70,6 +80,13 @@ impl TokenStorage {
             None => false,
             Some(_) => true,
         }
+    }
+
+    pub fn get_expiration(&self) -> Option<Result<DateTime<Utc>, Error>> {
+        self.backend
+            .token
+            .clone()
+            .map(|ts| Ok(DateTime::parse_from_rfc3339(&ts)?.to_utc()))
     }
 
     pub fn get_token(&self) -> Option<Result<OauthTokenResponse, Error>> {

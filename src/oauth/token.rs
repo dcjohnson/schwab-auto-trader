@@ -3,7 +3,8 @@ use crate::{
     oauth::{token_storage, utils},
     server::server,
 };
-use oauth2::{TokenResponse,AuthorizationCode, CsrfToken, Scope, reqwest};
+use chrono::{DateTime, Local};
+use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse, reqwest};
 use std::{sync, time as sTime};
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
 
@@ -70,7 +71,7 @@ impl OauthManager {
                 loop {
                     tTime::sleep(period).await;
 
-                    if let Ok(mut token_storage_handle) = token_storage.lock() {
+                    if let Ok(token_storage_handle) = token_storage.lock() {
                         if let Some(Ok(token)) = token_storage_handle.get_token() {
                             // check if it is out of date.
                             // use the client to do an exchange
@@ -105,16 +106,19 @@ impl OauthManager {
                                         .await
                                     {
                                         Ok(token) => {
-                                            let expiration = sTime::SystemTime::now() + (match token.expires_in() {
-                                                Some(duration) => duration, 
-                                                None => sTime::Duration::from_secs(1800),
-                                            });
+                                            // calculate the expiration date
+                                            let expiration = (Local::now()
+                                                + (match token.expires_in() {
+                                                    Some(duration) => duration,
+                                                    None => sTime::Duration::from_secs(1800),
+                                                }))
+                                            .to_utc();
 
                                             if let Ok(mut token_storage_handle) =
                                                 token_storage.lock()
                                             {
-                                                if let Err(e) =
-                                                    token_storage_handle.set_token(&token, expiration)
+                                                if let Err(e) = token_storage_handle
+                                                    .set_token(&token, expiration)
                                                 {
                                                     log::info!(
                                                         "Failed to set the received oauth token: {}",
