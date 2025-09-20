@@ -5,7 +5,7 @@ use crate::{
 };
 use chrono::Local;
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse, reqwest};
-use std::{sync, time as sTime};
+use std::{sync as sSync, time as sTime};
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
 
 pub type OauthTokenResponse =
@@ -25,11 +25,11 @@ impl TokenMessenger {
 
 pub struct OauthManager {
     token_manager: server::TokenManager,
-    receivers: sync::Arc<tokio::sync::Mutex<Option<TokenMessenger>>>,
+    receivers: sSync::Arc<tSync::Mutex<Option<TokenMessenger>>>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     token_refresh_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     client: utils::oauth_utils::Client,
-    token_storage: sync::Arc<sync::Mutex<token_storage::TokenStorage>>,
+    token_storage: sSync::Arc<tSync::Mutex<token_storage::TokenStorage>>,
     current_auth_url: Option<String>,
 }
 
@@ -37,11 +37,11 @@ impl OauthManager {
     pub fn new(
         token_manager: server::TokenManager,
         client: utils::oauth_utils::Client,
-        token_storage: sync::Arc<sync::Mutex<token_storage::TokenStorage>>,
+        token_storage: sSync::Arc<tSync::Mutex<token_storage::TokenStorage>>,
     ) -> Self {
         Self {
             token_manager: token_manager,
-            receivers: sync::Arc::new(tSync::Mutex::new(None)),
+            receivers: sSync::Arc::new(sSync::Mutex::new(None)),
             token_receiver_manager_join_handle: None,
             token_refresh_manager_join_handle: None,
             client: client,
@@ -75,10 +75,22 @@ impl OauthManager {
                         if let Some(Ok((token, expir))) =
                             token_storage_handle.get_token_and_expiration()
                         {
-                            // check if it is out of date.
-                            // use the client to do an exchange
-
-                            let _refresh_token = token.refresh_token();
+                            // make the buffer time configurable
+                            if chrono::prelude::Utc::now()
+                                > (expir - std::time::Duration::from_secs(180))
+                            {
+                                match token.refresh_token() {
+                                    Some(refresh_token) => match client
+                                        .exchange_refresh_token(refresh_token)
+                                        .request_async(&reqwest::Client::new())
+                                        .await
+                                    {
+                                        Ok(token) => {}
+                                        Err(e) => {}
+                                    },
+                                    None => {}
+                                }
+                            }
                         }
                     }
                 }
