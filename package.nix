@@ -1,6 +1,9 @@
-{ pkgs, naersk, src }:
-let 
+{
+  pkgs,
+  naersk,
+  src,
+}:
+let
   naersk-lib = pkgs.callPackage naersk { };
 in
-  naersk-lib.buildPackage src
-
+naersk-lib.buildPackage src

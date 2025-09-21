@@ -20,11 +20,11 @@
       in
       {
         formatter = pkgs.nixfmt-tree;
-        defaultPackage = import package.nix { 
-	inherit pkgs; 
-	inherit naersk; 
-	src = self;
-	};
+        defaultPackage = import ./package.nix {
+          inherit pkgs;
+          inherit naersk;
+          src = self;
+        };
         devShell =
           with pkgs;
           mkShell {
