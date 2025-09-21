@@ -3,7 +3,7 @@ use crate::{
     oauth::{token_storage, utils},
     server::server,
 };
-use chrono::Local;
+use chrono::{DateTime, Local, Utc};
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse, reqwest};
 use std::{sync as sSync, time as sTime};
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
@@ -58,16 +58,24 @@ impl OauthManager {
         self.token_storage.lock().await.get_token()
     }
 
+    fn calculate_expiration(expires_in: Option<core::time::Duration>) -> DateTime<Utc> {
+        (Local::now()
+            + (match expires_in {
+                Some(duration) => duration,
+                None => sTime::Duration::from_secs(1800), // some default value
+            }))
+        .to_utc()
+    }
+
     pub async fn spawn_token_refresher(&mut self, period: core::time::Duration) -> () {
         if self.token_refresh_manager_join_handle.is_none() {
-            let receivers = self.receivers.clone();
             let client = self.client.clone();
             let token_storage = self.token_storage.clone();
             self.token_refresh_manager_join_handle = Some(tokio::spawn(async move {
                 loop {
                     tTime::sleep(period).await;
 
-                    let mut token_storage_handle = token_storage.lock().await;
+                    let token_storage_handle = token_storage.lock().await;
                     if let Some(Ok((token, expir))) =
                         token_storage_handle.get_token_and_expiration()
                     {
@@ -75,16 +83,28 @@ impl OauthManager {
                         if chrono::prelude::Utc::now()
                             > (expir - std::time::Duration::from_secs(180))
                         {
-                            match token.refresh_token() {
-                                Some(refresh_token) => match client
+                            if let Some(refresh_token) = token.refresh_token() {
+                                match client
                                     .exchange_refresh_token(refresh_token)
                                     .request_async(&reqwest::Client::new())
                                     .await
                                 {
-                                    Ok(token) => {}
-                                    Err(e) => {}
-                                },
-                                None => {}
+                                    Ok(token) => {
+                                        if let Err(e) = token_storage.lock().await.set_token(
+                                            &token,
+                                            Self::calculate_expiration(token.expires_in()),
+                                        ) {
+                                            log::error!(
+                                                "Failed to set the received oauth token: {}",
+                                                e
+                                            );
+                                        }
+                                    }
+                                    Err(e) => log::error!(
+                                        "Failed to exchange refresh token with oauth token: {}",
+                                        e
+                                    ),
+                                }
                             }
                         }
                     }
@@ -113,19 +133,10 @@ impl OauthManager {
                                         .await
                                     {
                                         Ok(token) => {
-                                            // calculate the expiration date
-                                            let expiration = (Local::now()
-                                                + (match token.expires_in() {
-                                                    Some(duration) => duration,
-                                                    None => sTime::Duration::from_secs(1800),
-                                                }))
-                                            .to_utc();
-
-                                            if let Err(e) = token_storage
-                                                .lock()
-                                                .await
-                                                .set_token(&token, expiration)
-                                            {
+                                            if let Err(e) = token_storage.lock().await.set_token(
+                                                &token,
+                                                Self::calculate_expiration(token.expires_in()),
+                                            ) {
                                                 log::info!(
                                                     "Failed to set the received oauth token: {}",
                                                     e
