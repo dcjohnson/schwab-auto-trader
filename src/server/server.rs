@@ -37,8 +37,8 @@ impl TokenManager {
         state_token: &String,
     ) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(cached_state_token) = self.state_token.as_ref()
-            && cached_state_token == state_token
         {
+            if cached_state_token == state_token {
             match self.sender.take() {
                 Some(sender) => {
                     sender.send(auth_token)?;
@@ -46,8 +46,11 @@ impl TokenManager {
                 }
                 None => Err("No sender for state token".to_string().into()),
             }
+            } else {
+                Err("State Tokens didn't match".to_string().into())
+            }
         } else {
-            Err("State Tokens didn't match".to_string().into())
+            Err("No stored state token".to_string().into())
         }
     }
 
