@@ -154,9 +154,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                 (&Method::GET, "/") => {
                     let mut unwrapped_om = om_c.lock().await;
 
-                    if unwrapped_om.has_token()
-                        && let Some(Ok(token)) = unwrapped_om.get_token()
-                    {
+                    if let Some(Ok(token)) = unwrapped_om.get_token().await {
                         return Ok(Response::new(Full::from(format!(
                             "VOO: {:?}",
                             SchwabClient::new(token).get_accounts().await,

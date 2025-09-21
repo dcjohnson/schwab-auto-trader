@@ -42,7 +42,7 @@ async fn main() -> Result<(), Error> {
             config["clientSecret"].to_string(),
             config["redirectAddress"].to_string(),
         )?,
-        std::sync::Arc::new(std::sync::Mutex::new(token_storage::TokenStorage::load(
+        std::sync::Arc::new(tokio::sync::Mutex::new(token_storage::TokenStorage::load(
             config["tokenFilePath"].to_string(),
         )?)),
     )));

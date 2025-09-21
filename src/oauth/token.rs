@@ -41,7 +41,7 @@ impl OauthManager {
     ) -> Self {
         Self {
             token_manager: token_manager,
-            receivers: sSync::Arc::new(sSync::Mutex::new(None)),
+            receivers: sSync::Arc::new(tSync::Mutex::new(None)),
             token_receiver_manager_join_handle: None,
             token_refresh_manager_join_handle: None,
             client: client,
@@ -50,16 +50,12 @@ impl OauthManager {
         }
     }
 
-    pub fn has_token(&self) -> bool {
-        if let Ok(lr) = self.token_storage.lock() {
-            lr.has_token()
-        } else {
-            false
-        }
+    pub async fn has_token(&self) -> bool {
+        self.token_storage.lock().await.has_token()
     }
 
-    pub fn get_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
-        self.token_storage.lock().ok()?.get_token()
+    pub async fn get_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
+        self.token_storage.lock().await.get_token()
     }
 
     pub async fn spawn_token_refresher(&mut self, period: core::time::Duration) -> () {
@@ -71,25 +67,24 @@ impl OauthManager {
                 loop {
                     tTime::sleep(period).await;
 
-                    if let Ok(token_storage_handle) = token_storage.lock() {
-                        if let Some(Ok((token, expir))) =
-                            token_storage_handle.get_token_and_expiration()
+                    let mut token_storage_handle = token_storage.lock().await;
+                    if let Some(Ok((token, expir))) =
+                        token_storage_handle.get_token_and_expiration()
+                    {
+                        // make the buffer time configurable
+                        if chrono::prelude::Utc::now()
+                            > (expir - std::time::Duration::from_secs(180))
                         {
-                            // make the buffer time configurable
-                            if chrono::prelude::Utc::now()
-                                > (expir - std::time::Duration::from_secs(180))
-                            {
-                                match token.refresh_token() {
-                                    Some(refresh_token) => match client
-                                        .exchange_refresh_token(refresh_token)
-                                        .request_async(&reqwest::Client::new())
-                                        .await
-                                    {
-                                        Ok(token) => {}
-                                        Err(e) => {}
-                                    },
-                                    None => {}
-                                }
+                            match token.refresh_token() {
+                                Some(refresh_token) => match client
+                                    .exchange_refresh_token(refresh_token)
+                                    .request_async(&reqwest::Client::new())
+                                    .await
+                                {
+                                    Ok(token) => {}
+                                    Err(e) => {}
+                                },
+                                None => {}
                             }
                         }
                     }
@@ -126,17 +121,15 @@ impl OauthManager {
                                                 }))
                                             .to_utc();
 
-                                            if let Ok(mut token_storage_handle) =
-                                                token_storage.lock()
+                                            if let Err(e) = token_storage
+                                                .lock()
+                                                .await
+                                                .set_token(&token, expiration)
                                             {
-                                                if let Err(e) = token_storage_handle
-                                                    .set_token(&token, expiration)
-                                                {
-                                                    log::info!(
-                                                        "Failed to set the received oauth token: {}",
-                                                        e
-                                                    );
-                                                }
+                                                log::info!(
+                                                    "Failed to set the received oauth token: {}",
+                                                    e
+                                                );
                                             }
                                         }
                                         Err(e) => {
