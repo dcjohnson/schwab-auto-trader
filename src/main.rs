@@ -24,10 +24,6 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     // todo: add a nice login web page
-    // todo: Implement token refresh for expiring tokens.
-    // if it exists.
-    //
-    //
 
     env_logger::init();
 
@@ -54,7 +50,7 @@ async fn main() -> Result<(), Error> {
 
     om.lock()
         .await
-        .spawn_token_refresher(core::time::Duration::from_millis(5000))
+        .spawn_token_refresher(core::time::Duration::from_secs(60))
         .await;
 
     let jh = tokio::spawn(server::run_server(

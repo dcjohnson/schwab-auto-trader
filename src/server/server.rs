@@ -112,19 +112,25 @@ pub async fn run_server(
         tokio::select! {
             _ = cancel_token.cancelled() => return Ok(()),
             connection = incoming.accept() => {
-                let (stream, _) = connection?;
-
-                let tls_stream = tls_acceptor.accept(stream).await?;
-                let io = TokioIo::new(tls_stream);
-
-                let om = oauth_manager.clone();
-                tokio::task::spawn(async move {
-                    if let Err(err) = hyper::server::conn::http2::Builder::new(TokioExecutor)
-                        .serve_connection(io, Svc::new(om))
-                        .await {
-                        log::warn!("Error serving connection: {}", err);
-                    }
-                });
+                match connection {
+                    Ok((stream, _)) => {
+                        match tls_acceptor.accept(stream).await {
+                            Ok(tls_stream) => {
+                                let io = TokioIo::new(tls_stream);
+                                let om = oauth_manager.clone();
+                                tokio::task::spawn(async move {
+                                    if let Err(err) = hyper::server::conn::http2::Builder::new(TokioExecutor)
+                                        .serve_connection(io, Svc::new(om))
+                                        .await {
+                                            log::warn!("Error serving connection: {}", err);
+                                        }
+                                });
+                            },
+                            Err(e) => log::warn!("Couldn't accept tls connection: {}", e),
+                        }
+                    },
+                    Err(e) => log::warn!("Couldn't accept tcp connection: {}", e),
+                }
             },
         };
     }
