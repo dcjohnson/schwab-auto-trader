@@ -5,10 +5,7 @@ use schwab_auto_trader::{
     oauth::{token, token_storage, utils},
     server::server,
 };
-use std::{
-    fs,
-    net::{Ipv4Addr, SocketAddr},
-};
+use std::fs;
 use tokio::signal::{
     ctrl_c,
     unix::{SignalKind, signal},
@@ -54,7 +51,7 @@ async fn main() -> Result<(), Error> {
         .await;
 
     let jh = tokio::spawn(server::run_server(
-        SocketAddr::new(Ipv4Addr::LOCALHOST.into(), 8182),
+        config["bindAddress"].to_string().parse()?,
         om,
         cancellation_token.clone(),
         config["certPath"].to_string(),
