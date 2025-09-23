@@ -84,7 +84,7 @@ impl TokenStorage {
 
     pub fn get_expiration(&self) -> Option<Result<DateTime<Utc>, Error>> {
         self.backend
-            .token
+            .expiration_timestamp
             .clone()
             .map(|ts| Ok(DateTime::parse_from_rfc3339(&ts)?.to_utc()))
     }
