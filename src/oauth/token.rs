@@ -206,7 +206,7 @@ impl OauthManager {
     }
 
     // returns auth url
-    pub async fn reset_auth_url(&mut self) -> String {
+    pub fn reset_auth_url(&mut self) -> String {
         // Generate the full authorization URL.
         let (auth_url, csrf_token) = self
             .client

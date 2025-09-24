@@ -170,7 +170,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     } else {
                         return Ok(Response::new(Full::from(format!(
                             "auth: {}",
-                            unwrapped_om.reset_auth_url().await
+                            unwrapped_om.reset_auth_url()
                         ))));
                     }
                 }
