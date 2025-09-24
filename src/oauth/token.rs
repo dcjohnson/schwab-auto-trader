@@ -75,7 +75,7 @@ impl OauthManager {
                 loop {
                     log::info!("Attempting token refresh");
 
-                    let token_storage_handle = token_storage.lock().await;
+                    let mut token_storage_handle = token_storage.lock().await;
                     if let Some(Ok((token, expir))) =
                         token_storage_handle.get_token_and_expiration()
                     {
@@ -91,7 +91,7 @@ impl OauthManager {
                                     .await
                                 {
                                     Ok(token) => {
-                                        if let Err(e) = token_storage.lock().await.set_token(
+                                        if let Err(e) = token_storage_handle.set_token(
                                             &token,
                                             Self::calculate_expiration(token.expires_in()),
                                         ) {
