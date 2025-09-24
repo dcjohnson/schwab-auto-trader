@@ -35,19 +35,12 @@ async fn main() -> Result<(), Error> {
             config["clientSecret"].to_string(),
             config["redirectAddress"].to_string(),
         )?,
-        std::sync::Arc::new(tokio::sync::Mutex::new(token_storage::TokenStorage::load(
-            config["tokenFilePath"].to_string(),
-        )?)),
+        token_storage::TokenStorage::load(config["tokenFilePath"].to_string())?,
     )));
 
-    om.lock()
-        .await
-        .spawn_token_receiver(core::time::Duration::from_millis(500))
+    token::OauthManager::spawn_token_receiver(om.clone(), core::time::Duration::from_millis(500))
         .await;
-
-    om.lock()
-        .await
-        .spawn_token_refresher(core::time::Duration::from_secs(60))
+    token::OauthManager::spawn_token_refresher(om.clone(), core::time::Duration::from_secs(60))
         .await;
 
     let jh = tokio::spawn(server::run_server(

@@ -25,11 +25,11 @@ impl TokenMessenger {
 
 pub struct OauthManager {
     token_manager: server::TokenManager,
-    receivers: sSync::Arc<tSync::Mutex<Option<TokenMessenger>>>,
+    receiver: Option<TokenMessenger>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     token_refresh_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     client: utils::oauth_utils::Client,
-    token_storage: sSync::Arc<tSync::Mutex<token_storage::TokenStorage>>,
+    token_storage: token_storage::TokenStorage,
     current_auth_url: Option<String>,
 }
 
@@ -37,11 +37,11 @@ impl OauthManager {
     pub fn new(
         token_manager: server::TokenManager,
         client: utils::oauth_utils::Client,
-        token_storage: sSync::Arc<tSync::Mutex<token_storage::TokenStorage>>,
+        token_storage: token_storage::TokenStorage,
     ) -> Self {
         Self {
             token_manager: token_manager,
-            receivers: sSync::Arc::new(tSync::Mutex::new(None)),
+            receiver: None,
             token_receiver_manager_join_handle: None,
             token_refresh_manager_join_handle: None,
             client: client,
@@ -50,12 +50,12 @@ impl OauthManager {
         }
     }
 
-    pub async fn has_token(&self) -> bool {
-        self.token_storage.lock().await.has_token()
+    pub fn has_token(&self) -> bool {
+        self.token_storage.has_token()
     }
 
-    pub async fn get_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
-        self.token_storage.lock().await.get_token()
+    pub fn get_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
+        self.token_storage.get_token()
     }
 
     fn calculate_expiration(expires_in: Option<core::time::Duration>) -> DateTime<Utc> {
@@ -67,113 +67,133 @@ impl OauthManager {
         .to_utc()
     }
 
-    pub async fn spawn_token_refresher(&mut self, period: core::time::Duration) -> () {
-        if self.token_refresh_manager_join_handle.is_none() {
-            let client = self.client.clone();
-            let token_storage = self.token_storage.clone();
-            self.token_refresh_manager_join_handle = Some(tokio::spawn(async move {
-                loop {
-                    log::info!("Attempting token refresh");
+    pub async fn spawn_token_refresher(
+        s: sSync::Arc<tSync::Mutex<Self>>,
+        period: core::time::Duration,
+    ) {
+        let s_c = s.clone();
 
-                    {
-                        let mut token_storage_handle = token_storage.lock().await;
-                        if let Some(Ok((token, expir))) =
-                            token_storage_handle.get_token_and_expiration()
+        {
+            let mut s_lock_handle = s.lock().await;
+            if s_lock_handle.token_refresh_manager_join_handle.is_none() {
+                s_lock_handle.token_refresh_manager_join_handle = Some(tokio::spawn(async move {
+                    loop {
+                        log::info!("Attempting token refresh");
+
                         {
-                            // make the buffer time configurable
-                            if chrono::prelude::Utc::now()
-                                > (expir - std::time::Duration::from_secs(180))
+                            let mut s_handle = s_c.lock().await;
+                            if let Some(Ok((token, expir))) =
+                                s_handle.token_storage.get_token_and_expiration()
                             {
-                                log::info!("Token is expired, refreshing...");
-                                if let Some(refresh_token) = token.refresh_token() {
-                                    match client
-                                        .exchange_refresh_token(refresh_token)
-                                        .request_async(&reqwest::Client::new())
-                                        .await
-                                    {
-                                        Ok(token) => {
-                                            if let Err(e) = token_storage_handle.set_token(
-                                                &token,
-                                                Self::calculate_expiration(token.expires_in()),
-                                            ) {
-                                                log::error!(
-                                                    "Failed to set the received oauth token: {}",
-                                                    e
-                                                );
-                                            } else {
-                                                log::info!("New oauth token recieved");
+                                // make the buffer time configurable
+                                if chrono::prelude::Utc::now()
+                                    > (expir - std::time::Duration::from_secs(180))
+                                {
+                                    log::info!("Token is expired, refreshing...");
+                                    if let Some(refresh_token) = token.refresh_token() {
+                                        match s_handle
+                                            .client
+                                            .exchange_refresh_token(refresh_token)
+                                            .request_async(&reqwest::Client::new())
+                                            .await
+                                        {
+                                            Ok(token) => {
+                                                if let Err(e) = s_handle.token_storage.set_token(
+                                                    &token,
+                                                    Self::calculate_expiration(token.expires_in()),
+                                                ) {
+                                                    log::error!(
+                                                        "Failed to set the received oauth token: {}",
+                                                        e
+                                                    );
+                                                } else {
+                                                    log::info!("New oauth token recieved");
+                                                }
                                             }
+                                            Err(e) => log::error!(
+                                                "Failed to exchange refresh token with oauth token: {}",
+                                                e
+                                            ),
                                         }
-                                        Err(e) => log::error!(
-                                            "Failed to exchange refresh token with oauth token: {}",
-                                            e
-                                        ),
                                     }
                                 }
+                            } else {
+                                log::info!("No token to refresh");
                             }
-                        } else {
-                            log::info!("No token to refresh");
                         }
+                        log::info!(
+                            "Token is not expiring; sleeping until next token refresh check."
+                        );
+                        tTime::sleep(period).await;
                     }
-                    log::info!("Token is not expiring; sleeping until next token refresh check.");
-                    tTime::sleep(period).await;
-                }
-            }));
+                }));
+            }
         }
     }
 
-    pub async fn spawn_token_receiver(&mut self, period: core::time::Duration) -> () {
-        if self.token_receiver_manager_join_handle.is_none() {
-            let receivers = self.receivers.clone();
-            let client = self.client.clone();
-            let token_storage = self.token_storage.clone();
-            self.token_receiver_manager_join_handle = Some(tokio::spawn(async move {
-                loop {
-                    tTime::sleep(period).await;
+    pub async fn spawn_token_receiver(
+        s: sSync::Arc<tSync::Mutex<Self>>,
+        period: core::time::Duration,
+    ) {
+        let s_c = s.clone();
 
-                    {
-                        let mut cleanup = false;
-                        if let Some(r) = receivers.lock().await.as_mut() {
-                            match r.auth_code_receiver.try_recv() {
-                                Ok(code) => {
-                                    match client
-                                        .exchange_code(AuthorizationCode::new(code))
-                                        .request_async(&reqwest::Client::new())
-                                        .await
-                                    {
-                                        Ok(token) => {
-                                            if let Err(e) = token_storage.lock().await.set_token(
-                                                &token,
-                                                Self::calculate_expiration(token.expires_in()),
-                                            ) {
-                                                log::info!(
-                                                    "Failed to set the received oauth token: {}",
-                                                    e
-                                                );
+        {
+            let mut s_lock_handle = s.lock().await;
+            if s_lock_handle.token_receiver_manager_join_handle.is_none() {
+                s_lock_handle.token_receiver_manager_join_handle = Some(tokio::spawn(async move {
+                    loop {
+                        tTime::sleep(period).await;
+
+                        {
+                            let mut s_lock_handle = s_c.lock().await;
+                            let mut cleanup = false;
+                            if let Some(r) = s_lock_handle.receiver.as_mut() {
+                                match r.auth_code_receiver.try_recv() {
+                                    Ok(code) => {
+                                        match s_lock_handle
+                                            .client
+                                            .exchange_code(AuthorizationCode::new(code))
+                                            .request_async(&reqwest::Client::new())
+                                            .await
+                                        {
+                                            Ok(token) => {
+                                                if let Err(e) =
+                                                    s_lock_handle.token_storage.set_token(
+                                                        &token,
+                                                        Self::calculate_expiration(
+                                                            token.expires_in(),
+                                                        ),
+                                                    )
+                                                {
+                                                    log::info!(
+                                                        "Failed to set the received oauth token: {}",
+                                                        e
+                                                    );
+                                                }
+                                            }
+                                            Err(e) => {
+                                                log::warn!("error exchanging a token: {}", e);
                                             }
                                         }
-                                        Err(e) => {
-                                            log::warn!("error exchanging a token: {}", e);
-                                        }
+                                    }
+                                    Err(oneshot::error::TryRecvError::Empty) => {
+                                        log::info!("No oauth code has been received yet");
+                                    }
+                                    Err(oneshot::error::TryRecvError::Closed) => {
+                                        log::debug!(
+                                            "Current oauth code receiver channel is closed, removing..."
+                                        );
+                                        cleanup = true;
                                     }
                                 }
-                                Err(oneshot::error::TryRecvError::Empty) => {
-                                    log::info!("No oauth code has been received yet");
-                                }
-                                Err(oneshot::error::TryRecvError::Closed) => {
-                                    log::debug!(
-                                        "Current oauth code receiver channel is closed, removing..."
-                                    );
-                                    cleanup = true;
-                                }
+                            }
+                            if cleanup {
+                                s_lock_handle.receiver = None;
                             }
                         }
-                        if cleanup {
-                            *receivers.lock().await = None;
-                        }
                     }
-                }
-            }));
+                }));
+            }
         }
     }
 
@@ -199,7 +219,7 @@ impl OauthManager {
             .token_manager
             .new_token_request(csrf_token.secret().to_string());
 
-        *self.receivers.lock().await = Some(TokenMessenger::new(auth_code_receiver));
+        self.receiver = Some(TokenMessenger::new(auth_code_receiver));
 
         self.current_auth_url = Some(auth_url.to_string());
         auth_url.to_string()
