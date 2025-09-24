@@ -75,43 +75,45 @@ impl OauthManager {
                 loop {
                     log::info!("Attempting token refresh");
 
-                    let mut token_storage_handle = token_storage.lock().await;
-                    if let Some(Ok((token, expir))) =
-                        token_storage_handle.get_token_and_expiration()
                     {
-                        // make the buffer time configurable
-                        if chrono::prelude::Utc::now()
-                            > (expir - std::time::Duration::from_secs(180))
+                        let mut token_storage_handle = token_storage.lock().await;
+                        if let Some(Ok((token, expir))) =
+                            token_storage_handle.get_token_and_expiration()
                         {
-                            log::info!("Token is expired, refreshing...");
-                            if let Some(refresh_token) = token.refresh_token() {
-                                match client
-                                    .exchange_refresh_token(refresh_token)
-                                    .request_async(&reqwest::Client::new())
-                                    .await
-                                {
-                                    Ok(token) => {
-                                        if let Err(e) = token_storage_handle.set_token(
-                                            &token,
-                                            Self::calculate_expiration(token.expires_in()),
-                                        ) {
-                                            log::error!(
-                                                "Failed to set the received oauth token: {}",
-                                                e
-                                            );
-                                        } else {
-                                            log::info!("New oauth token recieved");
+                            // make the buffer time configurable
+                            if chrono::prelude::Utc::now()
+                                > (expir - std::time::Duration::from_secs(180))
+                            {
+                                log::info!("Token is expired, refreshing...");
+                                if let Some(refresh_token) = token.refresh_token() {
+                                    match client
+                                        .exchange_refresh_token(refresh_token)
+                                        .request_async(&reqwest::Client::new())
+                                        .await
+                                    {
+                                        Ok(token) => {
+                                            if let Err(e) = token_storage_handle.set_token(
+                                                &token,
+                                                Self::calculate_expiration(token.expires_in()),
+                                            ) {
+                                                log::error!(
+                                                    "Failed to set the received oauth token: {}",
+                                                    e
+                                                );
+                                            } else {
+                                                log::info!("New oauth token recieved");
+                                            }
                                         }
+                                        Err(e) => log::error!(
+                                            "Failed to exchange refresh token with oauth token: {}",
+                                            e
+                                        ),
                                     }
-                                    Err(e) => log::error!(
-                                        "Failed to exchange refresh token with oauth token: {}",
-                                        e
-                                    ),
                                 }
                             }
+                        } else {
+                            log::info!("No token to refresh");
                         }
-                    } else {
-                        log::info!("No token to refresh");
                     }
                     tTime::sleep(period).await;
                 }
