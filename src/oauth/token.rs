@@ -115,6 +115,7 @@ impl OauthManager {
                             log::info!("No token to refresh");
                         }
                     }
+                    log::info!("sleeping until next refresh check.");
                     tTime::sleep(period).await;
                 }
             }));
