@@ -73,7 +73,7 @@ impl OauthManager {
             let token_storage = self.token_storage.clone();
             self.token_refresh_manager_join_handle = Some(tokio::spawn(async move {
                 loop {
-                    tTime::sleep(period).await;
+                    log::info!("Attempting token refresh");
 
                     let token_storage_handle = token_storage.lock().await;
                     if let Some(Ok((token, expir))) =
@@ -83,6 +83,7 @@ impl OauthManager {
                         if chrono::prelude::Utc::now()
                             > (expir - std::time::Duration::from_secs(180))
                         {
+                            log::info!("Token is expired, refreshing...");
                             if let Some(refresh_token) = token.refresh_token() {
                                 match client
                                     .exchange_refresh_token(refresh_token)
@@ -98,6 +99,8 @@ impl OauthManager {
                                                 "Failed to set the received oauth token: {}",
                                                 e
                                             );
+                                        } else {
+                                            log::info!("New oauth token recieved");
                                         }
                                     }
                                     Err(e) => log::error!(
@@ -107,7 +110,10 @@ impl OauthManager {
                                 }
                             }
                         }
+                    } else {
+                        log::info!("No token to refresh");
                     }
+                    tTime::sleep(period).await;
                 }
             }));
         }
