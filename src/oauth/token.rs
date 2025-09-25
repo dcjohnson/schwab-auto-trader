@@ -1,14 +1,11 @@
 use crate::{
     Error,
     oauth::{token_storage, utils},
-    server::server,
 };
 use chrono::{DateTime, Local, Utc};
 use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse, reqwest};
 use std::{sync as sSync, time as sTime};
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
-
-
 
 pub struct TokenManager {
     state_token: Option<String>,
@@ -54,10 +51,6 @@ impl TokenManager {
         r
     }
 }
-
-
-
-
 
 pub type OauthTokenResponse =
     oauth2::StandardTokenResponse<oauth2::EmptyExtraTokenFields, oauth2::basic::BasicTokenType>;

@@ -1,9 +1,5 @@
 pub mod oauth_utils {
 
-
-
-
-
     pub type Client = oauth2::basic::BasicClient<
         oauth2::EndpointSet,
         oauth2::EndpointNotSet,
@@ -29,8 +25,4 @@ pub mod oauth_utils {
             .set_token_uri(TokenUrl::new(TOKEN_ENDPOINT.to_string())?)
             .set_redirect_uri(RedirectUrl::new(redirect_address)?))
     }
-
-
-
-
 }

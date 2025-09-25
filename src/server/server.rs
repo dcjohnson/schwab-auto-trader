@@ -10,14 +10,13 @@ use rustls::{
     pki_types::{CertificateDer, PrivateKeyDer},
 };
 use std::{fs, io, net::SocketAddr, ops::Deref, sync::Arc};
-use tokio::{net::TcpListener, sync::oneshot};
+use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
 use url::Url;
 
 fn error(err: String) -> io::Error {
     io::Error::new(io::ErrorKind::Other, err)
 }
-
 
 #[derive(Clone)]
 // An Executor that uses the tokio runtime.
