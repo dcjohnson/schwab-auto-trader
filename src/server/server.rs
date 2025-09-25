@@ -18,50 +18,6 @@ fn error(err: String) -> io::Error {
     io::Error::new(io::ErrorKind::Other, err)
 }
 
-pub struct TokenManager {
-    state_token: Option<String>,
-    sender: Option<oneshot::Sender<String>>,
-}
-
-impl TokenManager {
-    pub fn new() -> Self {
-        Self {
-            state_token: None,
-            sender: None,
-        }
-    }
-
-    pub fn send_token(
-        &mut self,
-        auth_token: String,
-        state_token: &String,
-    ) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(cached_state_token) = self.state_token.as_ref() {
-            if cached_state_token == state_token {
-                match self.sender.take() {
-                    Some(sender) => {
-                        sender.send(auth_token)?;
-                        Ok(())
-                    }
-                    None => Err("No sender for state token".to_string().into()),
-                }
-            } else {
-                Err("State Tokens didn't match".to_string().into())
-            }
-        } else {
-            Err("No stored state token".to_string().into())
-        }
-    }
-
-    pub fn new_token_request(&mut self, state_token: String) -> oneshot::Receiver<String> {
-        let (s, r) = oneshot::channel();
-
-        self.state_token = Some(state_token);
-        self.sender = Some(s);
-
-        r
-    }
-}
 
 #[derive(Clone)]
 // An Executor that uses the tokio runtime.

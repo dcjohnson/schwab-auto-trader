@@ -8,6 +8,57 @@ use oauth2::{AuthorizationCode, CsrfToken, Scope, TokenResponse, reqwest};
 use std::{sync as sSync, time as sTime};
 use tokio::{sync as tSync, sync::oneshot, time as tTime};
 
+
+
+pub struct TokenManager {
+    state_token: Option<String>,
+    sender: Option<oneshot::Sender<String>>,
+}
+
+impl TokenManager {
+    pub fn new() -> Self {
+        Self {
+            state_token: None,
+            sender: None,
+        }
+    }
+
+    pub fn send_token(
+        &mut self,
+        auth_token: String,
+        state_token: &String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        if let Some(cached_state_token) = self.state_token.as_ref() {
+            if cached_state_token == state_token {
+                match self.sender.take() {
+                    Some(sender) => {
+                        sender.send(auth_token)?;
+                        Ok(())
+                    }
+                    None => Err("No sender for state token".to_string().into()),
+                }
+            } else {
+                Err("State Tokens didn't match".to_string().into())
+            }
+        } else {
+            Err("No stored state token".to_string().into())
+        }
+    }
+
+    pub fn new_token_request(&mut self, state_token: String) -> oneshot::Receiver<String> {
+        let (s, r) = oneshot::channel();
+
+        self.state_token = Some(state_token);
+        self.sender = Some(s);
+
+        r
+    }
+}
+
+
+
+
+
 pub type OauthTokenResponse =
     oauth2::StandardTokenResponse<oauth2::EmptyExtraTokenFields, oauth2::basic::BasicTokenType>;
 
@@ -24,7 +75,7 @@ impl TokenMessenger {
 }
 
 pub struct OauthManager {
-    token_manager: server::TokenManager,
+    token_manager: TokenManager,
     receiver: Option<TokenMessenger>,
     token_receiver_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
     token_refresh_manager_join_handle: Option<tokio::task::JoinHandle<()>>,
@@ -35,12 +86,11 @@ pub struct OauthManager {
 
 impl OauthManager {
     pub fn new(
-        token_manager: server::TokenManager,
         client: utils::oauth_utils::Client,
         token_storage: token_storage::TokenStorage,
     ) -> Self {
         Self {
-            token_manager: token_manager,
+            token_manager: TokenManager::new(),
             receiver: None,
             token_receiver_manager_join_handle: None,
             token_refresh_manager_join_handle: None,
@@ -197,7 +247,7 @@ impl OauthManager {
         }
     }
 
-    pub fn token_manager(&mut self) -> &mut server::TokenManager {
+    pub fn token_manager(&mut self) -> &mut TokenManager {
         &mut self.token_manager
     }
 
