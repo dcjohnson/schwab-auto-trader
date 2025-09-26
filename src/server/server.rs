@@ -9,7 +9,7 @@ use rustls::{
     ServerConfig,
     pki_types::{CertificateDer, PrivateKeyDer},
 };
-use std::{fs, io::Read, net::SocketAddr, ops::Deref, sync::Arc};
+use std::{fs, io, io::Read, net::SocketAddr, ops::Deref, sync::Arc};
 use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
 use url::Url;
@@ -115,6 +115,9 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
+
+                    // USE https://github.com/askama-rs/askama to render and send out HTML, I don't
+                    // want a directory of HTML
                     /*
                     let mut unwrapped_om = om_c.lock().await;
 
@@ -131,8 +134,8 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     }
                     */
 
-                    if let Ok(f) = std::fs::File::open("./ui/index.html") {
-                        return Ok(Response::new(Full::new(Bytes::from(f.bytes()))));
+                    if let Ok(fs) = std::fs::read_to_string("./ui/index.html") {
+                        return Ok(Response::new(Full::new(Bytes::from(fs   ))));
                     } else {
                         return Ok(Response::new(Full::new(Bytes::from("aaaaaaaaaaa"))));
                     }
@@ -175,6 +178,15 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     return Ok(Response::new(Full::from(format!(
                         "some token error happened"
                     ))));
+                }
+                (&Method::GET, "/static/js/main.js") => {
+
+                        return Ok(Response::new(Full::new(Bytes::from("MY HTML"))));
+
+
+                }
+                (&Method::GET, "/static/css/main.css") => {
+                   return Ok(Response::new(Full::from(format!("MY CSS")))); 
                 }
                 // Catch-all 404.
                 _ => {
