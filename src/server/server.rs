@@ -9,7 +9,7 @@ use rustls::{
     ServerConfig,
     pki_types::{CertificateDer, PrivateKeyDer},
 };
-use std::{fs, io, net::SocketAddr, ops::Deref, sync::Arc};
+use std::{fs, io::Read, net::SocketAddr, ops::Deref, sync::Arc};
 use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
 use url::Url;
@@ -115,6 +115,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
+                    /*
                     let mut unwrapped_om = om_c.lock().await;
 
                     if let Some(Ok(token)) = unwrapped_om.get_token() {
@@ -127,6 +128,13 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             "auth: {}",
                             unwrapped_om.reset_auth_url()
                         ))));
+                    }
+                    */
+
+                    if let Ok(f) = std::fs::File::open("./ui/index.html") {
+                        return Ok(Response::new(Full::new(Bytes::from(f.bytes()))));
+                    } else {
+                        return Ok(Response::new(Full::new(Bytes::from("aaaaaaaaaaa"))));
                     }
                 }
                 (&Method::GET, "/oauth") => {
