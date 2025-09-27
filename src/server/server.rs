@@ -1,4 +1,6 @@
-use crate::{oauth::token::OauthManager, schwab::client::SchwabClient, server::web_resources::files};
+use crate::{
+    oauth::token::OauthManager, schwab::client::SchwabClient, server::web_resources::files,
+};
 use http_body_util::Full;
 use hyper::{
     Method, Request, Response, StatusCode,
@@ -115,7 +117,6 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
-
                     // USE https://github.com/askama-rs/askama to render and send out HTML, I don't
                     // want a directory of HTML
                     /*
@@ -133,8 +134,8 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                         ))));
                     }
                     */
-                        
-                    return Ok(Response::new(Full::new(Bytes::from(files::INDEX))));
+
+                    return Ok(Response::new(Full::new(Bytes::from(files::html::INDEX))));
                 }
                 (&Method::GET, "/oauth") => {
                     let mut code = None;
@@ -176,13 +177,10 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     ))));
                 }
                 (&Method::GET, "/static/js/main.js") => {
-
-                        return Ok(Response::new(Full::new(Bytes::from("MY HTML"))));
-
-
+                    return Ok(Response::new(Full::new(Bytes::from("MY HTML"))));
                 }
                 (&Method::GET, "/static/css/main.css") => {
-                   return Ok(Response::new(Full::from(format!("MY CSS")))); 
+                    return Ok(Response::new(Full::from(format!("MY CSS"))));
                 }
                 // Catch-all 404.
                 _ => {
