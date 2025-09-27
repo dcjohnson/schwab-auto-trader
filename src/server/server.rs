@@ -1,4 +1,4 @@
-use crate::{oauth::token::OauthManager, schwab::client::SchwabClient};
+use crate::{oauth::token::OauthManager, schwab::client::SchwabClient, server::web_resources::files};
 use http_body_util::Full;
 use hyper::{
     Method, Request, Response, StatusCode,
@@ -133,12 +133,8 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                         ))));
                     }
                     */
-
-                    if let Ok(fs) = std::fs::read_to_string("./ui/index.html") {
-                        return Ok(Response::new(Full::new(Bytes::from(fs   ))));
-                    } else {
-                        return Ok(Response::new(Full::new(Bytes::from("aaaaaaaaaaa"))));
-                    }
+                        
+                    return Ok(Response::new(Full::new(Bytes::from(files::INDEX))));
                 }
                 (&Method::GET, "/oauth") => {
                     let mut code = None;
