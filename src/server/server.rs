@@ -1,7 +1,7 @@
 use crate::{
-    oauth::token::OauthManager, schwab::client::SchwabClient, server::web_resources::files,
+    oauth::token::OauthManager, schwab::client::SchwabClient,
+    server::web_resources::files::html::Renderer,
 };
-use handlebars::Handlebars;
 use http_body_util::Full;
 use hyper::{
     Method, Request, Response, StatusCode,
@@ -12,7 +12,7 @@ use rustls::{
     ServerConfig,
     pki_types::{CertificateDer, PrivateKeyDer},
 };
-use std::{collections::BTreeMap, fs, io, net::SocketAddr, ops::Deref, sync::Arc};
+use std::{fs, io, net::SocketAddr, ops::Deref, sync::Arc};
 use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
 use url::Url;
@@ -68,6 +68,8 @@ pub async fn run_server(
     server_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec(), b"http/1.0".to_vec()];
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
 
+    let renderer = Renderer::new()?;
+
     loop {
         tokio::select! {
             _ = cancel_token.cancelled() => return Ok(()),
@@ -76,14 +78,18 @@ pub async fn run_server(
                     Ok((stream, _)) => {
                         match tls_acceptor.accept(stream).await {
                             Ok(tls_stream) => {
-                                let io = TokioIo::new(tls_stream);
-                                let om = oauth_manager.clone();
-                                tokio::task::spawn(async move {
-                                    if let Err(err) = hyper::server::conn::http2::Builder::new(TokioExecutor)
-                                        .serve_connection(io, Svc::new(om))
-                                        .await {
-                                            log::warn!("Error serving connection: {}", err);
+                                tokio::task::spawn({
+                                    let io = TokioIo::new(tls_stream);
+                                    let om = oauth_manager.clone();
+                                    let renderer = renderer.clone();
+
+                                    async move {
+                                        if let Err(err) = hyper::server::conn::http2::Builder::new(TokioExecutor)
+                                            .serve_connection(io, Svc::new(om, renderer))
+                                            .await {
+                                                log::warn!("Error serving connection: {}", err);
                                         }
+                                    }
                                 });
                             },
                             Err(e) => log::warn!("Couldn't accept tls connection: {}", e),
@@ -98,11 +104,12 @@ pub async fn run_server(
 
 struct Svc {
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
+    renderer: Renderer,
 }
 
 impl Svc {
-    pub fn new(om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>) -> Self {
-        Self { om }
+    pub fn new(om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>, renderer: Renderer) -> Self {
+        Self { om, renderer }
     }
 }
 
@@ -114,11 +121,12 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
     >;
 
     fn call(&self, req: Request<Incoming>) -> Self::Future {
-        let om_c = self.om.clone();
+        let om = self.om.clone();
+        let renderer = self.renderer.clone();
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
-                    let mut unwrapped_om = om_c.lock().await;
+                    let mut unwrapped_om = om.lock().await;
 
                     if let Some(Ok(token)) = unwrapped_om.get_token() {
                         return Ok(Response::new(Full::from(format!(
@@ -126,16 +134,9 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             SchwabClient::new(token).get_accounts().await,
                         ))));
                     } else {
-                        let mut hb = Handlebars::new();
-                        hb.register_template_string("t1", files::html::INDEX);
-
-                        // Prepare some data.
-                        //
-                        // The data type should implements `serde::Serialize`
-                        let mut data = BTreeMap::new();
-                        data.insert("OAUTH_URL".to_string(), unwrapped_om.reset_auth_url());
-
-                        return Ok(Response::new(Full::from(hb.render("t1", &data).unwrap())));
+                        return Ok(Response::new(Full::from(
+                            renderer.index(&unwrapped_om.reset_auth_url()).unwrap(),
+                        )));
                     }
                 }
                 (&Method::GET, "/oauth") => {
@@ -152,7 +153,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                         }
 
                         if let (Some(code_p), Some(state_p)) = (code, state) {
-                            match om_c
+                            match om
                                 .lock()
                                 .await
                                 .token_manager()
