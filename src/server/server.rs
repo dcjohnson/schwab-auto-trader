@@ -1,6 +1,7 @@
 use crate::{
-    oauth::token::OauthManager, schwab::client::SchwabClient,
-    server::web_resources::files::html::Renderer,
+    oauth::token::OauthManager,
+    schwab::client::SchwabClient,
+    server::web_resources::files::{css, html::Renderer, js},
 };
 use http_body_util::Full;
 use hyper::{
@@ -179,10 +180,10 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     ))));
                 }
                 (&Method::GET, "/static/js/main.js") => {
-                    return Ok(Response::new(Full::new(Bytes::from("MY HTML"))));
+                    return Ok(Response::new(Full::from(js::MAIN)));
                 }
                 (&Method::GET, "/static/css/main.css") => {
-                    return Ok(Response::new(Full::from(format!("MY CSS"))));
+                    return Ok(Response::new(Full::from(css::MAIN)));
                 }
                 // Catch-all 404.
                 _ => {

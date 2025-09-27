@@ -29,9 +29,13 @@ pub mod html {
         }
     }
 
-    const INDEX: &'static str = include_str!("./files/index.html");
+    const INDEX: &'static str = include_str!("./files/html/index.html");
 }
 
-pub mod js {}
+pub mod js {
+    pub const MAIN: &'static str = include_str!("./files/js/main.js");
+}
 
-pub mod css {}
+pub mod css {
+    pub const MAIN: &'static str = include_str!("./files/css/main.css");
+}
