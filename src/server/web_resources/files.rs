@@ -29,7 +29,7 @@ pub mod html {
         }
     }
 
-    pub const INDEX: &'static str = include_str!("./files/index.html");
+    const INDEX: &'static str = include_str!("./files/index.html");
 }
 
 pub mod js {}
