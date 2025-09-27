@@ -1,6 +1,7 @@
 use crate::{
     oauth::token::OauthManager, schwab::client::SchwabClient, server::web_resources::files,
 };
+use handlebars::Handlebars;
 use http_body_util::Full;
 use hyper::{
     Method, Request, Response, StatusCode,
@@ -11,7 +12,7 @@ use rustls::{
     ServerConfig,
     pki_types::{CertificateDer, PrivateKeyDer},
 };
-use std::{fs, io, io::Read, net::SocketAddr, ops::Deref, sync::Arc};
+use std::{collections::BTreeMap, fs, io, net::SocketAddr, ops::Deref, sync::Arc};
 use tokio::net::TcpListener;
 use tokio_rustls::TlsAcceptor;
 use url::Url;
@@ -117,9 +118,6 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
-                    // USE https://github.com/askama-rs/askama to render and send out HTML, I don't
-                    // want a directory of HTML
-                    /*
                     let mut unwrapped_om = om_c.lock().await;
 
                     if let Some(Ok(token)) = unwrapped_om.get_token() {
@@ -128,14 +126,17 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             SchwabClient::new(token).get_accounts().await,
                         ))));
                     } else {
-                        return Ok(Response::new(Full::from(format!(
-                            "auth: {}",
-                            unwrapped_om.reset_auth_url()
-                        ))));
-                    }
-                    */
+                        let mut hb = Handlebars::new();
+                        hb.register_template_string("t1", files::html::INDEX);
 
-                    return Ok(Response::new(Full::new(Bytes::from(files::html::INDEX))));
+                        // Prepare some data.
+                        //
+                        // The data type should implements `serde::Serialize`
+                        let mut data = BTreeMap::new();
+                        data.insert("OAUTH_URL".to_string(), unwrapped_om.reset_auth_url());
+
+                        return Ok(Response::new(Full::from(hb.render("t1", &data).unwrap())));
+                    }
                 }
                 (&Method::GET, "/oauth") => {
                     let mut code = None;
