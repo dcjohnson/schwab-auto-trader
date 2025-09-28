@@ -136,7 +136,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                         ))));
                     } else {
                         return Ok(Response::new(Full::from(
-                            renderer.index(&unwrapped_om.reset_auth_url()).unwrap(),
+                            renderer.oauth(&unwrapped_om.reset_auth_url()).unwrap(),
                         )));
                     }
                 }
@@ -178,9 +178,6 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     return Ok(Response::new(Full::from(format!(
                         "some token error happened"
                     ))));
-                }
-                (&Method::GET, "/static/js/main.js") => {
-                    return Ok(Response::new(Full::from(js::MAIN)));
                 }
                 (&Method::GET, "/static/css/main.css") => {
                     return Ok(Response::new(Full::from(css::MAIN)));
