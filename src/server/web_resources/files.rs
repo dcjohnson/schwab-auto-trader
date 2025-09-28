@@ -8,7 +8,9 @@ pub mod html {
     }
 
     #[derive(Serialize)]
-    pub struct OauthReturnArgs {}
+    pub struct OauthReturnArgs {
+        pub oauth_return_message: String,
+    }
 
     #[derive(Clone)]
     pub struct Renderer {
@@ -38,8 +40,8 @@ pub mod html {
             self.hb.render(Self::OAUTH_T, args)
         }
 
-        pub fn oauth_return(&self) -> Result<String, RenderError> {
-            self.hb.render(Self::OAUTH_RETURN_T, &OauthReturnArgs {})
+        pub fn oauth_return(&self, args: &OauthReturnArgs) -> Result<String, RenderError> {
+            self.hb.render(Self::OAUTH_RETURN_T, args)
         }
     }
 

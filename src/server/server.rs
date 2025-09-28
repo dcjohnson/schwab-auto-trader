@@ -3,7 +3,7 @@ use crate::{
     schwab::client::SchwabClient,
     server::web_resources::files::{
         css,
-        html::{OauthArgs, Renderer},
+        html::{OauthArgs, OauthReturnArgs, Renderer},
     },
 };
 use http_body_util::Full;
@@ -168,15 +168,19 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                                 .send_token(code_p.clone(), &state_p)
                             {
                                 Ok(()) => {
-                                    return Ok(Response::new(Full::from(format!(
-                                        "Sent the token"
-                                    ))));
+                                    return Ok(Response::new(Full::from(renderer.oauth_return(   &OauthReturnArgs {
+                                        oauth_return_message: "Authorization Successful; click on the button below to return to the homepage.".to_string(),
+                                    }).unwrap())));
                                 }
                                 Err(e) => {
-                                    return Ok(Response::new(Full::from(format!(
-                                        "Failed to store token: {}",
+                                    log::error!(
+                                        "Failed to send token for completion of oauth authentication: '{}'",
                                         e
-                                    ))));
+                                    );
+
+                                    return Ok(Response::new(Full::from(renderer.oauth_return(   &OauthReturnArgs {
+                                        oauth_return_message: "Authorization Not Successful; click on the button below to return to the homepage.".to_string(),
+                                    }).unwrap())));
                                 }
                             }
                         }

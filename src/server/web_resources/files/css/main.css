@@ -36,3 +36,18 @@ head, body, footer {
   text-align: center;
 }
 
+.blue-background-button {
+  border: 2px solid white;
+  border-radius: 0.2em;
+  padding: 0.5em; 
+  font: bold 24px Arial;
+  text-decoration: none;
+  color: white;
+}
+
+.blue-background-button:hover {
+  background-color: #e6ecf533;
+}
+
+
+
