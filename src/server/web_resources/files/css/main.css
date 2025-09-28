@@ -22,7 +22,7 @@ head, body, footer {
   color: white;
   font-size: 24px;
   font-family: Arial;
-  height: 10em;
+  height: 100%; //10em;
 }
 
 //#oauth {
