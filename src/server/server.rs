@@ -1,7 +1,7 @@
 use crate::{
     oauth::token::OauthManager,
     schwab::client::SchwabClient,
-    server::web_resources::files::{css, html::Renderer, js},
+    server::web_resources::files::{css, html::Renderer},
 };
 use http_body_util::Full;
 use hyper::{
