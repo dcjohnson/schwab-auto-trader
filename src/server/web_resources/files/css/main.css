@@ -1,0 +1,53 @@
+head, body, footer {
+  margin: 0;
+}
+
+#titlebox {
+  background-color: #260d40;
+  font: 1.2em sans-serif;
+  height: 2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-family: Arial;
+}
+
+#main {
+  background-color: #405d99; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  font-size: 24px;
+  font-family: Arial;
+  height: 100%;
+}
+
+#title {
+  color: white;
+  padding: 0rem;
+  width: 20em;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.blue-background-button {
+  border: 2px solid white;
+  border-radius: 0.2em;
+  padding: 0.5em; 
+  font: bold 24px Arial;
+  text-decoration: none;
+  color: white;
+}
+
+.blue-background-button:hover {
+  background-color: #e6ecf533;
+}
+
+
+
