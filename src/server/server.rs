@@ -1,10 +1,7 @@
 use crate::{
     oauth::token::OauthManager,
     schwab::client::SchwabClient,
-    server::web_resources::files::{
-        css,
-        html::{OauthArgs, OauthReturnArgs, Renderer},
-    },
+    server::web_resources::files::{css, html},
 };
 use http_body_util::Full;
 use hyper::{
@@ -72,7 +69,7 @@ pub async fn run_server(
     server_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec(), b"http/1.0".to_vec()];
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
 
-    let renderer = Renderer::new()?;
+    let renderer = html::Renderer::new()?;
 
     loop {
         tokio::select! {
@@ -108,11 +105,14 @@ pub async fn run_server(
 
 struct Svc {
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
-    renderer: Renderer,
+    renderer: html::Renderer,
 }
 
 impl Svc {
-    pub fn new(om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>, renderer: Renderer) -> Self {
+    pub fn new(
+        om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
+        renderer: html::Renderer,
+    ) -> Self {
         Self { om, renderer }
     }
 }
@@ -140,7 +140,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     } else {
                         return Ok(Response::new(Full::from(
                             renderer
-                                .oauth(&OauthArgs {
+                                .oauth(&html::OauthArgs {
                                     oauth_url: unwrapped_om.reset_auth_url(),
                                 })
                                 .unwrap(),
@@ -168,7 +168,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                                 .send_token(code_p.clone(), &state_p)
                             {
                                 Ok(()) => {
-                                    return Ok(Response::new(Full::from(renderer.oauth_return(   &OauthReturnArgs {
+                                    return Ok(Response::new(Full::from(renderer.oauth_return(&html::OauthReturnArgs {
                                         oauth_return_message: "Authorization Successful; click on the button below to return to the homepage.".to_string(),
                                     }).unwrap())));
                                 }
@@ -178,7 +178,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                                         e
                                     );
 
-                                    return Ok(Response::new(Full::from(renderer.oauth_return(   &OauthReturnArgs {
+                                    return Ok(Response::new(Full::from(renderer.oauth_return(&html::OauthReturnArgs {
                                         oauth_return_message: "Authorization Not Successful; click on the button below to return to the homepage.".to_string(),
                                     }).unwrap())));
                                 }
@@ -195,6 +195,9 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                 }
                 (&Method::GET, "/static/css/oauth.css") => {
                     return Ok(Response::new(Full::from(css::OAUTH)));
+                }
+                (&Method::GET, "/static/css/oauth_return.css") => {
+                    return Ok(Response::new(Full::from(css::OAUTH_RETURN)));
                 }
                 // Catch-all 404.
                 _ => {

@@ -56,4 +56,5 @@ pub mod js {}
 pub mod css {
     pub const MAIN: &'static str = include_str!("./files/css/main.css");
     pub const OAUTH: &'static str = include_str!("./files/css/oauth.css");
+    pub const OAUTH_RETURN: &'static str = include_str!("./files/css/oauth_return.css");
 }
