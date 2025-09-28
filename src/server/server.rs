@@ -1,7 +1,7 @@
 use crate::{
     oauth::token::OauthManager,
     schwab::client::SchwabClient,
-    server::web_resources::files::{css, html::Renderer},
+    server::web_resources::files::{css, html::{OauthArgs, Renderer}},
 };
 use http_body_util::Full;
 use hyper::{
@@ -136,8 +136,9 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                         ))));
                     } else {
                         return Ok(Response::new(Full::from(
-                            renderer.oauth(&unwrapped_om.reset_auth_url()).unwrap(),
-                        )));
+                            renderer.oauth( &OauthArgs{
+                                oauth_url: unwrapped_om.reset_auth_url(),
+                            }).unwrap())));
                     }
                 }
                 (&Method::GET, "/oauth") => {

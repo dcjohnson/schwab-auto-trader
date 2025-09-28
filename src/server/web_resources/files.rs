@@ -1,6 +1,14 @@
 pub mod html {
     use handlebars::{Handlebars, RenderError, TemplateError};
-    use std::collections::BTreeMap;
+use serde::Serialize;
+
+    #[derive(Serialize)]
+    pub struct OauthArgs {
+    pub     oauth_url: String, 
+    }
+
+    #[derive(Serialize)]
+    pub struct OauthReturnArgs {}
 
     #[derive(Clone)]
     pub struct Renderer {
@@ -12,8 +20,6 @@ pub mod html {
         const OAUTH_RETURN_T: &'static str = "oauth_return";
         const FOOTER_P: &'static str = "footer";
         const HEADER_P: &'static str = "header";
-
-        const OAUTH_URL_K: &'static str = "OAUTH_URL";
 
         pub fn new() -> Result<Self, TemplateError> {
             let mut s = Self {
@@ -28,16 +34,13 @@ pub mod html {
             Ok(s)
         }
 
-        pub fn oauth(&self, oauth_url: &str) -> Result<String, RenderError> {
-            let mut data = BTreeMap::new();
-            data.insert(Self::OAUTH_URL_K, oauth_url);
-
-            self.hb.render(Self::OAUTH_T, &data)
+        pub fn oauth(&self, args: &OauthArgs) -> Result<String, RenderError> {
+            self.hb.render(Self::OAUTH_T, args)
         }
 
         pub fn oauth_return(&self) -> Result<String, RenderError> {
             self.hb
-                .render(Self::OAUTH_RETURN_T, &BTreeMap::<String, String>::new())
+                .render(Self::OAUTH_RETURN_T, &OauthReturnArgs{})
         }
     }
 
