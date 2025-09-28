@@ -1,0 +1,19 @@
+#oauth {
+  position: relative;
+  top: -5em;
+}
+
+.oauthbutton {
+  border: 2px solid white;
+  border-radius: 0.2em;
+  padding: 0.5em; 
+  font: bold 24px Arial;
+  text-decoration: none;
+  color: white;
+}
+
+.oauthbutton:hover {
+  background-color: #e6ecf533;
+}
+
+

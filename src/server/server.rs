@@ -185,6 +185,9 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                 (&Method::GET, "/static/css/main.css") => {
                     return Ok(Response::new(Full::from(css::MAIN)));
                 }
+                (&Method::GET, "/static/css/oauth.css") => {
+                    return Ok(Response::new(Full::from(css::OAUTH)));
+                }
                 // Catch-all 404.
                 _ => {
                     return {

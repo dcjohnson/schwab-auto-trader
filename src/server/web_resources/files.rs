@@ -9,6 +9,9 @@ pub mod html {
 
     impl Renderer {
         const INDEX_T: &'static str = "index";
+        const FOOTER_P: &'static str = "footer";
+        const HEADER_P: &'static str = "header";
+
         const OAUTH_URL_K: &'static str = "OAUTH_URL";
 
         pub fn new() -> Result<Self, TemplateError> {
@@ -16,6 +19,8 @@ pub mod html {
                 hb: Handlebars::new(),
             };
 
+            s.hb.register_partial(Self::FOOTER_P, FOOTER)?;
+            s.hb.register_partial(Self::HEADER_P, HEADER)?;
             s.hb.register_template_string(Self::INDEX_T, INDEX)?;
 
             Ok(s)
@@ -29,6 +34,8 @@ pub mod html {
         }
     }
 
+    const HEADER: &'static str = include_str!("./files/html/header.html");
+    const FOOTER: &'static str = include_str!("./files/html/footer.html");
     const INDEX: &'static str = include_str!("./files/html/index.html");
 }
 
@@ -38,4 +45,5 @@ pub mod js {
 
 pub mod css {
     pub const MAIN: &'static str = include_str!("./files/css/main.css");
+    pub const OAUTH: &'static str = include_str!("./files/css/oauth.css");
 }

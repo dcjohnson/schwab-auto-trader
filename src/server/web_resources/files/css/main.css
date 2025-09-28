@@ -25,24 +25,6 @@ head, body, footer {
   height: 100%;
 }
 
-#oauth {
-  position: relative;
-  top: -5em;
-}
-
-.button {
-  border: 2px solid white;
-  border-radius: 0.2em;
-  padding: 0.5em; 
-  font: bold 24px Arial;
-  text-decoration: none;
-  color: white;
-}
-
-.button:hover {
-  background-color: #e6ecf533;
-}
-
 #title {
   color: white;
   padding: 0rem;

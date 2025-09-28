@@ -1,20 +1,9 @@
-<html>
-  <head>
-    <link rel="stylesheet" href="/static/css/main.css" />
-  </head>
-  <body>
-    <header>
-      <div id="titlebox">
-	<div id="title">The Charles Schwab Robotic Trader</div>
-      </div>
-    </header>
+{{> header }}
+    <link rel="stylesheet" href="/static/css/oauth.css" />
     <div id="main">
       <div id="oauth">
         <p>Click on the link to log into your Charles Schwab account.</p>
-        <a class="button" href="{{OAUTH_URL}}">Authorize</a>
+        <a class="oauthbutton" href="{{OAUTH_URL}}">Authorize</a>
       </div>
     </div>
-  <footer>
-    <script type="text/javascript" src="/static/js/main.js"></script>
-  </footer>
-</html>
+{{> footer }}
