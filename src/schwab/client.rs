@@ -19,7 +19,7 @@ impl SchwabClient {
         }
     }
 
-    pub async fn get(&mut self, endpoint: String) -> Result<String, Error> {
+    pub async fn get(&self, endpoint: String) -> Result<String, Error> {
         Ok(self
             .client
             .get(endpoint)
@@ -30,22 +30,25 @@ impl SchwabClient {
             .await?)
     }
 
-    pub async fn get_json<T: for<'a> Deserialize<'a>>(
-        &mut self,
-        endpoint: String,
-    ) -> Result<T, Error> {
+    pub async fn get_json<T: for<'a> Deserialize<'a>>(&self, endpoint: String) -> Result<T, Error> {
         let json = self.get(endpoint.clone()).await?;
         log::debug!("get_json for endpoint: {} , json: {}", endpoint, json);
         Ok(serde_json::from_str(&json)?)
     }
 
+    pub async fn get_account_numbers(
+        &self,
+    ) -> Result<schemas::accounts_and_trading::accounts::AccountNumbers, Error> {
+        self.get_json(endpoints::account_numbers()).await
+    }
+
     pub async fn get_accounts(
-        &mut self,
+        &self,
     ) -> Result<schemas::accounts_and_trading::accounts::Accounts, Error> {
         self.get_json(endpoints::accounts()).await
     }
 
-    pub async fn get_quotes(&mut self, ticker: &str) -> Result<String, Error> {
+    pub async fn get_quotes(&self, ticker: &str) -> Result<String, Error> {
         self.get(endpoints::ticker_quotes_data(ticker)).await
     }
 }

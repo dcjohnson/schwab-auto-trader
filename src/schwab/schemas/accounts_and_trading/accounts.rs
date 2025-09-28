@@ -1,6 +1,15 @@
 #![allow(dead_code)]
 use serde::Deserialize;
 
+pub type AccountNumbers = Vec<AccountNumber>;
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountNumber {
+    account_number: String,
+    hash_value: String,
+}
+
 pub type Accounts = Vec<AccountTypes>;
 
 #[derive(Deserialize, Debug)]
