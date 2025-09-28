@@ -1,18 +1,49 @@
-#titlebox{
-  background-color: #33424c; // rgb(75, 70, 75);
+head, body, footer {
+  margin: 0;
+}
+
+#titlebox {
+  background-color: #260d40;
   font: 1.2em sans-serif;
-  height: 5em;
+  height: 2em;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 48px;
+  font-family: Arial;
 }
 
-#title{
-  //background-color: rgb(75, 70, 75);
-  //border: 2px solid rgb(95 97 110);
-  //border-radius: 0.5em;
-  color: navy;
+#main {
+  background-color: #405d99; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  font-size: 24px;
+  font-family: Arial;
+  height: 10em;
+}
+
+//#oauth {
+//  height: 4em;
+//}
+
+.button {
+  border: 2px solid white;
+  border-radius: 0.2em;
+  padding: 0.5em; 
+  font: bold 24px Arial;
+  text-decoration: none;
+  color: white;
+}
+
+.button:hover {
+  background-color: #e6ecf533;
+}
+
+#title {
+  color: white;
   padding: 0rem;
   width: 20em;
   height: 100%;

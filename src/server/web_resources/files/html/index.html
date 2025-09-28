@@ -3,14 +3,16 @@
     <link rel="stylesheet" href="/static/css/main.css" />
   </head>
   <body>
-    <header> 
+    <header>
       <div id="titlebox">
 	<div id="title">The Charles Schwab Robotic Trader</div>
       </div>
     </header>
-    <div id="oauth">
-      <p>Click on the link to log into your Charles Schwab account.</p>
-      <a href="{{OAUTH_URL}}">{{OAUTH_URL}}</a>
+    <div id="main">
+      <div id="oauth">
+        <p>Click on the link to log into your Charles Schwab account.</p>
+        <a class="button" href="{{OAUTH_URL}}">Authorize</a>
+      </div>
     </div>
   <footer>
     <script type="text/javascript" src="/static/js/main.js"></script>
