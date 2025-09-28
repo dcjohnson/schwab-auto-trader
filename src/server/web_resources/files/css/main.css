@@ -22,12 +22,13 @@ head, body, footer {
   color: white;
   font-size: 24px;
   font-family: Arial;
-  height: 100%; //10em;
+  height: 100%;
 }
 
-//#oauth {
-//  height: 4em;
-//}
+#oauth {
+  position: relative;
+  top: -5em;
+}
 
 .button {
   border: 2px solid white;
