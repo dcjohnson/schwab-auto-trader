@@ -1,10 +1,10 @@
 pub mod html {
     use handlebars::{Handlebars, RenderError, TemplateError};
-use serde::Serialize;
+    use serde::Serialize;
 
     #[derive(Serialize)]
     pub struct OauthArgs {
-    pub     oauth_url: String, 
+        pub oauth_url: String,
     }
 
     #[derive(Serialize)]
@@ -39,8 +39,7 @@ use serde::Serialize;
         }
 
         pub fn oauth_return(&self) -> Result<String, RenderError> {
-            self.hb
-                .render(Self::OAUTH_RETURN_T, &OauthReturnArgs{})
+            self.hb.render(Self::OAUTH_RETURN_T, &OauthReturnArgs {})
         }
     }
 
