@@ -4,6 +4,7 @@ use schwab_auto_trader::{
     Error,
     oauth::{token, token_storage, utils},
     server::server,
+    schwab::account_manager::AccountManager,
 };
 use std::fs;
 use tokio::signal::{
@@ -37,6 +38,9 @@ async fn main() -> Result<(), Error> {
         token_storage::TokenStorage::load(config["tokenFilePath"].to_string())?,
     )));
 
+    let mut am = AccountManager::new(om.clone());
+    am.init().await;
+
     token::OauthManager::spawn_token_receiver(om.clone(), core::time::Duration::from_millis(500))
         .await;
     token::OauthManager::spawn_token_refresher(om.clone(), core::time::Duration::from_secs(60))
@@ -44,7 +48,7 @@ async fn main() -> Result<(), Error> {
 
     let jh = tokio::spawn(server::run_server(
         config["bindAddress"].to_string().parse()?,
-        om,
+        om.clone(),
         cancellation_token.clone(),
         config["certPath"].to_string(),
         config["keyPath"].to_string(),
