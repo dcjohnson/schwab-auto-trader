@@ -3,8 +3,9 @@ use json;
 use schwab_auto_trader::{
     Error,
     oauth::{token, token_storage, utils},
-    server::server,
     schwab::account_manager::AccountManager,
+    server::server,
+    config::Config, 
 };
 use std::fs;
 use tokio::signal::{
@@ -26,16 +27,16 @@ async fn main() -> Result<(), Error> {
     env_logger::init();
 
     let args = Args::parse();
-    let config = json::parse(&fs::read_to_string(&args.config_file_path).unwrap()).unwrap();
+    let config = Config::load(&args.config_file_path)?; 
     let cancellation_token = tokio_util::sync::CancellationToken::new();
 
     let om = std::sync::Arc::new(tokio::sync::Mutex::new(token::OauthManager::new(
         utils::oauth_utils::new_oauth_basic_client(
-            config["clientId"].to_string(),
-            config["clientSecret"].to_string(),
-            config["redirectAddress"].to_string(),
+            config.client_id,
+            config.client_secret ,
+            config.redirect_address,
         )?,
-        token_storage::TokenStorage::load(config["tokenFilePath"].to_string())?,
+        token_storage::TokenStorage::load(config.token_file_path )?,
     )));
 
     let mut am = AccountManager::new(om.clone());
@@ -47,11 +48,11 @@ async fn main() -> Result<(), Error> {
         .await;
 
     let jh = tokio::spawn(server::run_server(
-        config["bindAddress"].to_string().parse()?,
+        config.bind_address.parse()?,
         om.clone(),
         cancellation_token.clone(),
-        config["certPath"].to_string(),
-        config["keyPath"].to_string(),
+        config.cert_path ,
+        config.key_path ,
     ));
 
     let mut quit_signal = signal(SignalKind::quit())?;

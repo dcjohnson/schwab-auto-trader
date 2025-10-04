@@ -50,9 +50,9 @@ impl SchwabClient {
 
     pub async fn get_account(
         &self,
-        account_number: &str,
+        account_hash_number: &str,
     ) -> Result<schemas::accounts_and_trading::accounts::AccountTypes, Error> {
-        self.get_json(endpoints::account(account_number)).await
+        self.get_json(endpoints::account(account_hash_number)).await
     }
 
     pub async fn get_quotes(&self, ticker: &str) -> Result<String, Error> {

@@ -6,8 +6,8 @@ pub type AccountNumbers = Vec<AccountNumber>;
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountNumber {
-    account_number: String,
-    hash_value: String,
+    pub account_number: String,
+    pub hash_value: String,
 }
 
 pub type Accounts = Vec<AccountTypes>;

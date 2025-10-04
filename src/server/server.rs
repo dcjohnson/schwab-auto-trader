@@ -130,9 +130,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
-                    let mut unwrapped_om = om.lock().await;
-
-                    if let Some(Ok(token)) = unwrapped_om.get_token() {
+                    if let Some(Ok(token)) = om.lock().await.get_token() {
                         return Ok(Response::new(Full::from(format!(
                             "VOO: {:?}",
                             SchwabClient::new(token).get_accounts().await,
@@ -141,7 +139,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                         return Ok(Response::new(Full::from(
                             renderer
                                 .oauth(&html::OauthArgs {
-                                    oauth_url: unwrapped_om.reset_auth_url(),
+                                    oauth_url: om.lock().await.reset_auth_url(),
                                 })
                                 .unwrap(),
                         )));

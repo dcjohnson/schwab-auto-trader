@@ -26,8 +26,12 @@ impl AccountManager {
 
                         println!("Got the account numbers!: {:?}", account_numbers);
 
-                        return Ok(());
+                        println!(
+                            "Account: {:?}",
+                            sc.get_account(&account_numbers[0].hash_value).await?
+                        );
                     }
+                    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 }
             }
         });
