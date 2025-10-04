@@ -1,13 +1,11 @@
 use clap::Parser;
-use json;
 use schwab_auto_trader::{
     Error,
+    config::Config,
     oauth::{token, token_storage, utils},
     schwab::account_manager::AccountManager,
     server::server,
-    config::Config, 
 };
-use std::fs;
 use tokio::signal::{
     ctrl_c,
     unix::{SignalKind, signal},
@@ -27,16 +25,16 @@ async fn main() -> Result<(), Error> {
     env_logger::init();
 
     let args = Args::parse();
-    let config = Config::load(&args.config_file_path)?; 
+    let config = Config::load(&args.config_file_path)?;
     let cancellation_token = tokio_util::sync::CancellationToken::new();
 
     let om = std::sync::Arc::new(tokio::sync::Mutex::new(token::OauthManager::new(
         utils::oauth_utils::new_oauth_basic_client(
             config.client_id,
-            config.client_secret ,
+            config.client_secret,
             config.redirect_address,
         )?,
-        token_storage::TokenStorage::load(config.token_file_path )?,
+        token_storage::TokenStorage::load(config.token_file_path)?,
     )));
 
     let mut am = AccountManager::new(om.clone());
@@ -51,8 +49,8 @@ async fn main() -> Result<(), Error> {
         config.bind_address.parse()?,
         om.clone(),
         cancellation_token.clone(),
-        config.cert_path ,
-        config.key_path ,
+        config.cert_path,
+        config.key_path,
     ));
 
     let mut quit_signal = signal(SignalKind::quit())?;
