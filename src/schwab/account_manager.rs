@@ -16,6 +16,10 @@ pub struct AccountManager {
 #[derive(Default)]
 pub struct AccountData {
     pub account_value: f64,
+    //add an avaialble cash field 
+    // add a total amount of available margin
+    // a map of security groupings with financial information that can be broken down by group.
+    // Each group is a collection of securities
 }
 
 impl AccountData {
