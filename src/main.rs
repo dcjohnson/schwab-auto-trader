@@ -26,6 +26,7 @@ async fn main() -> Result<(), Error> {
 
     let args = Args::parse();
     let config = Config::load(&args.config_file_path)?;
+    config.validate()?;
 
     let cancellation_token = tokio_util::sync::CancellationToken::new();
 
@@ -43,7 +44,7 @@ async fn main() -> Result<(), Error> {
     token::OauthManager::spawn_token_refresher(om.clone(), core::time::Duration::from_secs(60))
         .await;
     let am = std::sync::Arc::new(tokio::sync::Mutex::new(AccountManager::new(
-        config.account_number,
+        config.trading_config.clone(),
         om.clone(),
     )));
 

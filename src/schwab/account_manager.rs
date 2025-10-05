@@ -1,12 +1,13 @@
 use crate::{
     Error,
+    config::TradingConfig,
     oauth::token::OauthManager,
     schwab::{client::SchwabClient, schemas::accounts_and_trading::accounts::SecuritiesAccount},
 };
 use tokio::{sync::watch, task::JoinSet};
 
 pub struct AccountManager {
-    account_number: String,
+    trading_config: TradingConfig,
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     account_data: watch::Sender<AccountData>,
     js: JoinSet<Result<(), Error>>,
@@ -25,11 +26,11 @@ impl AccountData {
 
 impl AccountManager {
     pub fn new(
-        account_number: String,
+        trading_config: TradingConfig,
         om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     ) -> Self {
         Self {
-            account_number,
+            trading_config,
             om,
             account_data: {
                 let (s, _) = watch::channel(AccountData::default());
@@ -47,12 +48,12 @@ impl AccountManager {
         self.js.spawn({
             let om = self.om.clone();
             let account_data = self.account_data.clone();
-            let account_number = self.account_number.clone();
+            let trading_config = self.trading_config.clone();
             async move {
                 let account_hash = 'outer: loop {
                     if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
                         for an in SchwabClient::new(token).get_account_numbers().await?.iter() {
-                            if an.account_number == account_number {
+                            if an.account_number == trading_config.account_number {
                                 log::info!("Retrieved the account hash.");
                                 break 'outer an.hash_value.clone();
                             }
