@@ -42,7 +42,7 @@ async fn main() -> Result<(), Error> {
         .await;
     token::OauthManager::spawn_token_refresher(om.clone(), core::time::Duration::from_secs(60))
         .await;
-    let mut am = std::sync::Arc::new(tokio::sync::Mutex::new(AccountManager::new(
+    let am = std::sync::Arc::new(tokio::sync::Mutex::new(AccountManager::new(
         config.account_number,
         om.clone(),
     )));
@@ -56,7 +56,10 @@ async fn main() -> Result<(), Error> {
         config.key_path,
     ));
 
-    am.lock().await.init().await?;
+    am.lock()
+        .await
+        .init(tokio::time::Duration::from_secs(5))
+        .await?;
 
     let mut quit_signal = signal(SignalKind::quit())?;
     let mut terminate_signal = signal(SignalKind::terminate())?;

@@ -7,7 +7,6 @@ use tokio::{sync::watch, task::JoinSet};
 
 pub struct AccountManager {
     account_number: String,
-    account_hash: String,
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     account_data: watch::Sender<AccountData>,
     js: JoinSet<Result<(), Error>>,
@@ -31,7 +30,6 @@ impl AccountManager {
     ) -> Self {
         Self {
             account_number,
-            account_hash: String::default(),
             om,
             account_data: {
                 let (s, _) = watch::channel(AccountData::default());
@@ -45,28 +43,28 @@ impl AccountManager {
         self.account_data.subscribe()
     }
 
-    pub async fn init(&mut self) -> Result<(), Error> {
-        self.account_hash = 'outer: loop {
-            if let Some(Ok(token)) = self.om.lock().await.get_unexpired_token() {
-                for an in SchwabClient::new(token).get_account_numbers().await?.iter() {
-                    if an.account_number == self.account_number {
-                        log::info!("Retrieved the account hash.");
-                        break 'outer an.hash_value.clone();
-                    }
-                }
-            }
-            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
-        };
-
+    pub async fn init(&mut self, timeout: tokio::time::Duration) -> Result<(), Error> {
         self.js.spawn({
             let om = self.om.clone();
-            let ah = self.account_hash.clone();
             let account_data = self.account_data.clone();
+            let account_number = self.account_number.clone();
             async move {
+                let account_hash = 'outer: loop {
+                    if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
+                        for an in SchwabClient::new(token).get_account_numbers().await?.iter() {
+                            if an.account_number == account_number {
+                                log::info!("Retrieved the account hash.");
+                                break 'outer an.hash_value.clone();
+                            }
+                        }
+                    }
+                    tokio::time::sleep(timeout).await;
+                };
+
                 loop {
                     if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
                         let sc = SchwabClient::new(token);
-                        if let Ok(account) = sc.get_account(&ah).await {
+                        if let Ok(account) = sc.get_account(&account_hash).await {
                             if let Some(securities_account) = account.securities_account {
                                 account_data.send_modify(|ad| {
                                     ad.update(&securities_account);
@@ -74,7 +72,7 @@ impl AccountManager {
                             }
                         }
                     }
-                    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                    tokio::time::sleep(timeout).await;
                 }
             }
         });

@@ -75,6 +75,13 @@ impl TokenStorage {
         Ok(())
     }
 
+    pub fn reset(&mut self) -> Result<(), Error> {
+        // truncate the file
+        fs::File::create(&self.path)?;
+        self.backend = StorageBackend::new();
+        Ok(())
+    }
+
     pub fn has_token(&self) -> bool {
         match self.backend.token {
             None => false,

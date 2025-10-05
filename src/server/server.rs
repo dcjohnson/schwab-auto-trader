@@ -1,6 +1,6 @@
 use crate::{
     oauth::token::OauthManager,
-    schwab::{account_manager::AccountManager, client::SchwabClient},
+    schwab::account_manager::{AccountData, AccountManager},
     server::web_resources::files::{css, html},
 };
 use http_body_util::Full;
@@ -14,7 +14,7 @@ use rustls::{
     pki_types::{CertificateDer, PrivateKeyDer},
 };
 use std::{fs, io, net::SocketAddr, ops::Deref, sync::Arc};
-use tokio::net::TcpListener;
+use tokio::{net::TcpListener, sync::watch};
 use tokio_rustls::TlsAcceptor;
 use url::Url;
 
@@ -69,8 +69,8 @@ pub async fn run_server(
         .map_err(|e| error(e.to_string()))?;
     server_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec(), b"http/1.0".to_vec()];
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
-
     let renderer = html::Renderer::new()?;
+    let account_data_watcher = account_manager.lock().await.account_data_watcher();
 
     loop {
         tokio::select! {
@@ -84,10 +84,11 @@ pub async fn run_server(
                                     let io = TokioIo::new(tls_stream);
                                     let om = oauth_manager.clone();
                                     let renderer = renderer.clone();
+                                    let account_data_watcher = account_data_watcher.clone();
 
                                     async move {
                                         if let Err(err) = hyper::server::conn::http2::Builder::new(TokioExecutor)
-                                            .serve_connection(io, Svc::new(om, renderer))
+                                            .serve_connection(io, Svc::new(om, renderer, account_data_watcher))
                                             .await {
                                                 log::warn!("Error serving connection: {}", err);
                                         }
@@ -104,17 +105,24 @@ pub async fn run_server(
     }
 }
 
+#[derive(Clone)]
 struct Svc {
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     renderer: html::Renderer,
+    account_data_watcher: watch::Receiver<AccountData>,
 }
 
 impl Svc {
     pub fn new(
         om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
         renderer: html::Renderer,
+        account_data_watcher: watch::Receiver<AccountData>,
     ) -> Self {
-        Self { om, renderer }
+        Self {
+            om,
+            renderer,
+            account_data_watcher,
+        }
     }
 }
 
@@ -126,21 +134,20 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
     >;
 
     fn call(&self, req: Request<Incoming>) -> Self::Future {
-        let om = self.om.clone();
-        let renderer = self.renderer.clone();
+        let svc = self.clone();
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
-                    if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
+                    if svc.om.lock().await.has_token() {
                         return Ok(Response::new(Full::from(format!(
-                            "VOO: {:?}",
-                            SchwabClient::new(token).get_accounts().await,
+                            "account_value: {}",
+                            svc.account_data_watcher.borrow().account_value
                         ))));
                     } else {
                         return Ok(Response::new(Full::from(
-                            renderer
+                            svc.renderer
                                 .oauth(&html::OauthArgs {
-                                    oauth_url: om.lock().await.reset_auth_url(),
+                                    oauth_url: svc.om.lock().await.reset_auth_url(),
                                 })
                                 .unwrap(),
                         )));
@@ -160,14 +167,15 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                         }
 
                         if let (Some(code_p), Some(state_p)) = (code, state) {
-                            match om
+                            match svc
+                                .om
                                 .lock()
                                 .await
                                 .token_manager()
                                 .send_token(code_p.clone(), &state_p)
                             {
                                 Ok(()) => {
-                                    return Ok(Response::new(Full::from(renderer.oauth_return(&html::OauthReturnArgs {
+                                    return Ok(Response::new(Full::from(svc.renderer.oauth_return(&html::OauthReturnArgs {
                                         oauth_return_message: "Authorization Successful; click on the button below to return to the homepage.".to_string(),
                                     }).unwrap())));
                                 }
@@ -180,7 +188,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             }
                         }
                     }
-                    return Ok(Response::new(Full::from(renderer.oauth_return(&html::OauthReturnArgs {
+                    return Ok(Response::new(Full::from(svc.renderer.oauth_return(&html::OauthReturnArgs {
                                         oauth_return_message: "Authorization Not Successful; click on the button below to return to the homepage.".to_string(),
                                     }).unwrap())));
                 }

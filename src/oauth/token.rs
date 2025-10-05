@@ -97,6 +97,10 @@ impl OauthManager {
         self.token_storage.has_token()
     }
 
+    pub fn reset(&mut self) -> Result<(), Error> {
+        self.token_storage.reset()
+    }
+
     pub fn get_unexpired_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
         match self.token_storage.get_token_and_expiration() {
             Some(Ok((t, e))) => {
@@ -144,29 +148,30 @@ impl OauthManager {
                                 {
                                     log::info!("Token is expired, refreshing...");
                                     if let Some(refresh_token) = token.refresh_token() {
-                                        match s_handle
-                                            .client
-                                            .exchange_refresh_token(refresh_token)
-                                            .request_async(&reqwest::Client::new())
-                                            .await
+                                        if let Err(e) = async {
+                                            let token = s_handle
+                                                .client
+                                                .exchange_refresh_token(refresh_token)
+                                                .request_async(&reqwest::Client::new())
+                                                .await?;
+                                            log::info!("token refreshed, storing...");
+                                            s_handle.token_storage.set_token(
+                                                &token,
+                                                Self::calculate_expiration(token.expires_in()),
+                                            )?;
+                                            log::info!("token refresh complete");
+                                            Ok::<(), Error>(())
+                                        }
+                                        .await
                                         {
-                                            Ok(token) => {
-                                                if let Err(e) = s_handle.token_storage.set_token(
-                                                    &token,
-                                                    Self::calculate_expiration(token.expires_in()),
-                                                ) {
-                                                    log::error!(
-                                                        "Failed to set the received oauth token: {}",
-                                                        e
-                                                    );
-                                                } else {
-                                                    log::info!("New oauth token recieved");
-                                                }
-                                            }
-                                            Err(e) => log::error!(
-                                                "Failed to exchange refresh token with oauth token: {}",
+                                            log::error!(
+                                                "Couldn't refresh oauth token: '{}'; resetting...",
                                                 e
-                                            ),
+                                            );
+                                            if let Err(e) = s_handle.reset() {
+                                                // unrecoverable error, panicing
+                                                panic!("Can't reset oauth backend: '{}'", e);
+                                            }
                                         }
                                     }
                                 }
