@@ -1,4 +1,8 @@
-use crate::{Error, oauth::token::OauthManager, schwab::client::SchwabClient};
+use crate::{
+    Error,
+    oauth::token::OauthManager,
+    schwab::{client::SchwabClient, schemas::accounts_and_trading::accounts::SecuritiesAccount},
+};
 use tokio::task::JoinSet;
 
 pub struct AccountManager {
@@ -15,11 +19,9 @@ pub struct AccountData {
 
 impl AccountData {
     pub fn update(&mut self, securities_account: &SecuritiesAccount) {
-      self.account_value = securities_account.account_value;
+        self.account_value = securities_account.initial_balances.account_value;
     }
 }
-
-
 
 impl AccountManager {
     pub fn new(
@@ -36,7 +38,7 @@ impl AccountManager {
 
     pub async fn init(&mut self) -> Result<(), Error> {
         self.account_hash = 'outer: loop {
-            if let Some(Ok(token)) = self.om.lock().await.get_token() {
+            if let Some(Ok(token)) = self.om.lock().await.get_unexpired_token() {
                 for an in SchwabClient::new(token).get_account_numbers().await?.iter() {
                     if an.account_number == self.account_number {
                         log::info!("Retrieved the account hash.");
@@ -52,7 +54,7 @@ impl AccountManager {
             let ah = self.account_hash.clone();
             async move {
                 loop {
-                    if let Some(Ok(token)) = om.lock().await.get_token() {
+                    if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
                         let sc = SchwabClient::new(token);
                         println!("Account: {:?}", sc.get_account(&ah).await?);
                     }

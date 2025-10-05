@@ -125,7 +125,7 @@ pub struct MarginInitialBalance {
     pending_deposits: f64,
     margin_balance: Option<f64>,
     short_balance: Option<f64>,
-    account_value: f64,
+    pub account_value: f64,
 }
 
 #[derive(Deserialize, Debug)]
@@ -160,9 +160,9 @@ pub struct SecuritiesAccount {
     is_day_trader: bool,
     is_closing_only_restricted: bool,
     pfcb_flag: bool,
-    positions: Option<Vec<Position>>,
-    initial_balances: MarginInitialBalance,
-    current_balances: MarginBalance,
+    pub positions: Option<Vec<Position>>,
+    pub initial_balances: MarginInitialBalance,
+    pub current_balances: MarginBalance,
     projected_balances: MarginBalance,
 }
 

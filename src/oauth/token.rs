@@ -97,9 +97,22 @@ impl OauthManager {
         self.token_storage.has_token()
     }
 
-    pub fn get_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
-        self.token_storage.get_token()
+ pub    fn get_unexpired_token(&self) -> Option<Result<OauthTokenResponse, Error>> {
+
+        match self.token_storage.get_token_and_expiration() {
+            Some(Ok((t, e))) => { 
+
+            if chrono::prelude::Utc::now() >= e {
+                None
+            } else {
+                Some(Ok(t))
+            }
+        },
+        None => None, 
+        Some(Err(e)) => Some(Err(e)), 
+        }
     }
+
 
     fn calculate_expiration(expires_in: Option<core::time::Duration>) -> DateTime<Utc> {
         (Local::now()

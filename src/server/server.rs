@@ -131,7 +131,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
-                    if let Some(Ok(token)) = om.lock().await.get_token() {
+                    if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
                         return Ok(Response::new(Full::from(format!(
                             "VOO: {:?}",
                             SchwabClient::new(token).get_accounts().await,
