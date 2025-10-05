@@ -15,7 +15,7 @@ pub type Accounts = Vec<AccountTypes>;
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountTypes {
-    securities_account: Option<SecuritiesAccount>,
+    pub securities_account: Option<SecuritiesAccount>,
     cash_account: Option<CashAccount>,
 }
 
