@@ -3,7 +3,7 @@ use serde::Deserialize;
 use serde_json::Deserializer as jsonDe;
 use std::fs;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Config {
     pub client_id: String,
     pub client_secret: String,
@@ -12,6 +12,7 @@ pub struct Config {
     pub bind_address: String,
     pub cert_path: String,
     pub key_path: String,
+    pub account_number: String,
 }
 
 impl Config {

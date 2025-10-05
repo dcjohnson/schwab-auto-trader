@@ -1,6 +1,6 @@
 use crate::{
     oauth::token::OauthManager,
-    schwab::client::SchwabClient,
+    schwab::{account_manager::AccountManager, client::SchwabClient},
     server::web_resources::files::{css, html},
 };
 use http_body_util::Full;
@@ -43,6 +43,7 @@ where
 pub async fn run_server(
     addr: SocketAddr,
     oauth_manager: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
+    account_manager: std::sync::Arc<tokio::sync::Mutex<AccountManager>>,
     cancel_token: tokio_util::sync::CancellationToken,
     cert_path: String,
     key_path: String,

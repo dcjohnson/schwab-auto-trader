@@ -26,6 +26,7 @@ async fn main() -> Result<(), Error> {
 
     let args = Args::parse();
     let config = Config::load(&args.config_file_path)?;
+
     let cancellation_token = tokio_util::sync::CancellationToken::new();
 
     let om = std::sync::Arc::new(tokio::sync::Mutex::new(token::OauthManager::new(
@@ -37,21 +38,25 @@ async fn main() -> Result<(), Error> {
         token_storage::TokenStorage::load(config.token_file_path)?,
     )));
 
-    let mut am = AccountManager::new(om.clone());
-    am.init().await;
-
     token::OauthManager::spawn_token_receiver(om.clone(), core::time::Duration::from_millis(500))
         .await;
     token::OauthManager::spawn_token_refresher(om.clone(), core::time::Duration::from_secs(60))
         .await;
+    let mut am = std::sync::Arc::new(tokio::sync::Mutex::new(AccountManager::new(
+        config.account_number,
+        om.clone(),
+    )));
 
     let jh = tokio::spawn(server::run_server(
         config.bind_address.parse()?,
         om.clone(),
+        am.clone(),
         cancellation_token.clone(),
         config.cert_path,
         config.key_path,
     ));
+
+    am.lock().await.init().await?;
 
     let mut quit_signal = signal(SignalKind::quit())?;
     let mut terminate_signal = signal(SignalKind::terminate())?;
