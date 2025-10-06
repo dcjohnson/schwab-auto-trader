@@ -26,7 +26,9 @@ async fn main() -> Result<(), Error> {
 
     let args = Args::parse();
     let config = Config::load(&args.config_file_path)?;
+    log::info!("Validating config");
     config.validate()?;
+    log::info!("Config validated");
 
     let cancellation_token = tokio_util::sync::CancellationToken::new();
 

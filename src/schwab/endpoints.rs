@@ -19,3 +19,17 @@ pub fn account_numbers() -> String {
 pub fn ticker_quotes_data(ticker: &str) -> String {
     format!("{}/{}/quotes", MARKET_DATA_ENDPOINT, ticker)
 }
+
+pub fn transactions(account_number: &str) -> String {
+    format!(
+        "{}/accounts/{}/transactions",
+        TRADER_ENDPOINT, account_number
+    )
+}
+
+pub fn transaction(account_number: &str, transaction_id: &str) -> String {
+    format!(
+        "{}/accounts/{}/transactions/{}",
+        TRADER_ENDPOINT, account_number, transaction_id
+    )
+}

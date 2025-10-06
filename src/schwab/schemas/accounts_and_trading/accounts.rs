@@ -169,3 +169,49 @@ pub struct SecuritiesAccount {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CashAccount {}
+
+pub type Transactions = Vec<Transaction>;
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Transaction {
+pub activity_id: i64, 
+pub time: String, 
+pub user: UserDetails, 
+pub description: String, 
+pub account_number: String ,
+pub r#type: TransactionType, 
+pub status: TransactionStatus,
+pub sub_account: SubAccount,
+pub tradeDate : 	String ,
+pub settlementDate :	String, 
+pub positionId :	i64, 
+pub orderId	: i64 , 
+pub netAmount: f64, 
+pub activityType :	TransactionActivityType, 
+pub transferItems: Vec<TransferItem>, 
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct UserDetails {} 
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct TransactionType {}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum TransactionStatus {}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum SubAccount {}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub enum TransactionActivityType {}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct TransferItem {}

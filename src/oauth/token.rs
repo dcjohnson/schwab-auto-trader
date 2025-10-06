@@ -174,14 +174,15 @@ impl OauthManager {
                                             }
                                         }
                                     }
+                                } else {
+                                    log::info!(
+                                        "Token is not expiring; sleeping until next token refresh check."
+                                    );
                                 }
                             } else {
                                 log::info!("No token to refresh");
                             }
                         }
-                        log::info!(
-                            "Token is not expiring; sleeping until next token refresh check."
-                        );
                         tTime::sleep(period).await;
                     }
                 }));
