@@ -20,7 +20,7 @@ pub struct AccountTypes {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(tag = "assetType")]
+#[serde(tag = "assetType")] // why is this here? 
 pub enum AccountInstrument {
     #[serde(rename(deserialize = "COLLECTIVE_INVESTMENT"))]
     CollectiveInvestment {
@@ -197,20 +197,106 @@ pub struct Transaction {
 pub struct UserDetails {}
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct TransactionType {}
+pub enum TransactionType {
+    #[serde(rename(deserialize = "TRADE"))]
+    Trade,
+
+    #[serde(rename(deserialize = "RECEIVE_AND_DELIVER"))]
+    ReceiveAndDeliver,
+
+    #[serde(rename(deserialize = "DIVIDEND_OR_INTEREST"))]
+    DividendOrInterest,
+
+    #[serde(rename(deserialize = "ACH_RECEIPT"))]
+    AchReceipt,
+
+    #[serde(rename(deserialize = "ACH_DISBURSEMENT"))]
+    AchDisbursement,
+
+    #[serde(rename(deserialize = "CASH_RECEIPT"))]
+    CashReceipt,
+
+    #[serde(rename(deserialize = "CASH_DISBURSEMENT"))]
+    CashDisbursement,
+
+    #[serde(rename(deserialize = "ELECTRONIC_FUND"))]
+    ElectronicFund,
+
+    #[serde(rename(deserialize = "WIRE_OUT"))]
+    WireOut,
+
+    #[serde(rename(deserialize = "WIRE_IN"))]
+    WireIn,
+
+    #[serde(rename(deserialize = "JOURNAL"))]
+    Journal,
+
+    #[serde(rename(deserialize = "MEMORANDUM"))]
+    Memorandum,
+
+    #[serde(rename(deserialize = "MARGIN_CALL"))]
+    MarginCall,
+
+    #[serde(rename(deserialize = "MONEY_MARKET"))]
+    MoneyMarket,
+
+    #[serde(rename(deserialize = "SMA_ADJUSTMENT"))]
+    SmaAdjustment,
+}
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub enum TransactionStatus {}
+pub enum TransactionStatus {
+    #[serde(rename(deserialize = "VALID"))]
+    Valid,
+
+    #[serde(rename(deserialize = "INVALID"))]
+    Invalid,
+
+    #[serde(rename(deserialize = "PENDING"))]
+    Pending,
+
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+}
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub enum SubAccount {}
+pub enum SubAccount {
+    #[serde(rename(deserialize = "CASH"))]
+    Cash,
+
+    #[serde(rename(deserialize = "MARGIN"))]
+    Margin,
+
+    #[serde(rename(deserialize = "SHORT"))]
+    Short,
+
+    #[serde(rename(deserialize = "DIV"))]
+    Div,
+
+    #[serde(rename(deserialize = "INCOME"))]
+    Income,
+
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+}
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub enum TransactionActivityType {}
+pub enum TransactionActivityType {
+    #[serde(rename(deserialize = "ACTIVITY_CORRECTION"))]
+    ActivityCorrection,
+
+    #[serde(rename(deserialize = "EXECUTION"))]
+    Execution,
+
+    #[serde(rename(deserialize = "ORDER_ACTION"))]
+    OrderAction,
+
+    #[serde(rename(deserialize = "TRANSFER"))]
+    Transfer,
+
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+}
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
