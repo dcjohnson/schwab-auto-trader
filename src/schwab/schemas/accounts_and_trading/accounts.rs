@@ -175,26 +175,26 @@ pub type Transactions = Vec<Transaction>;
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Transaction {
-pub activity_id: i64, 
-pub time: String, 
-pub user: UserDetails, 
-pub description: String, 
-pub account_number: String ,
-pub r#type: TransactionType, 
-pub status: TransactionStatus,
-pub sub_account: SubAccount,
-pub tradeDate : 	String ,
-pub settlementDate :	String, 
-pub positionId :	i64, 
-pub orderId	: i64 , 
-pub netAmount: f64, 
-pub activityType :	TransactionActivityType, 
-pub transferItems: Vec<TransferItem>, 
+    pub activity_id: i64,
+    pub time: String,
+    pub user: UserDetails,
+    pub description: String,
+    pub account_number: String,
+    pub r#type: TransactionType,
+    pub status: TransactionStatus,
+    pub sub_account: SubAccount,
+    pub trade_date: String,
+    pub settlement_date: String,
+    pub position_id: i64,
+    pub order_id: i64,
+    pub net_amount: f64,
+    pub activity_type: TransactionActivityType,
+    pub transfer_items: Vec<TransferItem>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct UserDetails {} 
+pub struct UserDetails {}
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
