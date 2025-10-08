@@ -406,6 +406,22 @@ pub enum CollectiveInvestmentType {
     UNITS,
 }
 
+pub enum TransactionEquityType {
+    COMMON_STOCK,
+    PREFERRED_STOCK,
+    DEPOSITORY_RECEIPT,
+    PREFERRED_DEPOSITORY_RECEIPT,
+    RESTRICTED_STOCK,
+    COMPONENT_UNIT,
+    RIGHT,
+    WARRANT,
+    CONVERTIBLE_PREFERRED_STOCK,
+    CONVERTIBLE_STOCK,
+    LIMITED_PARTNERSHIP,
+    WHEN_ISSUED,
+    UNKNOWN,
+}
+
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub enum TransactionInstrument {
@@ -427,32 +443,25 @@ pub enum TransactionInstrument {
         instrument_id: i64,
         net_change: f64,
         r#type: CollectiveInvestmentType,
+    },
+    Currency {
+        asset_type: AssetType,
+        cusip: String,
+        symbol: String,
+        description: String,
+        instrument_id: i64,
+        net_change: f64,
+    },
+
+    TransactionEquity {
+        asset_type: AssetType,
+        cusip: String,
+        symbol: String,
+        description: String,
+        instrument_id: i64,
+        net_change: f64,
+        r#type: TransactionEquityType,
     }, /*
-       Currency{
-       assetType*	string
-       Enum:
-       [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-       cusip	string
-       symbol	string
-       description	string
-       instrumentId	integer($int64)
-       netChange	number($double)
-       }
-
-       TransactionEquity{
-       assetType*	string
-       Enum:
-       [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-       cusip	string
-       symbol	string
-       description	string
-       instrumentId	integer($int64)
-       netChange	number($double)
-       type	string
-       Enum:
-       [ COMMON_STOCK, PREFERRED_STOCK, DEPOSITORY_RECEIPT, PREFERRED_DEPOSITORY_RECEIPT, RESTRICTED_STOCK, COMPONENT_UNIT, RIGHT, WARRANT, CONVERTIBLE_PREFERRED_STOCK, CONVERTIBLE_STOCK, LIMITED_PARTNERSHIP, WHEN_ISSUED, UNKNOWN ]
-       }
-
        TransactionFixedIncome{
        assetType*	string
        Enum:
