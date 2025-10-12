@@ -380,47 +380,253 @@ pub enum PositionEffect {
     Unknown,
 }
 
+#[derive(Deserialize, Debug)]
 pub enum AssetType {
-    EQUITY,
-    OPTION,
-    INDEX,
-    MUTUAL_FUND,
-    CASH_EQUIVALENT,
-    FIXED_INCOME,
-    CURRENCY,
-    COLLECTIVE_INVESTMENT,
+    #[serde(rename(deserialize = "EQUITY"))]
+    Equity,
+    #[serde(rename(deserialize = "OPTION"))]
+    Option,
+    #[serde(rename(deserialize = "INDEX"))]
+    Index,
+    #[serde(rename(deserialize = "MUTUAL_FUND"))]
+    MutualFund,
+    #[serde(rename(deserialize = "CASH_EQUIVALENT"))]
+    CashEquivalent,
+    #[serde(rename(deserialize = "FIXED_INCOME"))]
+    FixedIncome,
+    #[serde(rename(deserialize = "CURRENCY"))]
+    Currency,
+    #[serde(rename(deserialize = "COLLECTIVE_INVESTMENT"))]
+    CollectiveInvestment,
 }
 
+#[derive(Deserialize, Debug)]
 pub enum TransactionCashEquivalentType {
-    SWEEP_VEHICLE,
-    SAVINGS,
-    MONEY_MARKET_FUND,
-    UNKNOWN,
+    #[serde(rename(deserialize = "SWEEP_VEHICLE"))]
+    SweepVehicle,
+    #[serde(rename(deserialize = "SAVINGS"))]
+    Savings,
+    #[serde(rename(deserialize = "MONEY_MARKET_FUND"))]
+    MoneyMarketFund,
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
 }
 
+#[derive(Deserialize, Debug)]
 pub enum CollectiveInvestmentType {
-    UNIT_INVESTMENT_TRUST,
-    EXCHANGE_TRADED_FUND,
-    CLOSED_END_FUND,
-    INDEX,
-    UNITS,
+    #[serde(rename(deserialize = "UNIT_INVESTMENT_TRUST"))]
+    UnitInvestmentTrust,
+    #[serde(rename(deserialize = "EXCHANGE_TRADED_FUND"))]
+    ExchangeTradedFund,
+    #[serde(rename(deserialize = "CLOSED_END_FUND"))]
+    ClosedEndFund,
+    #[serde(rename(deserialize = "INDEX"))]
+    Index,
+    #[serde(rename(deserialize = "UNITS"))]
+    Units,
 }
 
+#[derive(Deserialize, Debug)]
 pub enum TransactionEquityType {
-    COMMON_STOCK,
-    PREFERRED_STOCK,
-    DEPOSITORY_RECEIPT,
-    PREFERRED_DEPOSITORY_RECEIPT,
-    RESTRICTED_STOCK,
-    COMPONENT_UNIT,
-    RIGHT,
-    WARRANT,
-    CONVERTIBLE_PREFERRED_STOCK,
-    CONVERTIBLE_STOCK,
-    LIMITED_PARTNERSHIP,
-    WHEN_ISSUED,
-    UNKNOWN,
+    #[serde(rename(deserialize = "COMMON_STOCK"))]
+    CommonStock,
+    #[serde(rename(deserialize = "PREFERRED_STOCK"))]
+    PreferredStock,
+    #[serde(rename(deserialize = "DEPOSITORY_RECEIPT"))]
+    DepositoryReceipt,
+    #[serde(rename(deserialize = "PREFERRED_DEPOSITORY_RECEIPT"))]
+    PreferredDepositoryReceipt,
+    #[serde(rename(deserialize = "RESTRICTED_STOCK"))]
+    RestrictedStock,
+    #[serde(rename(deserialize = "COMPONENT_UNIT"))]
+    ComponentUnit,
+    #[serde(rename(deserialize = "RIGHT"))]
+    Right,
+    #[serde(rename(deserialize = "WARRANT"))]
+    Warrant,
+    #[serde(rename(deserialize = "CONVERTIBLE_PREFERRED_STOCK"))]
+    ConvertiblePreferredStock,
+    #[serde(rename(deserialize = "CONVERTIBLE_STOCK"))]
+    ConvertibleStock,
+    #[serde(rename(deserialize = "LIMITED_PARTNERSHIP"))]
+    LimitedPartnership,
+    #[serde(rename(deserialize = "WHEN_ISSUED"))]
+    WhenIssued,
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
 }
+
+#[derive(Deserialize, Debug)]
+pub enum TransactionFixedIncomeType {
+    #[serde(rename(deserialize = "BOND_UNIT"))]
+         BondUnit, 
+
+    #[serde(rename(deserialize = "CERTIFICATE_OF_DEPOSIT"))]
+         CertificateOfDeposit,
+    
+         #[serde(rename(deserialize = "CONVERTIBLE_BOND"))]
+         ConvertibleBond,
+
+         #[serde(rename(deserialize = "COLLATERALIZED_MORTGAGE_OBLIGATION"))]
+         CollateralizedMortgageObligation,
+
+         #[serde(rename(deserialize = "CORPORATE_BOND"))]
+         CorporateBond,
+
+         #[serde(rename(deserialize = "GOVERNMENT_MORTGAGE"))]
+         GovernmentMortgage,
+
+         #[serde(rename(deserialize = "GNMA_BONDS"))]
+         GnmaBonds,
+
+         #[serde(rename(deserialize = "MUNICIPAL_ASSESSMENT_DISTRICT"))]
+         MunicipalAssessmentDistrict,
+
+         #[serde(rename(deserialize = "MUNICIPAL_BOND"))]
+         MunicipalBond,
+
+         #[serde(rename(deserialize = "OTHER_GOVERNMENT"))]
+         OtherGovernment, 
+
+#[serde(rename(deserialize = "SHORT_TERM_PAPER"))]
+         ShortTermPaper, 
+
+#[serde(rename(deserialize = "US_TREASURY_BOND"))]
+         UsTreasuryBond,
+
+         #[serde(rename(deserialize = "US_TREASURY_BILL"))]
+         UsTreasuryBill, 
+
+#[serde(rename(deserialize = "US_TREASURY_NOTE"))]
+         UsTreasuryNote,
+
+         #[serde(rename(deserialize = "US_TREASURY_ZERO_COUPON"))]
+         UsTreasuryZeroCoupon,
+
+         #[serde(rename(deserialize = "AGENCY_BOND"))]
+         AgencyBond,
+
+         #[serde(rename(deserialize = "WHEN_AS_AND_IF_ISSUED_BOND"))]
+         WhenAsAndIfissuedBond,
+
+         #[serde(rename(deserialize = "ASSET_BACKED_SECURITY"))]
+         AssetBackedSecurity,
+
+         #[serde(rename(deserialize = "UNKNOWN"))]
+         Unknown ,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum ForexType {
+    #[serde(rename(deserialize = "STANDARD"))]
+        Standard, 
+    #[serde(rename(deserialize = "NBBO"))]
+        Nbbo, 
+    #[serde(rename(deserialize = "UNKNOWN"))]
+        Unknown, 
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Currency {
+       asset_type: AssetType ,
+       cusip: 	String,
+       symbol :	String,
+       description	: String,
+       instrument_id :	i64 ,
+       net_change :	f64 ,
+}
+
+#[derive(Deserialize, Debug)]
+      pub enum FutureType{
+    #[serde(rename(deserialize = "STANDARD"))]
+        Standard, 
+    #[serde(rename(deserialize = "UNKNOWN"))]
+        Unknown, 
+       }
+
+#[derive(Deserialize, Debug)]
+       pub enum IndexType {
+    #[serde(rename(deserialize = "BROAD_BASED"))]
+       BroadBased,
+    #[serde(rename(deserialize = "NARROW_BASED"))]
+       NarrowBased, 
+    #[serde(rename(deserialize = "UNKNOWN"))]
+       Unknown, 
+       }
+
+#[derive(Deserialize, Debug)]
+       pub enum TransactionMutualFundType {
+    #[serde(rename(deserialize = "NOT_APPLICABLE"))]
+        NotApplicable, 
+    #[serde(rename(deserialize = "OPEN_END_NON_TAXABLE"))]
+        OpenEndNonTaxable, 
+    #[serde(rename(deserialize = "OPEN_END_TAXABLE"))]
+        OpenEndTaxable,
+    #[serde(rename(deserialize = "NO_LOAD_NON_TAXABLE"))]
+        NoLoadNonTaxable, 
+    #[serde(rename(deserialize = "NO_LOAD_TAXABLE"))]
+        NoLoadTaxable,
+    #[serde(rename(deserialize = "UNKNOWN"))]
+        Unknown , 
+       }
+
+
+
+
+#[derive(Deserialize, Debug)]
+         pub enum  PutCallType {
+    #[serde(rename(deserialize = "PUT"))]
+       Put,
+    #[serde(rename(deserialize = "CALL"))]
+       Call,
+    #[serde(rename(deserialize = "UNKNOWN"))]
+       Unknown ,
+           }
+       
+#[derive(Deserialize, Debug)]
+pub enum TransactionOptionType {
+    #[serde(rename(deserialize = "VANILLA"))]
+        Vanilla, 
+    #[serde(rename(deserialize = "BINARY"))]
+        Binary,
+    #[serde(rename(deserialize = "BARRIER"))]
+        Barrier,
+    #[serde(rename(deserialize = "UNKNOWN"))]
+        Unknown ,
+}
+
+#[derive(Deserialize, Debug)]
+    pub enum   ProductType {
+    #[serde(rename(deserialize = "TBD"))]
+        Tbd, 
+    #[serde(rename(deserialize = "UNKNOWN"))]
+        Unknown ,
+       }
+
+
+
+
+
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct TransactionAPIOptionDeliverable{
+       root_symbol	: String ,
+       strike_percent	: i64   ,
+       deliverable_number   : i64 , 
+       deliverable_units   : f64, 
+        // deliverable	Some empty type? 
+       asset_type  : AssetType, 
+       }
+
+
+
+
+
+
+
+
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -461,147 +667,92 @@ pub enum TransactionInstrument {
         instrument_id: i64,
         net_change: f64,
         r#type: TransactionEquityType,
-    }, /*
+    }, 
        TransactionFixedIncome{
-       assetType*	string
-       Enum:
-       [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-       cusip	string
-       symbol	string
-       description	string
-       instrumentId	integer($int64)
-       netChange	number($double)
-       type	string
-       Enum:
-       [ BOND_UNIT, CERTIFICATE_OF_DEPOSIT, CONVERTIBLE_BOND, COLLATERALIZED_MORTGAGE_OBLIGATION, CORPORATE_BOND, GOVERNMENT_MORTGAGE, GNMA_BONDS, MUNICIPAL_ASSESSMENT_DISTRICT, MUNICIPAL_BOND, OTHER_GOVERNMENT, SHORT_TERM_PAPER, US_TREASURY_BOND, US_TREASURY_BILL, US_TREASURY_NOTE, US_TREASURY_ZERO_COUPON, AGENCY_BOND, WHEN_AS_AND_IF_ISSUED_BOND, ASSET_BACKED_SECURITY, UNKNOWN ]
-       maturityDate	string($date-time)
-       factor	number($double)
-       multiplier	number($double)
-       variableRate	number($double)
-       }
+       asset_type: 	String,
+       cusip	: String ,
+       symbol	: String ,
+       description	: String ,
+       instrument_id: 	i64 ,
+       net_change:	f64 ,
+       r#type: TransactionFixedIncomeType, 
+       maturity_cate:  String, 
+       factor	: f64,
+       multiplier :	f64, 
+       variable_rate	: f64,
+       },
 
+    
        Forex{
-       assetType*	string
-       Enum:
-       [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-       cusip	string
-       symbol	string
-       description	string
-       instrumentId	integer($int64)
-       netChange	number($double)
-       type	string
-       Enum:
-       [ STANDARD, NBBO, UNKNOWN ]
-       baseCurrency	Currency{
-       assetType*	string
-       Enum:
-       [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-       cusip	string
-       symbol	string
-       description	string
-       instrumentId	integer($int64)
-       netChange	number($double)
-       }
-       counterCurrency	Currency{
-       assetType*	string
-       Enum:
-       [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-       cusip	string
-       symbol	string
-       description	string
-       instrumentId	integer($int64)
-       netChange	number($double)
-       }
-       }
+       asset_type : AssetType ,
+       cusip	: String ,
+       symbol	: String ,
+       description :	String ,
+       instrument_id	: i64, 
+       net_change    : f64, 
+       r#type : ForexType, 
+       base_currency : 	Currency,
+       counter_currency	: Currency, 
+       },
 
        Future{
-       activeContract	boolean
-       default: false
-       type	string
-       Enum:
-       [ STANDARD, UNKNOWN ]
-       expirationDate	string($date-time)
-       lastTradingDate	string($date-time)
-       firstNoticeDate	string($date-time)
-       multiplier	number($double)
-       }
+       active_contract :bool, 
+       r#type : FutureType , 
+       expiration_date : String, 
+       last_trading_date	: String, 
+       first_notice_date	: String , 
+       multiplier	: f64, 
+       },
 
        Index{
-       activeContract	boolean
-       default: false
-       type	string
-       Enum:
-       [ BROAD_BASED, NARROW_BASED, UNKNOWN ]
-       }
+       active_contract : bool, 
+       r#type : IndexType , 
+       },
+
+
 
        TransactionMutualFund{
-       assetType*	string
-       Enum:
-       [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-       cusip	string
-       symbol	string
-       description	string
-       instrumentId	integer($int64)
-       netChange	number($double)
-       fundFamilyName	string
-       fundFamilySymbol	string
-       fundGroup	string
-       type	string
-       Enum:
-       [ NOT_APPLICABLE, OPEN_END_NON_TAXABLE, OPEN_END_TAXABLE, NO_LOAD_NON_TAXABLE, NO_LOAD_TAXABLE, UNKNOWN ]
-       exchangeCutoffTime	string($date-time)
-       purchaseCutoffTime	string($date-time)
-       redemptionCutoffTime	string($date-time)
-       }
-
+       asset_type : AssetType, 
+       cusip	: String,
+       symbol	: String,
+       description	: String,
+       instrument_id	: i64 , 
+       net_change	: f64 , 
+       fund_family_name	: String,
+       fund_family_symbol	: String,
+       fund_group	: String ,
+       r#type : TransactionMutualFundType, 
+       exchange_cutoff_time : String, 
+       purchase_cutoff_time	 : String , 
+       redemption_cutoff_time	: String ,
+       },
+ 
        TransactionOption{
-       assetType*	string
-       Enum:
-       Array [ 8 ]
-       cusip	string
-       symbol	string
-       description	string
-       instrumentId	integer($int64)
-       netChange	number($double)
-       expirationDate	string($date-time)
-       optionDeliverables	[
-       xml: OrderedMap { "name": "optionDeliverables", "wrapped": true }
-       TransactionAPIOptionDeliverable{
-       rootSymbol	string
-       strikePercent	integer($int64)
-       deliverableNumber	integer($int64)
-       deliverableUnits	number($double)
-       deliverable	{ }
-       assetType	assetTypestring
-       Enum:
-       [ EQUITY, MUTUAL_FUND, OPTION, FUTURE, FOREX, INDEX, CASH_EQUIVALENT, FIXED_INCOME, PRODUCT, CURRENCY, COLLECTIVE_INVESTMENT ]
-       }]
-       optionPremiumMultiplier	integer($int64)
-       putCall	string
-       Enum:
-       [ PUT, CALL, UNKNOWN ]
-       strikePrice	number($double)
-       type	string
-       Enum:
-       [ VANILLA, BINARY, BARRIER, UNKNOWN ]
-       underlyingSymbol	string
-       underlyingCusip	string
-       deliverable	{ }
-       }
-
+       asset_type : AssetType, 
+       cusip :	String,
+       symbol :	String,
+       description	: String,
+       instrument_id :	i64,
+       net_change :	f64 ,
+       expiration_date :	String ,
+       option_deliverables : Vec<TransactionAPIOptionDeliverable> , 
+       option_premium_multiplier : 	i64 ,
+       put_call : PutCallType, 
+       strike_price : f64 ,
+       r#type : TransactionOptionType , 
+       underlying_symbol   :	String,
+       underlying_cusip	 : String,
+       // deliverable empty field? 
+       },
+ 
        Product{
-       assetType*	string
-       Enum:
-       [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-       cusip	string
-       symbol	string
-       description	string
-       instrumentId	integer($int64)
-       netChange	number($double)
-       type	string
-       Enum:
-       [ TBD, UNKNOWN ]
-       }
-       }
-       */
+       asset_type : AssetType , 
+       cusip :	String,
+       symbol	: String,
+       description :	String,
+       instrument_id  :  f64,  
+       net_change   :      f64, 
+       r#type : ProductType, 
+       },
+       
 }
