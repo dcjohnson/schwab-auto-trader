@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use serde::Deserialize;
-use std::{string::ToString, fmt};
+use std::fmt;
 
 pub type AccountNumbers = Vec<AccountNumber>;
 
@@ -220,7 +220,7 @@ pub enum UserDetailsType {
     Unknown,
 }
 
-#[derive(string::ToString, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub enum TransactionType {
     #[serde(rename(deserialize = "TRADE"))]
     Trade,
@@ -270,27 +270,29 @@ pub enum TransactionType {
 
 impl fmt::Display for TransactionType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", match self {
-    TransactionType::Trade => "TRADE",
-    TransactionType::ReceiveAndDeliver => "RECEIVE_AND_DELIVER",
-    TransactionType::DividendOrInterest => "DIVIDEND_OR_INTEREST",
-    TransactionType::AchReceipt => "ACH_RECEIPT",
-    TransactionType::AchDisbursement => "ACH_DISBURSEMENT",
-    TransactionType::CashReceipt => "CASH_RECEIPT",
-    TransactionType::CashDisbursement => "CASH_DISBURSEMENT",
-    TransactionType::ElectronicFund => "ELECTRONIC_FUND",
-    TransactionType::WireOut => "WIRE_OUT",
-    TransactionType::WireIn => "WIRE_IN",
-    TransactionType::Journal => "JOURNAL",
-    TransactionType::Memorandum => "MEMORANDUM",
-    TransactionType::MarginCall => "MARGIN_CALL",
-    TransactionType::MoneyMarket => "MONEY_MARKET",
-    TransactionType::SmaAdjustment => "SMA_ADJUSTMENT",
-            
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                TransactionType::Trade => "TRADE",
+                TransactionType::ReceiveAndDeliver => "RECEIVE_AND_DELIVER",
+                TransactionType::DividendOrInterest => "DIVIDEND_OR_INTEREST",
+                TransactionType::AchReceipt => "ACH_RECEIPT",
+                TransactionType::AchDisbursement => "ACH_DISBURSEMENT",
+                TransactionType::CashReceipt => "CASH_RECEIPT",
+                TransactionType::CashDisbursement => "CASH_DISBURSEMENT",
+                TransactionType::ElectronicFund => "ELECTRONIC_FUND",
+                TransactionType::WireOut => "WIRE_OUT",
+                TransactionType::WireIn => "WIRE_IN",
+                TransactionType::Journal => "JOURNAL",
+                TransactionType::Memorandum => "MEMORANDUM",
+                TransactionType::MarginCall => "MARGIN_CALL",
+                TransactionType::MoneyMarket => "MONEY_MARKET",
+                TransactionType::SmaAdjustment => "SMA_ADJUSTMENT",
+            }
+        )
     }
 }
-
 
 #[derive(Deserialize, Debug)]
 pub enum TransactionStatus {

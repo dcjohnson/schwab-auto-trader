@@ -1,11 +1,16 @@
 use crate::{
     Error,
     oauth::token,
-    schwab::{endpoints, schemas::accounts_and_trading::accounts::{Accounts, AccountNumbers, AccountTypes, TransactionType, Transaction, Transactions}},
+    schwab::{
+        endpoints,
+        schemas::accounts_and_trading::accounts::{
+            AccountNumbers, AccountTypes, Accounts, Transaction, TransactionType, Transactions,
+        },
+    },
 };
+use chrono::{DateTime, Utc};
 use oauth2::{TokenResponse, reqwest};
 use serde::de::Deserialize;
-use chrono::{DateTime, Utc};
 
 pub struct SchwabClient {
     client: reqwest::Client,
@@ -37,22 +42,15 @@ impl SchwabClient {
         Ok(serde_json::from_str(&json)?)
     }
 
-    pub async fn get_account_numbers(
-        &self,
-    ) -> Result<AccountNumbers, Error> {
+    pub async fn get_account_numbers(&self) -> Result<AccountNumbers, Error> {
         self.get_json(endpoints::account_numbers()).await
     }
 
-    pub async fn get_accounts(
-        &self,
-    ) -> Result<Accounts, Error> {
+    pub async fn get_accounts(&self) -> Result<Accounts, Error> {
         self.get_json(endpoints::accounts()).await
     }
 
-    pub async fn get_account(
-        &self,
-        account_hash: &str,
-    ) -> Result<AccountTypes, Error> {
+    pub async fn get_account(&self, account_hash: &str) -> Result<AccountTypes, Error> {
         self.get_json(endpoints::account(account_hash)).await
     }
 
@@ -63,8 +61,17 @@ impl SchwabClient {
     pub async fn get_transactions(
         &self,
         account_hash: &str,
- start_date: DateTime<Utc>, end_date: DateTime<Utc>, transaction_type: TransactionType    ) -> Result<Transactions, Error> {
-        self.get_json(endpoints::transactions(account_hash, start_date, end_date, transaction_type)).await
+        start_date: DateTime<Utc>,
+        end_date: DateTime<Utc>,
+        transaction_type: TransactionType,
+    ) -> Result<Transactions, Error> {
+        self.get_json(endpoints::transactions(
+            account_hash,
+            start_date,
+            end_date,
+            transaction_type,
+        ))
+        .await
     }
 
     pub async fn get_transaction(

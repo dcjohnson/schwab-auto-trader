@@ -2,7 +2,10 @@ use crate::{
     Error,
     config::TradingConfig,
     oauth::token::OauthManager,
-    schwab::{client::SchwabClient, schemas::accounts_and_trading::accounts::{TransactionType, SecuritiesAccount}},
+    schwab::{
+        client::SchwabClient,
+        schemas::accounts_and_trading::accounts::{SecuritiesAccount, TransactionType},
+    },
 };
 use chrono::Local;
 use std::time::Duration;
@@ -79,7 +82,15 @@ impl AccountManager {
                             }
                         }
 
-                        match sc.get_transactions(&account_hash, Local::now().to_utc(), Local::now().to_utc() - Duration::from_secs(60 * 60 * 24 * 7 * 52), TransactionType::Trade ).await {
+                        match sc
+                            .get_transactions(
+                                &account_hash,
+                                Local::now().to_utc(),
+                                Local::now().to_utc() - Duration::from_secs(60 * 60 * 24 * 7 * 52),
+                                TransactionType::Trade,
+                            )
+                            .await
+                        {
                             Ok(transactions) => println!("transactions: {:?}", transactions),
                             Err(e) => println!("ERROR!: {}", e),
                         }
