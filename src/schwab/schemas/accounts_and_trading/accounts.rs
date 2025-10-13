@@ -640,7 +640,7 @@ pub struct TransactionAPIOptionDeliverable {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
+#[serde(untagged)]
 pub enum TransactionInstrument {
     TransactionCashEquivalent {
         asset_type: AssetType,
@@ -654,7 +654,7 @@ pub enum TransactionInstrument {
 
     CollectiveInvestment {
         asset_type: AssetType,
-        cusip: String,
+        cusip: Option<String>,
         symbol: String,
         description: String,
         instrument_id: i64,
@@ -663,12 +663,18 @@ pub enum TransactionInstrument {
     },
 
     Currency {
+        #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        cusip: String,
+        cusip: Option<String>, // listed in the spec, not actually returned
         symbol: String,
         description: String,
+        #[serde(rename(deserialize = "instrumentId"))]
         instrument_id: i64,
-        net_change: f64,
+        #[serde(rename(deserialize = "netChange"))]
+        net_change: Option<f64>,
+        status: String,
+        #[serde(rename(deserialize = "closingPrice"))]
+        closing_price: f64,
     },
 
     TransactionEquity {
@@ -682,7 +688,7 @@ pub enum TransactionInstrument {
     },
 
     TransactionFixedIncome {
-        asset_type: String,
+        asset_type: AssetType,
         cusip: String,
         symbol: String,
         description: String,
