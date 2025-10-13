@@ -1,3 +1,6 @@
+use chrono::{DateTime, Utc};
+use crate::schwab::schemas::accounts_and_trading::accounts::TransactionType;
+
 const MARKET_DATA_ENDPOINT: &str = "https://api.schwabapi.com/marketdata/v1";
 const TRADER_ENDPOINT: &str = "https://api.schwabapi.com/trader/v1";
 
@@ -20,10 +23,10 @@ pub fn ticker_quotes_data(ticker: &str) -> String {
     format!("{}/{}/quotes", MARKET_DATA_ENDPOINT, ticker)
 }
 
-pub fn transactions(account_number: &str) -> String {
+pub fn transactions(account_number: &str, start_date: DateTime<Utc>, end_date: DateTime<Utc>, transaction_type: TransactionType) -> String {
     format!(
-        "{}/accounts/{}/transactions",
-        TRADER_ENDPOINT, account_number
+        "{}/accounts/{}/transactions?startDate={}&endDate={}&types={}",
+        TRADER_ENDPOINT, account_number, start_date.to_rfc3339(), end_date.to_rfc3339(), transaction_type
     )
 }
 
