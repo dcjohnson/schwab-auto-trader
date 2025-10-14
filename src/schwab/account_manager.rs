@@ -4,7 +4,9 @@ use crate::{
     oauth::token::OauthManager,
     schwab::{
         client::SchwabClient,
-        schemas::accounts_and_trading::accounts::{SecuritiesAccount, TransactionType},
+        schemas::accounts_and_trading::accounts::{
+            SecuritiesAccount, TransactionInstrument, TransactionType,
+        },
     },
 };
 use chrono::Local;
@@ -91,7 +93,35 @@ impl AccountManager {
                             )
                             .await
                         {
-                            Ok(transactions) => println!("transactions: {:?}", transactions),
+                            Ok(transactions) => {
+                                println!("ITOT");
+
+                                for t in transactions.iter() {
+                                    for ti in t.transfer_items.iter() {
+                                        if let TransactionInstrument::CollectiveInvestment {
+                                            symbol,
+                                            ..
+                                        } = &ti.instrument
+                                        {
+                                            if symbol == "VTI" {
+                                                println!("VTI: {:?}", t); //ti.instrument);
+                                            }
+                                        }
+
+                                        if let TransactionInstrument::TransactionEquity { .. } =
+                                            &ti.instrument
+                                        {
+                                            println!("equity instrument: {:?}", ti.instrument);
+                                        }
+
+                                        if let TransactionInstrument::TransactionOption { .. } =
+                                            &ti.instrument
+                                        {
+                                            println!("option instrument: {:?}", ti.instrument);
+                                        }
+                                    }
+                                }
+                            }
                             Err(e) => println!("ERROR!: {}", e),
                         }
                     }
