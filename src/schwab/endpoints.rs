@@ -29,18 +29,14 @@ pub fn transactions(
     end_date: DateTime<Utc>,
     transaction_type: TransactionType,
 ) -> String {
-    let i = format!(
+    format!(
         "{}/accounts/{}/transactions?startDate={}&endDate={}&types={}",
         TRADER_ENDPOINT,
         account_number,
         urlencoding::encode(&start_date.to_rfc3339_opts(SecondsFormat::Secs, true)),
         urlencoding::encode(&end_date.to_rfc3339_opts(SecondsFormat::Secs, true)),
         transaction_type
-    );
-
-    println!("EEEE: {}", i);
-
-    i
+    )
 }
 
 pub fn transaction(account_number: &str, transaction_id: &str) -> String {
