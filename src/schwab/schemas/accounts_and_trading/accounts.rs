@@ -667,13 +667,20 @@ pub enum TransactionInstrument {
         #[serde(rename(deserialize = "type"))]
         tce_type: TransactionCashEquivalentType,
     },
-          "assetType": "COLLECTIVE_INVESTMENT",
-          "status": "ACTIVE",
-          "symbol": "ITOT",
-          "description": "ISHARES TOTAL US STOCK MARKET ETF IV",
-          "instrumentId": 4184986,
-          "closingPrice": 145.12,
-          "type": "EXCHANGE_TRADED_FUND"
+    
+    TransactionEquity {
+        #[serde(rename(deserialize = "assetType"))]
+        asset_type: AssetType,
+        symbol: String,
+        status: String,
+        #[serde(rename(deserialize = "instrumentId"))]
+        instrument_id: Option<i64>,
+        #[serde(rename(deserialize = "closingPrice"))]
+        closing_price: Option<f64>,
+        #[serde(rename(deserialize = "type"))]
+        te_type: Option<TransactionEquityType>,
+    },
+   
     CollectiveInvestment {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -764,29 +771,8 @@ pub enum TransactionInstrument {
         closing_price: f64,
     },
 
-    // during trading hours
-    // "assetType": "EQUITY",
-    // "status": "ACTIVE",
-    // "symbol": "RKLB",
-    // "instrumentId": 235396177,
-    // "closingPrice": 65.42,
-    // "type": "COMMON_STOCK"
-    TransactionEquity {
-        #[serde(rename(deserialize = "assetType"))]
-        asset_type: AssetType,
-        symbol: String,
-        status: String,
-        description: String,
-        #[serde(rename(deserialize = "instrumentId"))]
-        instrument_id: Option<i64>,
-        #[serde(rename(deserialize = "netChange"))]
-        net_change: Option<f64>,
-        #[serde(rename(deserialize = "closingPrice"))]
-        closing_price: Option<f64>,
-        #[serde(rename(deserialize = "type"))]
-        te_type: Option<TransactionEquityType>,
-    },
 
+    /*
     TransactionFixedIncome {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -884,4 +870,5 @@ pub enum TransactionInstrument {
         #[serde(rename(deserialize = "type"))]
         p_type: ProductType,
     },
+    */
 }
