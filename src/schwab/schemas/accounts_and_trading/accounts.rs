@@ -654,33 +654,19 @@ pub struct CollectiveInvestment {
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 pub enum TransactionInstrument {
-    TransactionCashEquivalent {
-        #[serde(rename(deserialize = "assetType"))]
-        asset_type: AssetType,
-        cusip: String,
-        symbol: String,
-        description: String,
-        #[serde(rename(deserialize = "instrumentId"))]
-        instrument_id: i64,
-        #[serde(rename(deserialize = "netChange"))]
-        net_change: f64,
-        #[serde(rename(deserialize = "type"))]
-        tce_type: TransactionCashEquivalentType,
-    },
-    
     TransactionEquity {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
         symbol: String,
         status: String,
         #[serde(rename(deserialize = "instrumentId"))]
-        instrument_id: Option<i64>,
+        instrument_id: i64,
         #[serde(rename(deserialize = "closingPrice"))]
-        closing_price: Option<f64>,
+        closing_price: f64,
         #[serde(rename(deserialize = "type"))]
-        te_type: Option<TransactionEquityType>,
+        te_type: TransactionEquityType,
     },
-   
+
     CollectiveInvestment {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -695,39 +681,9 @@ pub enum TransactionInstrument {
         ci_ype: CollectiveInvestmentType,
     },
 
-    //      "assetType": "OPTION",
-    //      "status": "ACTIVE",
-    //      "symbol": "RKLB  261218C00070000",
-    //      "description": "ROCKET LAB CORP 12/18/2026 $70 Call",
-    //      "instrumentId": 237089792,
-    //      "closingPrice": 23.0308,
-    //      "expirationDate": "2026-12-18T05:00:00+0000",
-    //      "optionDeliverables": [
-    //        {
-    //          "rootSymbol": "RKLB",
-    //          "strikePercent": 100,
-    //          "deliverableNumber": 1,
-    //          "deliverableUnits": 100.0,
-    //          "deliverable": {
-    //            "assetType": "EQUITY",
-    //            "status": "ACTIVE",
-    //            "symbol": "RKLB",
-    //            "instrumentId": 235396177,
-    //            "closingPrice": 65.42,
-    //            "type": "COMMON_STOCK"
-    //         }
-    //        }
-    //      ],
-    //      "optionPremiumMultiplier": 100,
-    //      "putCall": "CALL",
-    //      "strikePrice": 70.0,
-    //      "type": "VANILLA",
-    //      "underlyingSymbol": "RKLB",
-    //      "underlyingCusip": "773121108"
     TransactionOption {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        cusip: Option<String>,
         status: String,
         symbol: String,
         #[serde(rename(deserialize = "closingPrice"))]
@@ -735,8 +691,6 @@ pub enum TransactionInstrument {
         description: String,
         #[serde(rename(deserialize = "instrumentId"))]
         instrument_id: i64,
-        #[serde(rename(deserialize = "netChange"))]
-        net_change: Option<f64>,
         #[serde(rename(deserialize = "expirationDate"))]
         expiration_date: String,
         #[serde(rename(deserialize = "optionDeliverables"))]
@@ -753,10 +707,8 @@ pub enum TransactionInstrument {
         underlying_symbol: String,
         #[serde(rename(deserialize = "underlyingCusip"))]
         underlying_cusip: String,
-        // deliverable empty field?
     },
 
-    // {"assetType":"CURRENCY","status":"ACTIVE","symbol":"CURRENCY_USD","description":"USD currency","instrumentId":1,"closingPrice":0.0}
     Currency {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -770,105 +722,21 @@ pub enum TransactionInstrument {
         #[serde(rename(deserialize = "closingPrice"))]
         closing_price: f64,
     },
-
-
     /*
-    TransactionFixedIncome {
-        #[serde(rename(deserialize = "assetType"))]
-        asset_type: AssetType,
-        cusip: String,
-        symbol: String,
-        description: String,
-        #[serde(rename(deserialize = "instrumentId"))]
-        instrument_id: i64,
-        #[serde(rename(deserialize = "netChange"))]
-        net_change: f64,
-        #[serde(rename(deserialize = "type"))]
-        tfi_type: TransactionFixedIncomeType,
-        #[serde(rename(deserialize = "maturityDate"))]
-        maturity_date: String,
-        factor: f64,
-        multiplier: f64,
-        #[serde(rename(deserialize = "variableRate"))]
-        variable_rate: f64,
-    },
+    Other types I may implement in the future
 
-    Forex {
-        #[serde(rename(deserialize = "assetType"))]
-        asset_type: AssetType,
-        cusip: String,
-        symbol: String,
-        description: String,
-        #[serde(rename(deserialize = "instrumentId"))]
-        instrument_id: i64,
-        #[serde(rename(deserialize = "netChange"))]
-        net_change: f64,
-        #[serde(rename(deserialize = "type"))]
-        f_type: ForexType,
-        #[serde(rename(deserialize = "baseCurrency"))]
-        base_currency: Currency,
-        #[serde(rename(deserialize = "counterCurrency"))]
-        counter_currency: Currency,
-    },
+    TransactionCashEquivalent { },
 
-    Future {
-        #[serde(rename(deserialize = "activeContract"))]
-        active_contract: bool,
-        #[serde(rename(deserialize = "type"))]
-        f_type: FutureType,
-        #[serde(rename(deserialize = "expirationDate"))]
-        expiration_date: String,
-        #[serde(rename(deserialize = "lastTradingDate"))]
-        last_trading_date: String,
-        #[serde(rename(deserialize = "firstNoticeDate"))]
-        first_notice_date: String,
-        multiplier: f64,
-    },
+    TransactionFixedIncome { },
 
-    Index {
-        #[serde(rename(deserialize = "activeContract"))]
-        active_contract: bool,
-        #[serde(rename(deserialize = "type"))]
-        i_type: IndexType,
-    },
+    Forex { },
 
-    TransactionMutualFund {
-        #[serde(rename(deserialize = "assetType"))]
-        asset_type: AssetType,
-        cusip: String,
-        symbol: String,
-        description: String,
-        #[serde(rename(deserialize = "instrumentId"))]
-        instrument_id: i64,
-        #[serde(rename(deserialize = "netChange"))]
-        net_change: f64,
-        #[serde(rename(deserialize = "fundFamilyName"))]
-        fund_family_name: String,
-        #[serde(rename(deserialize = "fundFamilySymbol"))]
-        fund_family_symbol: String,
-        #[serde(rename(deserialize = "fundGroup"))]
-        fund_group: String,
-        tmf_type: TransactionMutualFundType,
-        #[serde(rename(deserialize = "exchangeCutoffTime"))]
-        exchange_cutoff_time: String,
-        #[serde(rename(deserialize = "purchaseCutoffTime"))]
-        purchase_cutoff_time: String,
-        #[serde(rename(deserialize = "redemptionCutoffTime"))]
-        redemption_cutoff_time: String,
-    },
+    Future { },
 
-    Product {
-        #[serde(rename(deserialize = "assetType"))]
-        asset_type: AssetType,
-        cusip: String,
-        symbol: String,
-        description: String,
-        #[serde(rename(deserialize = "instrumentId"))]
-        instrument_id: f64,
-        #[serde(rename(deserialize = "netChange"))]
-        net_change: f64,
-        #[serde(rename(deserialize = "type"))]
-        p_type: ProductType,
-    },
+    Index { },
+
+    TransactionMutualFund { },
+
+    Product { },
     */
 }
