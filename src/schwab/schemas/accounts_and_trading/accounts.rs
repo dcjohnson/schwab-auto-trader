@@ -667,21 +667,23 @@ pub enum TransactionInstrument {
         #[serde(rename(deserialize = "type"))]
         tce_type: TransactionCashEquivalentType,
     },
-
-    // {"assetType":"COLLECTIVE_INVESTMENT","status":"ACTIVE","symbol":"ITOT","description":"ISHARES TOTAL US STOCK MARKET ETF IV","instrumentId":4184986,"closingPrice":145.12,"type":"EXCHANGE_TRADED_FUND"}
+          "assetType": "COLLECTIVE_INVESTMENT",
+          "status": "ACTIVE",
+          "symbol": "ITOT",
+          "description": "ISHARES TOTAL US STOCK MARKET ETF IV",
+          "instrumentId": 4184986,
+          "closingPrice": 145.12,
+          "type": "EXCHANGE_TRADED_FUND"
     CollectiveInvestment {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        status: Option<String>,
-        cusip: Option<String>,
+        status: String,
         symbol: String,
         description: String,
         #[serde(rename(deserialize = "instrumentId"))]
         instrument_id: i64,
-        #[serde(rename(deserialize = "netChange"))]
-        net_change: Option<f64>,
         #[serde(rename(deserialize = "closingPrice"))]
-        closing_price: Option<f64>,
+        closing_price: f64,
         #[serde(rename(deserialize = "type"))]
         ci_ype: CollectiveInvestmentType,
     },
@@ -772,10 +774,9 @@ pub enum TransactionInstrument {
     TransactionEquity {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        cusip: Option<String>,
         symbol: String,
         status: String,
-        description: Option<String>,
+        description: String,
         #[serde(rename(deserialize = "instrumentId"))]
         instrument_id: Option<i64>,
         #[serde(rename(deserialize = "netChange"))]
