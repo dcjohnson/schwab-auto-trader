@@ -9,7 +9,7 @@ use crate::{
         },
     },
 };
-use chrono::Local;
+use chrono::{DateTime, Local, Utc};
 use std::time::Duration;
 use tokio::{sync::watch, task::JoinSet};
 
@@ -60,6 +60,7 @@ impl AccountManager {
     pub async fn update_stock_basis(
         om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
         account_hash: String,
+        oldest_transaction_date: DateTime<Utc>,
     ) -> Result<(), Error> {
         let sc = match om.lock().await.get_unexpired_token() {
             Some(Ok(token)) => Ok(SchwabClient::new(token)),
@@ -70,7 +71,7 @@ impl AccountManager {
         let transactions = sc
             .get_transactions(
                 &account_hash,
-                Local::now().to_utc() - Duration::from_secs(60 * 60 * 24 * 7 * 52),
+                oldest_transaction_date,
                 Local::now().to_utc(),
                 TransactionType::Trade,
             )
@@ -135,7 +136,12 @@ impl AccountManager {
         self.initialize_account_hash().await?;
 
         // initialize stock basis
-        Self::update_stock_basis(self.om.clone(), self.account_hash.clone()).await?;
+        Self::update_stock_basis(
+            self.om.clone(),
+            self.account_hash.clone(),
+            self.trading_config.oldest_transaction_date,
+        )
+        .await?;
 
         self.js.spawn({
             let om = self.om.clone();
