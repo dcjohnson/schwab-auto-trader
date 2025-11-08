@@ -17,7 +17,7 @@ pub struct AccountManager {
     trading_config: TradingConfig,
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     account_data: watch::Sender<AccountData>,
-    account_hash: watch::Sender<String>,
+    account_hash: String,
     js: JoinSet<Result<(), Error>>,
 }
 
@@ -48,10 +48,7 @@ impl AccountManager {
                 let (s, _) = watch::channel(AccountData::default());
                 s
             },
-            account_hash: {
-                let (s, _) = watch::channel(String::default());
-                s
-            },
+            account_hash: String::default(),
             js: JoinSet::new(),
         }
     }
@@ -59,89 +56,101 @@ impl AccountManager {
     pub fn account_data_watcher(&mut self) -> watch::Receiver<AccountData> {
         self.account_data.subscribe()
     }
-    pub async fn initialize_stock_basis(&mut self) -> Result<(), Error> {
-        loop {
-            let mut sc = if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
-                SchwabClient::new(token)
-            } else {
-                continue;
-            };
+
+    pub async fn update_stock_basis(
+        om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
+        account_hash: String,
+    ) -> Result<(), Error> {
+        let sc = match om.lock().await.get_unexpired_token() {
+            Some(Ok(token)) => Ok(SchwabClient::new(token)),
+            Some(Err(e)) => Err(e),
+            None => Err("no token".into()),
+        }?;
+
+        let transactions = sc
+            .get_transactions(
+                &account_hash,
+                Local::now().to_utc() - Duration::from_secs(60 * 60 * 24 * 7 * 52),
+                Local::now().to_utc(),
+                TransactionType::Trade,
+            )
+            .await?;
+        println!("ITOT");
+
+        for t in transactions.iter() {
+            for ti in t.transfer_items.iter() {
+                if let TransactionInstrument::CollectiveInvestment { symbol, .. } = &ti.instrument {
+                    if symbol == "VTI" {
+                        println!("VTI: {:?}", t); //ti.instrument);
+                    }
+                }
+
+                if let TransactionInstrument::TransactionEquity { .. } = &ti.instrument {
+                    println!("equity instrument: {:?}", ti.instrument);
+                }
+
+                if let TransactionInstrument::TransactionOption { .. } = &ti.instrument {
+                    println!("option instrument: {:?}", ti.instrument);
+                }
+            }
         }
+        Ok(())
+    }
+
+    async fn initialize_account_hash(&mut self) -> Result<(), Error> {
+        self.account_hash = 'outer: loop {
+            if let Some(Ok(token)) = self.om.lock().await.get_unexpired_token() {
+                for an in SchwabClient::new(token).get_account_numbers().await?.iter() {
+                    if an.account_number == self.trading_config.account_number {
+                        log::info!("Retrieved the account hash.");
+                        break 'outer an.hash_value.clone();
+                    }
+                }
+                return Err("Account hash not found".into());
+            }
+        };
+
+        Ok(())
+    }
+
+    async fn update_account_data(
+        om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
+        account_data: watch::Sender<AccountData>,
+        account_hash: String,
+    ) -> Result<(), Error> {
+        if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
+            let account = SchwabClient::new(token).get_account(&account_hash).await?;
+
+            if let Some(securities_account) = account.securities_account {
+                account_data.send_modify(|ad| {
+                    ad.update(&securities_account);
+                });
+            }
+        }
+        Ok(())
     }
 
     pub async fn init(&mut self, timeout: tokio::time::Duration) -> Result<(), Error> {
+        // initialize account hash
+        self.initialize_account_hash().await?;
+
+        // initialize stock basis
+        Self::update_stock_basis(self.om.clone(), self.account_hash.clone()).await?;
+
         self.js.spawn({
             let om = self.om.clone();
             let account_data = self.account_data.clone();
-            let trading_config = self.trading_config.clone();
+            let account_hash = self.account_hash.clone();
             async move {
-                let account_hash = 'outer: loop {
-                    if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
-                        for an in SchwabClient::new(token).get_account_numbers().await?.iter() {
-                            if an.account_number == trading_config.account_number {
-                                log::info!("Retrieved the account hash.");
-                                break 'outer an.hash_value.clone();
-                            }
-                        }
-                    }
-                    tokio::time::sleep(timeout).await;
-                };
-
-                self.account_hash.send_modify(|ah| {
-                    ah = account_hash;
-                });
-
                 loop {
-                    if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
-                        let sc = SchwabClient::new(token);
-                        if let Ok(account) = sc.get_account(&account_hash).await {
-                            if let Some(securities_account) = account.securities_account {
-                                account_data.send_modify(|ad| {
-                                    ad.update(&securities_account);
-                                });
-                            }
-                        }
-
-                        match sc
-                            .get_transactions(
-                                &account_hash,
-                                Local::now().to_utc() - Duration::from_secs(60 * 60 * 24 * 7 * 52),
-                                Local::now().to_utc(),
-                                TransactionType::Trade,
-                            )
-                            .await
-                        {
-                            Ok(transactions) => {
-                                println!("ITOT");
-
-                                for t in transactions.iter() {
-                                    for ti in t.transfer_items.iter() {
-                                        if let TransactionInstrument::CollectiveInvestment {
-                                            symbol,
-                                            ..
-                                        } = &ti.instrument
-                                        {
-                                            if symbol == "VTI" {
-                                                println!("VTI: {:?}", t); //ti.instrument);
-                                            }
-                                        }
-
-                                        if let TransactionInstrument::TransactionEquity { .. } =
-                                            &ti.instrument
-                                        {
-                                            println!("equity instrument: {:?}", ti.instrument);
-                                        }
-
-                                        if let TransactionInstrument::TransactionOption { .. } =
-                                            &ti.instrument
-                                        {
-                                            println!("option instrument: {:?}", ti.instrument);
-                                        }
-                                    }
-                                }
-                            }
-                            Err(e) => println!("ERROR!: {}", e),
-                        }
+                    if let Err(e) = Self::update_account_data(
+                        om.clone(),
+                        account_data.clone(),
+                        account_hash.clone(),
+                    )
+                    .await
+                    {
+                        log::error!("Error when updating account data: '{}'", e);
                     }
                     tokio::time::sleep(timeout).await;
                 }
