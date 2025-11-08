@@ -59,14 +59,14 @@ impl AccountManager {
     pub fn account_data_watcher(&mut self) -> watch::Receiver<AccountData> {
         self.account_data.subscribe()
     }
-}
-pub async fn initialize_stock_basis(&mut self) -> Result<(), Error> {
-    loop {
-        let mut sc = if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
-            SchwabClient::new(token)
-        } else {
-            continue;
-        };
+    pub async fn initialize_stock_basis(&mut self) -> Result<(), Error> {
+        loop {
+            let mut sc = if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
+                SchwabClient::new(token)
+            } else {
+                continue;
+            };
+        }
     }
 
     pub async fn init(&mut self, timeout: tokio::time::Duration) -> Result<(), Error> {
