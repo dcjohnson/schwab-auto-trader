@@ -17,6 +17,7 @@ pub struct AccountManager {
     trading_config: TradingConfig,
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     account_data: watch::Sender<AccountData>,
+    account_hash: watch::Sender<String>,
     js: JoinSet<Result<(), Error>>,
 }
 
@@ -47,12 +48,25 @@ impl AccountManager {
                 let (s, _) = watch::channel(AccountData::default());
                 s
             },
+            account_hash: {
+                let (s, _) = watch::channel(String::default());
+                s
+            },
             js: JoinSet::new(),
         }
     }
 
     pub fn account_data_watcher(&mut self) -> watch::Receiver<AccountData> {
         self.account_data.subscribe()
+    }
+}
+pub async fn initialize_stock_basis(&mut self) -> Result<(), Error> {
+    loop {
+        let mut sc = if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
+            SchwabClient::new(token)
+        } else {
+            continue;
+        };
     }
 
     pub async fn init(&mut self, timeout: tokio::time::Duration) -> Result<(), Error> {
@@ -72,6 +86,10 @@ impl AccountManager {
                     }
                     tokio::time::sleep(timeout).await;
                 };
+
+                self.account_hash.send_modify(|ah| {
+                    ah = account_hash;
+                });
 
                 loop {
                     if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
