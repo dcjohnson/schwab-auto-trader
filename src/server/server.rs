@@ -62,16 +62,21 @@ pub async fn run_server(
     // Create a TCP listener via tokio.
     let incoming = TcpListener::bind(&addr).await?;
 
+    println!("a 1");
     // Build TLS configuration.
     let mut server_config = ServerConfig::builder()
         .with_no_client_auth()
         .with_single_cert(certs, key)
         .map_err(|e| error(e.to_string()))?;
+    println!("a 2");
     server_config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec(), b"http/1.0".to_vec()];
+    println!("a 3");
     let tls_acceptor = TlsAcceptor::from(Arc::new(server_config));
+    println!("a 4");
     let renderer = html::Renderer::new()?;
+    println!("a 5");
     let account_data_watcher = account_manager.lock().await.account_data_watcher();
-
+    println!("a 6");
     loop {
         tokio::select! {
             _ = cancel_token.cancelled() => return Ok(()),
@@ -86,10 +91,13 @@ pub async fn run_server(
                                     let renderer = renderer.clone();
                                     let account_data_watcher = account_data_watcher.clone();
 
+                                    println!("E 1");
                                     async move {
+                                        println!("E 2");
                                         if let Err(err) = hyper::server::conn::http2::Builder::new(TokioExecutor)
                                             .serve_connection(io, Svc::new(om, renderer, account_data_watcher))
                                             .await {
+                                                println!("E 3");
                                                 log::warn!("Error serving connection: {}", err);
                                         }
                                     }
@@ -138,12 +146,15 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
         Box::pin(async move {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
+                    println!("1");
                     if svc.om.lock().await.has_token() {
+                        println!("2");
                         return Ok(Response::new(Full::from(format!(
                             "account_value: {}",
                             svc.account_data_watcher.borrow().account_value
                         ))));
                     } else {
+                        println!("3");
                         return Ok(Response::new(Full::from(
                             svc.renderer
                                 .oauth(&html::OauthArgs {

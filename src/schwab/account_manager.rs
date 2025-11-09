@@ -17,7 +17,7 @@ pub struct AccountManager {
     trading_config: TradingConfig,
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     account_data: watch::Sender<AccountData>,
-    account_hash: String,
+    account_hash: std::sync::Arc<tokio::sync::RwLock<String>>,
     js: JoinSet<Result<(), Error>>,
 }
 
@@ -48,7 +48,7 @@ impl AccountManager {
                 let (s, _) = watch::channel(AccountData::default());
                 s
             },
-            account_hash: String::default(),
+            account_hash: std::sync::Arc::new(tokio::sync::RwLock::new(String::default())),
             js: JoinSet::new(),
         }
     }
@@ -98,17 +98,22 @@ impl AccountManager {
         Ok(())
     }
 
-    async fn initialize_account_hash(&mut self) -> Result<(), Error> {
-        self.account_hash = 'outer: loop {
-            if let Some(Ok(token)) = self.om.lock().await.get_unexpired_token() {
+    async fn initialize_account_hash(
+        om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
+        account_hash: std::sync::Arc<tokio::sync::RwLock<String>>,
+        trading_config: TradingConfig,
+    ) -> Result<(), Error> {
+        *account_hash.write().await = 'outer: loop {
+            if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
                 for an in SchwabClient::new(token).get_account_numbers().await?.iter() {
-                    if an.account_number == self.trading_config.account_number {
+                    if an.account_number == trading_config.account_number {
                         log::info!("Retrieved the account hash.");
                         break 'outer an.hash_value.clone();
                     }
                 }
                 return Err("Account hash not found".into());
             }
+            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
         };
 
         Ok(())
@@ -133,26 +138,34 @@ impl AccountManager {
 
     pub async fn init(&mut self, timeout: tokio::time::Duration) -> Result<(), Error> {
         // initialize account hash
-        self.initialize_account_hash().await?;
 
-        // initialize stock basis
-        Self::update_stock_basis(
-            self.om.clone(),
-            self.account_hash.clone(),
-            self.trading_config.oldest_transaction_date,
-        )
-        .await?;
-
+        /*
+                // initialize stock basis
+                Self::update_stock_basis(
+                    self.om.clone(),
+                    self.account_hash.clone(),
+                    self.trading_config.oldest_transaction_date,
+                )
+                .await?;
+        */
         self.js.spawn({
             let om = self.om.clone();
             let account_data = self.account_data.clone();
             let account_hash = self.account_hash.clone();
+            let trading_config = self.trading_config.clone();
             async move {
+                Self::initialize_account_hash(
+                    om.clone(),
+                    account_hash.clone(),
+                    trading_config.clone(),
+                )
+                .await?;
+
                 loop {
                     if let Err(e) = Self::update_account_data(
                         om.clone(),
                         account_data.clone(),
-                        account_hash.clone(),
+                        (*account_hash.read().await).clone(),
                     )
                     .await
                     {

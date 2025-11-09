@@ -27,7 +27,7 @@ pub struct TradingConfig {
     pub account_number: String,
     pub trading_collections: Vec<TradingCollection>,
     pub allocations: Vec<Allocation>,
-    pub oldest_transaction_date: DateTime<Utc>,
+    // pub oldest_transaction_date: DateTime<Utc>,
 }
 
 impl TradingConfig {
