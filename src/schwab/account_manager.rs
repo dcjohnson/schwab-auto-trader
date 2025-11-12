@@ -136,18 +136,26 @@ impl AccountManager {
         Ok(())
     }
 
-    pub async fn init(&mut self, timeout: tokio::time::Duration) -> Result<(), Error> {
-        // initialize account hash
+    async fn print_orders(
+        om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
+        account_hash: String,
+    ) -> Result<(), Error> {
+        if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
+            log::info!(
+                "ORDERS: {}",
+                SchwabClient::new(token)
+                    .get_orders(
+                        &account_hash,
+                        Utc::now() - std::time::Duration::from_secs(60 * 60 * 24 * 7 * 52),
+                        Utc::now()
+                    )
+                    .await?
+            );
+        }
+        Ok(())
+    }
 
-        /*
-                // initialize stock basis
-                Self::update_stock_basis(
-                    self.om.clone(),
-                    self.account_hash.clone(),
-                    self.trading_config.oldest_transaction_date,
-                )
-                .await?;
-        */
+    pub async fn init(&mut self, timeout: tokio::time::Duration) -> Result<(), Error> {
         self.js.spawn({
             let om = self.om.clone();
             let account_data = self.account_data.clone();
@@ -162,15 +170,21 @@ impl AccountManager {
                 .await?;
 
                 loop {
+                    let account_hash = (*account_hash.read().await).clone();
                     if let Err(e) = Self::update_account_data(
                         om.clone(),
                         account_data.clone(),
-                        (*account_hash.read().await).clone(),
+                        account_hash.clone(),
                     )
                     .await
                     {
                         log::error!("Error when updating account data: '{}'", e);
                     }
+
+                    if let Err(e) = Self::print_orders(om.clone(), account_hash.clone()).await {
+                        log::error!("Error printing orders: '{}'", e);
+                    }
+
                     tokio::time::sleep(timeout).await;
                 }
             }

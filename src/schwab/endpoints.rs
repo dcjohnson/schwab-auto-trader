@@ -45,3 +45,17 @@ pub fn transaction(account_number: &str, transaction_id: &str) -> String {
         TRADER_ENDPOINT, account_number, transaction_id
     )
 }
+
+pub fn orders(
+    account_number: &str,
+    from_entered_time: DateTime<Utc>,
+    to_entered_time: DateTime<Utc>,
+) -> String {
+    format!(
+        "{}/accounts/{}/orders?fromEnteredTime={}&toEnteredTime={}",
+        TRADER_ENDPOINT,
+        account_number,
+        urlencoding::encode(&from_entered_time.to_rfc3339_opts(SecondsFormat::Secs, true)),
+        urlencoding::encode(&to_entered_time.to_rfc3339_opts(SecondsFormat::Secs, true)),
+    )
+}

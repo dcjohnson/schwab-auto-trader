@@ -58,6 +58,20 @@ impl SchwabClient {
         self.get(endpoints::ticker_quotes_data(ticker)).await
     }
 
+    pub async fn get_orders(
+        &self,
+        account_hash: &str,
+        from_entered_time: DateTime<Utc>,
+        to_entered_time: DateTime<Utc>,
+    ) -> Result<String, Error> {
+        self.get(endpoints::orders(
+            account_hash,
+            from_entered_time,
+            to_entered_time,
+        ))
+        .await
+    }
+
     pub async fn get_transactions(
         &self,
         account_hash: &str,

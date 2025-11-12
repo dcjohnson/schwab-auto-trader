@@ -18,6 +18,13 @@ struct Args {
     config_file_path: String,
 }
 
+// Next steps; since we can't access the basis of the stocks lots, we can only do Tax Loss
+// Harvesting by buying put options. There might be some more details in the accounts section but I
+// am not sure what that is at the moment. 
+//
+// This means that I can start on implementing the purcashing algorithm based on percent allocation
+// of certain equities. We can figure out the TLH later.
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     // todo: add a nice login web page
