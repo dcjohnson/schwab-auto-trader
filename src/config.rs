@@ -66,12 +66,15 @@ impl TradingConfig {
     }
 }
 
+// A collection of stocks under an ID, suports multiple stocks for Tax Loss Harvesting in the
+// Future.
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct TradingCollection {
     pub id: String,
     pub collection: Vec<String>,
 }
 
+// The allocations per collection
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct Allocation {
     pub id: String,

@@ -13,6 +13,21 @@ use chrono::{DateTime, Local, Utc};
 use std::time::Duration;
 use tokio::{sync::watch, task::JoinSet};
 
+// In this Manager, we will want to represent a state we want to achieve/maintain.
+
+// Each instance of this will want to have a client so it can pull the relevant data from Charles
+// Schwab.
+pub trait CollectionManager {
+    fn invest(&mut self, amount: f64); 
+    fn liquidate(&mut self, amount: f64);
+}
+
+// This trait will represent a tradeable security. It can represent more than one item or a single
+// security.
+pub trait TradingItem { 
+    fn allocation(&self) -> f64;
+}
+
 pub struct AccountManager {
     trading_config: TradingConfig,
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
