@@ -15,57 +15,27 @@ use tokio::{sync::watch, task::JoinSet};
 
 // In this Manager, we will want to represent a state we want to achieve/maintain.
 
-/*
-// Each instance of this will have a watcher to the AccountManager AccountData. This trait will
-// also have the logic to determine if we need to buy the main security of the secondary one due to
-// TLH.
-pub trait CollectionManager {
-    fn allocation(&self) -> f64;
-    fn op(&mut self) -> Result<(), Error>;
-}
-
-// This trait will represent a tradeable security. It can represent more than one item or a single
-// security.
-pub trait TradingItem {
-    // Invest some amount
-    fn invest(&mut self, amount: f64) -> Result<(), Error>;
-
-    // Liquidate some amount
-    fn liquidate(&mut self, amount: f64) -> Result<(), Error>;
-
-    // Ticker symbol
-    fn name(&self) -> String;
-}
-
-struct InvestableSecurity {
-    client: SchwabClient,
-}
-
-impl InvestableSecurity {
-
-}
-*/
-
 enum Amount {
     PercentageValue(f64),
     AmountValue(u64),
 }
 
 struct AccountInvestments {
-    group_name: String,
-    priority_queue_investments: Vec<AccountInvestments>,
+    priority_queue_investments: Vec<Investment>,
     enable_tax_loss_harvesting: bool,
     // debt limit in dollars
     margin_debt_limit: f64,
 }
 
 struct Investment {
+    group_name: String,
     equities: Vec<String>,
     amount: Amount,
 }
 
 pub struct AccountManager {
-    trading_config: TradingConfig,
+    account_number: String,
+    investments: AccountInvestments,
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     account_data: watch::Sender<AccountData>,
     account_hash: std::sync::Arc<tokio::sync::RwLock<String>>,
@@ -93,7 +63,8 @@ impl AccountManager {
         om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     ) -> Self {
         Self {
-            trading_config,
+            account_number: trading_config.account_number.clone(),
+            investments: Self::account_config_from_trading_config(&trading_config),
             om,
             account_data: {
                 let (s, _) = watch::channel(AccountData::default());
@@ -101,6 +72,37 @@ impl AccountManager {
             },
             account_hash: std::sync::Arc::new(tokio::sync::RwLock::new(String::default())),
             js: JoinSet::new(),
+        }
+    }
+
+    fn account_config_from_trading_config(trading_config: &TradingConfig) -> AccountInvestments {
+        AccountInvestments {
+            priority_queue_investments: {
+                let (groups, allocation_percent, allocation_amount) = trading_config.to_maps();
+
+                allocation_percent.iter().fold(
+                    allocation_amount
+                        .iter()
+                        .fold(Vec::new(), |mut v, (id, amount)| {
+                            v.push(Investment {
+                                group_name: id.clone(),
+                                equities: groups[id].clone(),
+                                amount: Amount::AmountValue(*amount),
+                            });
+                            v
+                        }),
+                    |mut v, (id, percent)| {
+                        v.push(Investment {
+                            group_name: id.clone(),
+                            equities: groups[id].clone(),
+                            amount: Amount::PercentageValue(*percent),
+                        });
+                        v
+                    },
+                )
+            },
+            enable_tax_loss_harvesting: false,
+            margin_debt_limit: trading_config.margin_debt_limit,
         }
     }
 
@@ -152,12 +154,12 @@ impl AccountManager {
     async fn initialize_account_hash(
         om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
         account_hash: std::sync::Arc<tokio::sync::RwLock<String>>,
-        trading_config: TradingConfig,
+        account_number: String,
     ) -> Result<(), Error> {
         *account_hash.write().await = 'outer: loop {
             if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
                 for an in SchwabClient::new(token).get_account_numbers().await?.iter() {
-                    if an.account_number == trading_config.account_number {
+                    if an.account_number == account_number {
                         log::info!("Retrieved the account hash.");
                         break 'outer an.hash_value.clone();
                     }
@@ -211,14 +213,10 @@ impl AccountManager {
             let om = self.om.clone();
             let account_data = self.account_data.clone();
             let account_hash = self.account_hash.clone();
-            let trading_config = self.trading_config.clone();
+            let account_number = self.account_number.clone();
             async move {
-                Self::initialize_account_hash(
-                    om.clone(),
-                    account_hash.clone(),
-                    trading_config.clone(),
-                )
-                .await?;
+                Self::initialize_account_hash(om.clone(), account_hash.clone(), account_number)
+                    .await?;
 
                 loop {
                     let account_hash = (*account_hash.read().await).clone();

@@ -34,7 +34,13 @@ pub struct TradingConfig {
 }
 
 impl TradingConfig {
-    pub fn to_maps(&self) -> (HashMap<String, Vec<String>>, HashMap<String, f64>) {
+    pub fn to_maps(
+        &self,
+    ) -> (
+        HashMap<String, Vec<String>>,
+        HashMap<String, f64>,
+        HashMap<String, u64>,
+    ) {
         (
             self.trading_collections
                 .iter()
@@ -48,19 +54,31 @@ impl TradingConfig {
                     m.insert(v.id.clone(), v.percent.clone());
                     m
                 }),
+            self.allocations_amount
+                .iter()
+                .fold(HashMap::new(), |mut m, v| {
+                    m.insert(v.id.clone(), v.amount.clone());
+                    m
+                }),
         )
     }
     pub fn validate(&self) -> Result<(), Error> {
-        let (collections, allocations) = self.to_maps();
+        let (collections, percents, amounts) = self.to_maps();
 
         let mut sum = 0.0;
 
-        for (id, a) in allocations.iter() {
+        for (id, a) in percents.iter() {
             if !collections.contains_key(id) {
                 return Err(format!("'{}' is not a known collection", id).into());
             }
 
             sum += a;
+        }
+
+        for (id, a) in amounts.iter() {
+            if !collections.contains_key(id) {
+                return Err(format!("'{}' is not a known collection", id).into());
+            }
         }
 
         if sum != 100.0 {
@@ -91,7 +109,7 @@ pub struct AllocationPercent {
 pub struct AllocationAmount {
     pub id: String,
 
-    pub mount: u64,
+    pub amount: u64,
 }
 
 impl Config {
