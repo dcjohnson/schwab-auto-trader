@@ -15,17 +15,53 @@ use tokio::{sync::watch, task::JoinSet};
 
 // In this Manager, we will want to represent a state we want to achieve/maintain.
 
-// Each instance of this will want to have a client so it can pull the relevant data from Charles
-// Schwab.
+/*
+// Each instance of this will have a watcher to the AccountManager AccountData. This trait will
+// also have the logic to determine if we need to buy the main security of the secondary one due to
+// TLH.
 pub trait CollectionManager {
-    fn invest(&mut self, amount: f64); 
-    fn liquidate(&mut self, amount: f64);
+    fn allocation(&self) -> f64;
+    fn op(&mut self) -> Result<(), Error>;
 }
 
 // This trait will represent a tradeable security. It can represent more than one item or a single
 // security.
-pub trait TradingItem { 
-    fn allocation(&self) -> f64;
+pub trait TradingItem {
+    // Invest some amount
+    fn invest(&mut self, amount: f64) -> Result<(), Error>;
+
+    // Liquidate some amount
+    fn liquidate(&mut self, amount: f64) -> Result<(), Error>;
+
+    // Ticker symbol
+    fn name(&self) -> String;
+}
+
+struct InvestableSecurity {
+    client: SchwabClient,
+}
+
+impl InvestableSecurity {
+
+}
+*/
+
+enum Amount {
+    PercentageValue(f64),
+    AmountValue(u64),
+}
+
+struct AccountInvestments {
+    group_name: String,
+    priority_queue_investments: Vec<AccountInvestments>,
+    enable_tax_loss_harvesting: bool,
+    // debt limit in dollars
+    margin_debt_limit: f64,
+}
+
+struct Investment {
+    equities: Vec<String>,
+    amount: Amount,
 }
 
 pub struct AccountManager {

@@ -26,8 +26,11 @@ impl Config {
 pub struct TradingConfig {
     pub account_number: String,
     pub trading_collections: Vec<TradingCollection>,
-    pub allocations: Vec<Allocation>,
-    // pub oldest_transaction_date: DateTime<Utc>,
+    pub allocations_percent: Vec<AllocationPercent>,
+    pub allocations_amount: Vec<AllocationAmount>,
+
+    // will be -infinity to 0.
+    pub margin_debt_limit: f64,
 }
 
 impl TradingConfig {
@@ -39,10 +42,12 @@ impl TradingConfig {
                     m.insert(v.id.clone(), v.collection.clone());
                     m
                 }),
-            self.allocations.iter().fold(HashMap::new(), |mut m, v| {
-                m.insert(v.id.clone(), v.allocation.clone());
-                m
-            }),
+            self.allocations_percent
+                .iter()
+                .fold(HashMap::new(), |mut m, v| {
+                    m.insert(v.id.clone(), v.percent.clone());
+                    m
+                }),
         )
     }
     pub fn validate(&self) -> Result<(), Error> {
@@ -76,9 +81,17 @@ pub struct TradingCollection {
 
 // The allocations per collection
 #[derive(Deserialize, Debug, Default, Clone)]
-pub struct Allocation {
+pub struct AllocationPercent {
     pub id: String,
-    pub allocation: f64,
+
+    pub percent: f64,
+}
+
+#[derive(Deserialize, Debug, Default, Clone)]
+pub struct AllocationAmount {
+    pub id: String,
+
+    pub mount: u64,
 }
 
 impl Config {
