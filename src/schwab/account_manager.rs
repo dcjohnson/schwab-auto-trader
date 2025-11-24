@@ -109,47 +109,6 @@ impl AccountManager {
         self.account_data.subscribe()
     }
 
-    pub async fn update_stock_basis(
-        om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
-        account_hash: String,
-        oldest_transaction_date: DateTime<Utc>,
-    ) -> Result<(), Error> {
-        let sc = match om.lock().await.get_unexpired_token() {
-            Some(Ok(token)) => Ok(SchwabClient::new(token)),
-            Some(Err(e)) => Err(e),
-            None => Err("no token".into()),
-        }?;
-
-        let transactions = sc
-            .get_transactions(
-                &account_hash,
-                oldest_transaction_date,
-                Local::now().to_utc(),
-                TransactionType::Trade,
-            )
-            .await?;
-        println!("ITOT");
-
-        for t in transactions.iter() {
-            for ti in t.transfer_items.iter() {
-                if let TransactionInstrument::CollectiveInvestment { symbol, .. } = &ti.instrument {
-                    if symbol == "VTI" {
-                        println!("VTI: {:?}", t); //ti.instrument);
-                    }
-                }
-
-                if let TransactionInstrument::TransactionEquity { .. } = &ti.instrument {
-                    println!("equity instrument: {:?}", ti.instrument);
-                }
-
-                if let TransactionInstrument::TransactionOption { .. } = &ti.instrument {
-                    println!("option instrument: {:?}", ti.instrument);
-                }
-            }
-        }
-        Ok(())
-    }
-
     async fn initialize_account_hash(
         om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
         account_hash: std::sync::Arc<tokio::sync::RwLock<String>>,
@@ -188,25 +147,6 @@ impl AccountManager {
         Ok(())
     }
 
-    async fn print_orders(
-        om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
-        account_hash: String,
-    ) -> Result<(), Error> {
-        if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
-            log::info!(
-                "ORDERS: {}",
-                SchwabClient::new(token)
-                    .get_orders(
-                        &account_hash,
-                        Utc::now() - std::time::Duration::from_secs(60 * 60 * 24 * 7 * 52),
-                        Utc::now()
-                    )
-                    .await?
-            );
-        }
-        Ok(())
-    }
-
     pub async fn init(&mut self, timeout: tokio::time::Duration) -> Result<(), Error> {
         self.js.spawn({
             let om = self.om.clone();
@@ -227,10 +167,6 @@ impl AccountManager {
                     .await
                     {
                         log::error!("Error when updating account data: '{}'", e);
-                    }
-
-                    if let Err(e) = Self::print_orders(om.clone(), account_hash.clone()).await {
-                        log::error!("Error printing orders: '{}'", e);
                     }
 
                     tokio::time::sleep(timeout).await;
