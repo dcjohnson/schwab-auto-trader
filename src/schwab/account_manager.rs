@@ -4,9 +4,13 @@ use crate::{
     oauth::token::OauthManager,
     schwab::{
         client::SchwabClient,
-        schemas::accounts_and_trading::accounts::SecuritiesAccount,
+        schemas::accounts_and_trading::accounts::{
+            SecuritiesAccount, TransactionInstrument, TransactionType,
+        },
     },
 };
+use chrono::{DateTime, Local, Utc};
+use std::collections::HashMap;
 use tokio::{sync::watch, task::JoinSet};
 
 // In this Manager, we will want to represent a state we want to achieve/maintain.
@@ -40,7 +44,12 @@ pub struct AccountManager {
 
 #[derive(Default)]
 pub struct AccountData {
-    pub account_value: f64,
+    pub total_account_value: f64,
+    pub cash_balance: f64,
+    pub desired_amount: HashMap<String, u64>,
+    pub actual_amount: HashMap<String, u64>,
+    pub desired_balance_percentage: HashMap<String, f64>,
+    pub actual_balance_percentage: HashMap<String, f64>,
     //add an avaialble cash field
     // add a total amount of available margin
     // a map of security groupings with financial information that can be broken down by group.
@@ -49,7 +58,7 @@ pub struct AccountData {
 
 impl AccountData {
     pub fn update(&mut self, securities_account: &SecuritiesAccount) {
-        self.account_value = securities_account.initial_balances.account_value;
+        self.total_account_value = securities_account.initial_balances.account_value;
     }
 }
 

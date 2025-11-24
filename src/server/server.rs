@@ -151,7 +151,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                         println!("2");
                         return Ok(Response::new(Full::from(format!(
                             "account_value: {}",
-                            svc.account_data_watcher.borrow().account_value
+                            svc.account_data_watcher.borrow().total_account_value
                         ))));
                     } else {
                         println!("3");
