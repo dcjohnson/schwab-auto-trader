@@ -4,12 +4,9 @@ use crate::{
     oauth::token::OauthManager,
     schwab::{
         client::SchwabClient,
-        schemas::accounts_and_trading::accounts::{
-            SecuritiesAccount, TransactionInstrument, TransactionType,
-        },
+        schemas::accounts_and_trading::accounts::SecuritiesAccount,
     },
 };
-use chrono::{DateTime, Local, Utc};
 use tokio::{sync::watch, task::JoinSet};
 
 // In this Manager, we will want to represent a state we want to achieve/maintain.
