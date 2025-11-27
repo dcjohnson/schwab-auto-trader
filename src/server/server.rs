@@ -127,7 +127,7 @@ impl Svc {
 
 impl hyper::service::Service<Request<Incoming>> for Svc {
     type Response = Response<Full<Bytes>>;
-    type Error = hyper::Error;
+    type Error = Box<dyn std::error::Error + Send + Sync>;
     type Future = std::pin::Pin<
         Box<dyn std::future::Future<Output = Result<Self::Response, Self::Error>> + Send>,
     >;
@@ -138,24 +138,18 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
             match (req.method(), req.uri().path()) {
                 (&Method::GET, "/") => {
                     if svc.om.lock().await.has_token() {
-                        return Ok(Response::new(Full::from(
-                            svc.renderer
-                                .root(&html::Root {
-                                    account_value: svc
-                                        .account_data_watcher
-                                        .borrow()
-                                        .total_account_value,
-                                })
-                                .unwrap(),
-                        )));
+                        return Ok(Response::new(Full::from(svc.renderer.root(
+                            &html::Root {
+                                account_value:
+                                    svc.account_data_watcher.borrow().total_account_value,
+                            },
+                        )?)));
                     } else {
-                        return Ok(Response::new(Full::from(
-                            svc.renderer
-                                .oauth(&html::OauthArgs {
-                                    oauth_url: svc.om.lock().await.reset_auth_url(),
-                                })
-                                .unwrap(),
-                        )));
+                        return Ok(Response::new(Full::from(svc.renderer.oauth(
+                            &html::OauthArgs {
+                                oauth_url: svc.om.lock().await.reset_auth_url(),
+                            },
+                        )?)));
                     }
                 }
                 (&Method::GET, "/oauth") => {
@@ -182,7 +176,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                                 Ok(()) => {
                                     return Ok(Response::new(Full::from(svc.renderer.oauth_return(&html::OauthReturnArgs {
                                         oauth_return_message: "Authorization Successful; click on the button below to return to the homepage.".to_string(),
-                                    }).unwrap())));
+                                    })?)));
                                 }
                                 Err(e) => {
                                     log::error!(
@@ -195,7 +189,7 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                     }
                     return Ok(Response::new(Full::from(svc.renderer.oauth_return(&html::OauthReturnArgs {
                                         oauth_return_message: "Authorization Not Successful; click on the button below to return to the homepage.".to_string(),
-                                    }).unwrap())));
+                                    })?)));
                 }
                 (&Method::GET, "/static/css/root.css") => {
                     return Ok(Response::new(Full::from(css::ROOT)));
