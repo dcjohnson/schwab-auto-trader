@@ -2,10 +2,7 @@ use crate::{
     Error,
     config::TradingConfig,
     oauth::token::OauthManager,
-    schwab::{
-        client::SchwabClient,
-        schemas::accounts_and_trading::accounts::SecuritiesAccount,
-    },
+    schwab::{client::SchwabClient, schemas::accounts_and_trading::accounts::SecuritiesAccount},
 };
 use std::collections::HashMap;
 use tokio::{sync::watch, task::JoinSet};
