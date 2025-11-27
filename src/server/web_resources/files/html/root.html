@@ -1,8 +1,20 @@
 {{> header }}
-    <link rel="stylesheet" href="/static/css/oauth.css" />
+    <link rel="stylesheet" href="/static/css/root.css" />
     <div id="main">
       <div id="accountdata">
-	<p>Account Value: {{account_value}}</p>
+
+	      <!-- I will want a header box with this information just like in the Charles Schwab application
+		      Total accounts value | Total cash & cash invest | Total market value | Total day change | Total cost basis | Total gain/loss 
+	      
+		      Then I will have a separate box with all of the data about my investments.
+	      -->
+	      <div id="accountvalue">
+	      <p>Account Value</p>
+	      {{account_value}}
+	      </div>
+	      <div id="cashvalue">
+	      <p>Cash Value</p>
+	      </div>
       </div>
     </div>
 {{> footer }}

@@ -197,8 +197,11 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                                         oauth_return_message: "Authorization Not Successful; click on the button below to return to the homepage.".to_string(),
                                     }).unwrap())));
                 }
-                (&Method::GET, "/static/css/main.css") => {
-                    return Ok(Response::new(Full::from(css::MAIN)));
+                (&Method::GET, "/static/css/root.css") => {
+                    return Ok(Response::new(Full::from(css::ROOT)));
+                }
+                (&Method::GET, "/static/css/header.css") => {
+                    return Ok(Response::new(Full::from(css::HEADER)));
                 }
                 (&Method::GET, "/static/css/oauth.css") => {
                     return Ok(Response::new(Full::from(css::OAUTH)));
