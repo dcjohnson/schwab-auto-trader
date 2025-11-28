@@ -19,9 +19,9 @@ enum Amount {
 #[derive(Clone)]
 struct AccountInvestments {
     priority_queue_investments: Vec<Investment>,
-    enable_tax_loss_harvesting: bool,
+    _enable_tax_loss_harvesting: bool,
     // debt limit in dollars
-    margin_debt_limit: f64,
+    _margin_debt_limit: f64,
 }
 
 #[derive(Clone)]
@@ -63,7 +63,7 @@ impl AccountData {
         (f * 100.0).round() / 100.0
     }
 
-    pub fn update(
+    fn update(
         &mut self,
         securities_account: &SecuritiesAccount,
         investment_targets: &AccountInvestments,
@@ -125,10 +125,15 @@ impl AccountData {
                                         * 100.0,
                                 ),
                             });
-                            v
                         }
-                        Amount::AmountValue(_) => v,
+                        Amount::AmountValue(a) => log::info!(
+                            "Investment Group for ID: {}, Equities {:?}, Amount {}",
+                            group_name,
+                            equities,
+                            a
+                        ),
                     }
+                    v
                 },
             );
 
@@ -180,8 +185,8 @@ impl AccountManager {
                     },
                 )
             },
-            enable_tax_loss_harvesting: false,
-            margin_debt_limit: trading_config.margin_debt_limit,
+            _enable_tax_loss_harvesting: false,
+            _margin_debt_limit: trading_config.margin_debt_limit,
         }
     }
 

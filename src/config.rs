@@ -74,7 +74,7 @@ impl TradingConfig {
             sum += a;
         }
 
-        for (id, a) in amounts.iter() {
+        for id in amounts.keys() {
             if !collections.contains_key(id) {
                 return Err(format!("'{}' is not a known collection", id).into());
             }
