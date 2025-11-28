@@ -146,6 +146,9 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                                 total_market_value: account_data.total_market_value,
                                 total_day_change: account_data.total_day_change,
                                 total_profit_loss: account_data.total_profit_loss,
+                                percentage_investments: account_data
+                                    .investment_account_state_percent
+                                    .clone(),
                             }
                         })?)));
                     } else {

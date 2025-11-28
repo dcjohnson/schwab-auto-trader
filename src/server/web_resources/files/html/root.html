@@ -1,31 +1,40 @@
 {{> header }}
     <link rel="stylesheet" href="/static/css/root.css" />
     <div id="main">
-      <div id="accountdata">
-        <div class="accountdatadiv">
+      <div id="accountdatablock">
+        <div class="accountdata">
           <p>Total Account Value</p>
           {{account_value}}
         </div>
 
-        <div class="accountdatadiv">
+        <div class="accountdata">
           <p>Total Cash</p>
 	  {{total_cash}}
         </div>
 
-        <div class="accountdatadiv">
+        <div class="accountdata">
           <p>Total Market Value</p>
 	  {{total_market_value}}
         </div>
 
-         <div class="accountdatadiv">
+         <div class="accountdata">
           <p>Total Day Change<p>
 	  {{total_day_change}}
 	 </div>
 	      
-        <div class="accountdatadiv">
+        <div class="accountdata">
           <p>Total gain/loss<p>
 	  {{total_profit_loss}}
         </div>
+      </div>
+      <div id="accountinvestmentsdiv">
+	      {{#each percentage_investments}}
+	      <div class="investment">
+	      	<p>{{this.name}}</p>
+		<p>{{this.actual_investment}}</p>
+		<p>{{this.target_investment}}</p>
+	      </div>
+	      {{/each}}
       </div>
     </div>
 {{> footer }}

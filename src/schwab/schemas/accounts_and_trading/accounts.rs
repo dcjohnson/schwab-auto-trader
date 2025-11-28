@@ -56,6 +56,17 @@ pub enum AccountInstrument {
     },
 }
 
+impl AccountInstrument {
+    pub fn symbol(&self) -> String {
+        (match self {
+            Self::CollectiveInvestment { symbol, .. } => symbol,
+            Self::Option { symbol, .. } => symbol,
+            Self::Equity { symbol, .. } => symbol,
+        })
+        .clone()
+    }
+}
+
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountApiOptionDeliverable {

@@ -12,6 +12,13 @@ pub mod html {
         pub oauth_return_message: String,
     }
 
+    #[derive(Clone, Serialize)]
+    pub struct InvestmentCollectionPercent {
+        pub name: String,
+        pub target_investment: f64,
+        pub actual_investment: f64,
+    }
+
     #[derive(Serialize)]
     pub struct Root {
         pub account_value: f64,
@@ -19,6 +26,7 @@ pub mod html {
         pub total_market_value: f64,
         pub total_day_change: f64,
         pub total_profit_loss: f64,
+        pub percentage_investments: Vec<InvestmentCollectionPercent>,
     }
 
     #[derive(Clone)]
