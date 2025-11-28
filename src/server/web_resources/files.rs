@@ -15,6 +15,10 @@ pub mod html {
     #[derive(Serialize)]
     pub struct Root {
         pub account_value: f64,
+        pub total_cash: f64,
+        pub total_market_value: f64,
+        pub total_day_change: f64,
+        pub total_profit_loss: f64,
     }
 
     #[derive(Clone)]

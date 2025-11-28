@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use serde::Deserialize;
 use std::fmt;
 
@@ -17,7 +16,7 @@ pub type Accounts = Vec<AccountTypes>;
 #[serde(rename_all = "camelCase")]
 pub struct AccountTypes {
     pub securities_account: Option<SecuritiesAccount>,
-    cash_account: Option<CashAccount>,
+    pub cash_account: Option<CashAccount>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -60,111 +59,111 @@ pub enum AccountInstrument {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountApiOptionDeliverable {
-    symbol: String,
-    deliverable_units: f64,
-    api_currency_type: String,
-    asset_type: String,
+    pub symbol: String,
+    pub deliverable_units: f64,
+    pub api_currency_type: String,
+    pub asset_type: String,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Position {
-    short_quantity: f64,
-    average_price: f64,
-    current_day_profit_loss: f64,
-    current_day_profit_loss_percentage: f64,
-    long_quantity: f64,
-    settled_long_quantity: f64,
-    settled_short_quantity: f64,
-    aged_quantity: Option<f64>,
-    instrument: AccountInstrument,
-    market_value: f64,
-    maintenance_requirement: Option<f64>,
-    average_long_price: Option<f64>,
-    average_short_price: Option<f64>,
-    tax_log_average_price: Option<f64>,
-    tax_log_average_short_price: Option<f64>,
-    long_open_profit_loss: Option<f64>,
-    short_open_profit_loss: Option<f64>,
-    previous_session_long_quantity: Option<f64>,
-    previous_session_short_quantity: Option<f64>,
-    current_day_cost: f64,
+    pub short_quantity: f64,
+    pub average_price: f64,
+    pub current_day_profit_loss: f64,
+    pub current_day_profit_loss_percentage: f64,
+    pub long_quantity: f64,
+    pub settled_long_quantity: f64,
+    pub settled_short_quantity: f64,
+    pub aged_quantity: Option<f64>,
+    pub instrument: AccountInstrument,
+    pub market_value: f64,
+    pub maintenance_requirement: Option<f64>,
+    pub average_long_price: Option<f64>,
+    pub average_short_price: Option<f64>,
+    pub tax_log_average_price: Option<f64>,
+    pub tax_log_average_short_price: Option<f64>,
+    pub long_open_profit_loss: f64,
+    pub short_open_profit_loss: Option<f64>,
+    pub previous_session_long_quantity: Option<f64>,
+    pub previous_session_short_quantity: Option<f64>,
+    pub current_day_cost: f64,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct MarginInitialBalance {
-    accrued_interest: f64,
-    available_funds_non_marginable_trade: f64,
-    bond_value: f64,
-    buying_power: f64,
-    cash_balance: f64,
-    cash_available_for_trading: f64,
-    cash_receipts: f64,
-    day_trading_buying_power: Option<f64>,
-    day_trading_buying_power_call: Option<f64>,
-    day_trading_equity_call: Option<f64>,
-    equity: Option<f64>,
-    equity_percentage: Option<f64>,
-    liquidation_value: f64,
-    long_margin_value: Option<f64>,
-    long_option_market_value: f64,
-    long_stock_value: f64,
-    maintenance_call: f64,
-    maintenance_requirement: Option<f64>,
-    margin: f64,
-    margin_equity: f64,
-    money_market_fund: f64,
-    mutual_fund_value: f64,
-    reg_t_call: f64,
-    short_margin_value: Option<f64>,
-    short_option_market_value: f64,
-    short_stick_value: Option<f64>,
-    total_cash: f64,
-    is_in_call: bool,
-    unsettled_cash: Option<f64>,
-    pending_deposits: f64,
-    margin_balance: Option<f64>,
-    short_balance: Option<f64>,
+    pub accrued_interest: f64,
+    pub available_funds_non_marginable_trade: f64,
+    pub bond_value: f64,
+    pub buying_power: f64,
+    pub cash_balance: f64,
+    pub cash_available_for_trading: f64,
+    pub cash_receipts: f64,
+    pub day_trading_buying_power: Option<f64>,
+    pub day_trading_buying_power_call: Option<f64>,
+    pub day_trading_equity_call: Option<f64>,
+    pub equity: Option<f64>,
+    pub equity_percentage: Option<f64>,
+    pub liquidation_value: f64,
+    pub long_margin_value: Option<f64>,
+    pub long_option_market_value: f64,
+    pub long_stock_value: f64,
+    pub maintenance_call: f64,
+    pub maintenance_requirement: Option<f64>,
+    pub margin: f64,
+    pub margin_equity: f64,
+    pub money_market_fund: f64,
+    pub mutual_fund_value: f64,
+    pub reg_t_call: f64,
+    pub short_margin_value: Option<f64>,
+    pub short_option_market_value: f64,
+    pub short_stick_value: Option<f64>,
+    pub total_cash: f64,
+    pub is_in_call: bool,
+    pub unsettled_cash: Option<f64>,
+    pub pending_deposits: f64,
+    pub margin_balance: f64,
+    pub short_balance: Option<f64>,
     pub account_value: f64,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct MarginBalance {
-    available_funds: f64,
-    available_funds_non_marginable_trade: f64,
-    buying_power: f64,
-    buying_power_non_marginable_trade: Option<f64>,
-    day_trading_buying_power: Option<f64>,
-    day_trading_buying_power_call: Option<f64>,
-    equity: Option<f64>,
-    equity_percentage: Option<f64>,
-    long_margin_value: Option<f64>,
-    maintenance_call: f64,
-    maintenance_requirement: Option<f64>,
-    margin_balance: Option<f64>,
-    reg_t_call: f64,
-    short_balance: Option<f64>,
-    short_margin_value: Option<f64>,
-    sma: Option<f64>,
-    is_in_call: Option<bool>,
-    stock_buying_power: Option<f64>,
-    option_buying_power: Option<f64>,
+    pub available_funds: f64,
+    pub available_funds_non_marginable_trade: f64,
+    pub buying_power: f64,
+    pub buying_power_non_marginable_trade: Option<f64>,
+    pub day_trading_buying_power: Option<f64>,
+    pub day_trading_buying_power_call: Option<f64>,
+    pub equity: Option<f64>,
+    pub equity_percentage: Option<f64>,
+    pub long_margin_value: Option<f64>,
+    pub maintenance_call: f64,
+    pub maintenance_requirement: Option<f64>,
+    pub margin_balance: Option<f64>,
+    pub reg_t_call: f64,
+    pub short_balance: Option<f64>,
+    pub short_margin_value: Option<f64>,
+    pub sma: Option<f64>,
+    pub is_in_call: Option<bool>,
+    pub stock_buying_power: Option<f64>,
+    pub option_buying_power: Option<f64>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SecuritiesAccount {
-    account_number: String,
-    round_trips: i32,
-    is_day_trader: bool,
-    is_closing_only_restricted: bool,
-    pfcb_flag: bool,
-    pub positions: Option<Vec<Position>>,
+    pub account_number: String,
+    pub round_trips: i32,
+    pub is_day_trader: bool,
+    pub is_closing_only_restricted: bool,
+    pub pfcb_flag: bool,
+    pub positions: Vec<Position>,
     pub initial_balances: MarginInitialBalance,
     pub current_balances: MarginBalance,
-    projected_balances: MarginBalance,
+    pub projected_balances: MarginBalance,
 }
 
 #[derive(Deserialize, Debug)]
@@ -196,14 +195,14 @@ pub struct Transaction {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UserDetails {
-    cd_domain_id: String,
-    login: String,
-    r#type: UserDetailsType,
-    user_id: i64,
-    system_user_name: String,
-    first_name: String,
-    last_name: String,
-    broker_rep_code: String,
+    pub cd_domain_id: String,
+    pub login: String,
+    pub r#type: UserDetailsType,
+    pub user_id: i64,
+    pub system_user_name: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub broker_rep_code: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -556,12 +555,12 @@ pub enum ForexType {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Currency {
-    asset_type: AssetType,
-    cusip: String,
-    symbol: String,
-    description: String,
-    instrument_id: i64,
-    net_change: f64,
+    pub asset_type: AssetType,
+    pub cusip: String,
+    pub symbol: String,
+    pub description: String,
+    pub instrument_id: i64,
+    pub net_change: f64,
 }
 
 #[derive(Deserialize, Debug)]
@@ -631,12 +630,12 @@ pub enum ProductType {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionAPIOptionDeliverable {
-    root_symbol: String,
-    strike_percent: i64,
-    deliverable_number: i64,
-    deliverable_units: f64,
+    pub root_symbol: String,
+    pub strike_percent: i64,
+    pub deliverable_number: i64,
+    pub deliverable_units: f64,
     // deliverable	Some empty type?
-    deliverable: TransactionInstrument,
+    pub deliverable: TransactionInstrument,
 }
 
 #[derive(Deserialize, Debug)]

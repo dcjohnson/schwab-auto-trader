@@ -39,7 +39,11 @@ pub struct AccountManager {
 #[derive(Default)]
 pub struct AccountData {
     pub total_account_value: f64,
-    pub cash_balance: f64,
+    pub total_cash: f64,
+    pub total_market_value: f64,
+    pub total_day_change: f64,
+    pub total_profit_loss: f64,
+
     pub desired_amount: HashMap<String, u64>,
     pub actual_amount: HashMap<String, u64>,
     pub desired_balance_percentage: HashMap<String, f64>,
@@ -51,8 +55,32 @@ pub struct AccountData {
 }
 
 impl AccountData {
+    fn two_decimals(f: f64) -> f64 {
+        (f * 100.0).round() / 100.0
+    }
+
     pub fn update(&mut self, securities_account: &SecuritiesAccount) {
         self.total_account_value = securities_account.initial_balances.account_value;
+        self.total_cash = if securities_account.initial_balances.total_cash > 0.0 {
+            securities_account.initial_balances.total_cash
+        } else {
+            securities_account.initial_balances.margin_balance
+        };
+
+        (
+            self.total_market_value,
+            self.total_day_change,
+            self.total_profit_loss,
+        ) = securities_account
+            .positions
+            .iter()
+            .fold((0.0, 0.0, 0.0), |(tmv, tdc, tpl), p| {
+                (
+                    Self::two_decimals(tmv + p.market_value),
+                    Self::two_decimals(tdc + p.current_day_profit_loss),
+                    Self::two_decimals(tpl + p.long_open_profit_loss),
+                )
+            });
     }
 }
 
