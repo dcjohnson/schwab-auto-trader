@@ -1,3 +1,13 @@
-#accountdata> div {
-  display: inline-block;
+#main {
+  display: flex;
+  flex-direction: column;
+}
+
+.accountdata {
+  padding: 0.5em;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
 }

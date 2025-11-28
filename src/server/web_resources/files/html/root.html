@@ -1,7 +1,7 @@
 {{> header }}
     <link rel="stylesheet" href="/static/css/root.css" />
     <div id="main">
-      <div id="accountdatablock">
+      <div id="accountdatablock" class="row">
         <div class="accountdata">
           <p>Total Account Value</p>
           {{account_value}}
@@ -27,14 +27,15 @@
 	  {{total_profit_loss}}
         </div>
       </div>
-      <div id="accountinvestmentsdiv">
-	      {{#each percentage_investments}}
-	      <div class="investment">
-	      	<p>{{this.name}}</p>
-		<p>{{this.actual_investment}}</p>
-		<p>{{this.target_investment}}</p>
-	      </div>
-	      {{/each}}
+
+      <div id="accountinvestments" class="row">
+        {{#each percentage_investments}}
+        <div class="accountdata">
+          <p>{{this.name}}</p>
+          <p>{{this.actual_investment}}</p>
+          <p>{{this.target_investment}}</p>
+        </div>
+        {{/each}}
       </div>
     </div>
 {{> footer }}
