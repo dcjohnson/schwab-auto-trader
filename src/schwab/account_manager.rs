@@ -36,109 +36,35 @@ pub struct AccountManager {
     investments: AccountInvestments,
     om: std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
     account_data: watch::Sender<AccountData>,
-    account_hash: std::sync::Arc<tokio::sync::RwLock<String>>,
+    internal_account_data: std::sync::Arc<tokio::sync::RwLock<InternalAccountData>>,
     js: JoinSet<Result<(), Error>>,
 }
 
+#[derive(Clone)]
 pub struct Security {
     pub amount: f64,
     pub total_value: f64,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct AccountData {
     pub total_account_value: f64,
     pub total_cash: f64,
     pub total_market_value: f64,
     pub total_day_change: f64,
     pub total_profit_loss: f64,
-
-    securities: HashMap<String, Security>,
-
     pub investment_account_state_percent: Vec<InvestmentCollectionPercent>,
 }
 
-impl AccountData {
-    fn two_decimals(f: f64) -> f64 {
-        (f * 100.0).round() / 100.0
-    }
+#[derive(Default, Clone)]
+struct InternalAccountData {
+    account_data: AccountData,
+    account_hash: String,
+    securities: HashMap<String, Security>,
+}
 
-    fn update(
-        &mut self,
-        securities_account: &SecuritiesAccount,
-        investment_targets: &AccountInvestments,
-    ) {
-        self.total_account_value = securities_account.initial_balances.account_value;
-        self.total_cash = match securities_account.initial_balances.total_cash > 0.0 {
-            true => securities_account.initial_balances.total_cash,
-            false => securities_account.initial_balances.margin_balance,
-        };
-
-        (
-            self.total_market_value,
-            self.total_day_change,
-            self.total_profit_loss,
-            self.securities,
-        ) = securities_account.positions.iter().fold(
-            (0.0, 0.0, 0.0, HashMap::new()),
-            |(tmv, tdc, tpl, mut s), p| {
-                (
-                    Self::two_decimals(tmv + p.market_value),
-                    Self::two_decimals(tdc + p.current_day_profit_loss),
-                    Self::two_decimals(tpl + p.long_open_profit_loss),
-                    {
-                        s.insert(
-                            p.instrument.symbol(),
-                            Security {
-                                amount: p.long_quantity,
-                                total_value: p.market_value,
-                            },
-                        );
-                        s
-                    },
-                )
-            },
-        );
-
-        self.investment_account_state_percent =
-            investment_targets.priority_queue_investments.iter().fold(
-                Vec::new(),
-                |mut v,
-                 Investment {
-                     group_name,
-                     equities,
-                     amount,
-                 }| {
-                    match amount {
-                        Amount::PercentageValue(p) => {
-                            v.push(InvestmentCollectionPercent {
-                                name: group_name.clone(),
-                                target_investment: *p,
-                                actual_investment: Self::two_decimals(
-                                    (equities.iter().fold(0.0, |t, e| {
-                                        t + self
-                                            .securities
-                                            .get(e)
-                                            .map(|s| s.total_value)
-                                            .unwrap_or(0.0)
-                                    }) / self.total_market_value)
-                                        * 100.0,
-                                ),
-                            });
-                        }
-                        Amount::AmountValue(a) => log::info!(
-                            "Investment Group for ID: {}, Equities {:?}, Amount {}",
-                            group_name,
-                            equities,
-                            a
-                        ),
-                    }
-                    v
-                },
-            );
-
-        // next step is to calculate the percent allocations and add that to the map.
-    }
+fn two_decimals(f: f64) -> f64 {
+    (f * 100.0).round() / 100.0
 }
 
 impl AccountManager {
@@ -154,7 +80,9 @@ impl AccountManager {
                 let (s, _) = watch::channel(AccountData::default());
                 s
             },
-            account_hash: std::sync::Arc::new(tokio::sync::RwLock::new(String::default())),
+            internal_account_data: std::sync::Arc::new(tokio::sync::RwLock::new(
+                InternalAccountData::default(),
+            )),
             js: JoinSet::new(),
         }
     }
@@ -196,10 +124,10 @@ impl AccountManager {
 
     async fn initialize_account_hash(
         om: &std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
-        account_hash: &std::sync::Arc<tokio::sync::RwLock<String>>,
+        internal_account_data: &std::sync::Arc<tokio::sync::RwLock<InternalAccountData>>,
         account_number: &String,
     ) -> Result<(), Error> {
-        *account_hash.write().await = 'outer: loop {
+        internal_account_data.write().await.account_hash = 'outer: loop {
             if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
                 for an in SchwabClient::new(token).get_account_numbers().await?.iter() {
                     if an.account_number == *account_number {
@@ -218,16 +146,88 @@ impl AccountManager {
     async fn update_account_data(
         om: &std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
         account_data: &watch::Sender<AccountData>,
-        account_hash: &String,
+        internal_account_data: &mut std::sync::Arc<tokio::sync::RwLock<InternalAccountData>>,
         target_investments: &AccountInvestments,
     ) -> Result<(), Error> {
         if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
-            let account = SchwabClient::new(token).get_account(&account_hash).await?;
-
+            let account = SchwabClient::new(token)
+                .get_account(internal_account_data.read().await.account_hash.as_str())
+                .await?;
             if let Some(securities_account) = account.securities_account {
-                account_data.send_modify(|ad| {
-                    ad.update(&securities_account, target_investments);
-                });
+                let iad = &mut internal_account_data.write().await;
+
+                iad.account_data.total_account_value =
+                    securities_account.initial_balances.account_value;
+                iad.account_data.total_cash =
+                    match securities_account.initial_balances.total_cash > 0.0 {
+                        true => securities_account.initial_balances.total_cash,
+                        false => securities_account.initial_balances.margin_balance,
+                    };
+
+                (
+                    iad.account_data.total_market_value,
+                    iad.account_data.total_day_change,
+                    iad.account_data.total_profit_loss,
+                    iad.securities,
+                ) = securities_account.positions.iter().fold(
+                    (0.0, 0.0, 0.0, HashMap::new()),
+                    |(tmv, tdc, tpl, mut s), p| {
+                        (
+                            two_decimals(tmv + p.market_value),
+                            two_decimals(tdc + p.current_day_profit_loss),
+                            two_decimals(tpl + p.long_open_profit_loss),
+                            {
+                                s.insert(
+                                    p.instrument.symbol(),
+                                    Security {
+                                        amount: p.long_quantity,
+                                        total_value: p.market_value,
+                                    },
+                                );
+                                s
+                            },
+                        )
+                    },
+                );
+
+                iad.account_data.investment_account_state_percent =
+                    target_investments.priority_queue_investments.iter().fold(
+                        Vec::new(),
+                        |mut v,
+                         Investment {
+                             group_name,
+                             equities,
+                             amount,
+                         }| {
+                            match amount {
+                                Amount::PercentageValue(p) => {
+                                    v.push(InvestmentCollectionPercent {
+                                        name: group_name.clone(),
+                                        target_investment: *p,
+                                        actual_investment: two_decimals(
+                                            (equities.iter().fold(0.0, |t, e| {
+                                                t + iad
+                                                    .securities
+                                                    .get(e)
+                                                    .map(|s| s.total_value)
+                                                    .unwrap_or(0.0)
+                                            }) / iad.account_data.total_market_value)
+                                                * 100.0,
+                                        ),
+                                    });
+                                }
+                                Amount::AmountValue(a) => log::info!(
+                                    "Investment Group for ID: {}, Equities {:?}, Amount {}",
+                                    group_name,
+                                    equities,
+                                    a
+                                ),
+                            }
+                            v
+                        },
+                    );
+
+                account_data.send_modify(|ad: &mut AccountData| ad.clone_from(&iad.account_data));
             }
         }
         Ok(())
@@ -237,17 +237,21 @@ impl AccountManager {
         self.js.spawn({
             let om = self.om.clone();
             let account_data = self.account_data.clone();
-            let mut account_hash = self.account_hash.clone();
+            let mut internal_account_data = self.internal_account_data.clone();
             let account_number = self.account_number.clone();
             let investments = self.investments.clone();
             async move {
-                Self::initialize_account_hash(&om, &mut account_hash, &account_number).await?;
+                Self::initialize_account_hash(&om, &mut internal_account_data, &account_number)
+                    .await?;
 
                 loop {
-                    let account_hash = (*account_hash.read().await).clone();
-                    if let Err(e) =
-                        Self::update_account_data(&om, &account_data, &account_hash, &investments)
-                            .await
+                    if let Err(e) = Self::update_account_data(
+                        &om,
+                        &account_data,
+                        &mut internal_account_data,
+                        &investments,
+                    )
+                    .await
                     {
                         log::error!("Error when updating account data: '{}'", e);
                     }
