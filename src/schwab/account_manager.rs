@@ -47,6 +47,7 @@ pub struct AccountData {
     pub desired_amount: HashMap<String, u64>,
     pub actual_amount: HashMap<String, u64>,
     pub desired_balance_percentage: HashMap<String, f64>,
+    // The actual allocations based on the total balances of every collection listed in the map
     pub actual_balance_percentage: HashMap<String, f64>,
     //add an avaialble cash field
     // add a total amount of available margin
@@ -81,6 +82,8 @@ impl AccountData {
                     Self::two_decimals(tpl + p.long_open_profit_loss),
                 )
             });
+
+        // next step is to calculate the percent allocations and add that to the map.
     }
 }
 
