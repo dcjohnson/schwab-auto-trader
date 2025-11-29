@@ -42,22 +42,26 @@ pub fn calculate_investment_amount(
     x: Vec<(f64, f64)>,
 ) -> Result<Vec<f64>, Error> {
     if l < 0.0 || t < 0.0 {
-        return Err("invalid values".into());
+        return Err(format!("invalid values: l: {}, t: {}", l, t).into());
     }
 
     let mut x_t = 0.0;
     let mut x_t_o = 0.0;
     for (x_n, x_n_o) in x.iter() {
         if !(1.0 >= *x_n && *x_n >= 0.0) || !(1.0 >= *x_n_o && *x_n_o >= 0.0) {
-            return Err("invalid values".into());
+            return Err(format!("invalid values: x_n: {}, x_n_o: {}", x_n, x_n_o).into());
         }
 
         x_t += x_n;
         x_t_o += x_n_o;
     }
 
+    //round off
+    x_t = two_decimals(x_t);
+    x_t_o = two_decimals(x_t_o);
+
     if x_t != 1.0 || x_t_o != 1.0 {
-        return Err("Invalid values".into());
+        return Err(format!("Invalid values: x_1: {}, x_t_o: {}", x_t, x_t_o).into());
     }
 
     let theta = l + t;
@@ -96,7 +100,7 @@ pub fn calculate_investment_amount(
             l = 0.0;
         } else if l > value {
             result[foreign_index] = value;
-            l -= value;
+            l = two_decimals(l - value);
         }
     }
 
@@ -128,6 +132,29 @@ mod tests {
         let x = Vec::from([(0.65, 0.7), (0.35, 0.3)]);
 
         let ao = calculate_investment_amount(l, t, x);
+        assert!(ao.is_ok());
+
+        let a = ao.unwrap();
+        println!("{:#?}", a);
+        assert_eq!(l, two_decimals(a.iter().fold(0.0, |l_o, a_n| l_o + a_n)));
+    }
+
+    #[test]
+    fn test_5_collections_big_allocation() {
+        let t = 821.51;
+        let l = 10025.23;
+        let x = Vec::from([
+            (0.4, 0.2),
+            (0.2, 0.2),
+            (0.15, 0.25),
+            (0.15, 0.2),
+            (0.1, 0.15),
+        ]);
+
+        let ao = calculate_investment_amount(l, t, x);
+        if let Err(ref e) = ao {
+            println!("error: {}", e);
+        }
         assert!(ao.is_ok());
 
         let a = ao.unwrap();
