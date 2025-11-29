@@ -13,3 +13,5 @@
  * a_1 + a_2 + ... + a_n = lambda
  * (a_1 + t * x_1_o) + (a_2 + t * x_2_o) + ... + (a_n + t * x_n_o) = theta
  **/
+
+// Unit test the hell out of this stuff
