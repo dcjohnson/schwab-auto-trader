@@ -2,7 +2,10 @@ use crate::{
     Error,
     config::TradingConfig,
     oauth::token::OauthManager,
-    schwab::{client::SchwabClient, schemas::accounts_and_trading::accounts::SecuritiesAccount},
+    schwab::{
+        client::SchwabClient, math::two_decimals,
+        schemas::accounts_and_trading::accounts::SecuritiesAccount,
+    },
     server::web_resources::files::html::InvestmentCollectionPercent,
 };
 use std::collections::HashMap;
@@ -61,10 +64,6 @@ struct InternalAccountData {
     account_data: AccountData,
     account_hash: String,
     securities: HashMap<String, Security>,
-}
-
-fn two_decimals(f: f64) -> f64 {
-    (f * 100.0).round() / 100.0
 }
 
 impl AccountManager {
