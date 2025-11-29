@@ -232,6 +232,15 @@ impl AccountManager {
         Ok(())
     }
 
+    async fn perform_trades(
+        om: &std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
+        internal_account_data: &mut std::sync::Arc<tokio::sync::RwLock<InternalAccountData>>,
+        target_investments: &AccountInvestments,
+    ) -> Result<(), Error> {
+        if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {}
+        Ok(())
+    }
+
     pub async fn init(&mut self, timeout: tokio::time::Duration) -> Result<(), Error> {
         self.js.spawn({
             let om = self.om.clone();
@@ -240,9 +249,11 @@ impl AccountManager {
             let account_number = self.account_number.clone();
             let investments = self.investments.clone();
             async move {
+                log::info!("Initializing trading system");
                 Self::initialize_account_hash(&om, &mut internal_account_data, &account_number)
                     .await?;
 
+                log::info!("Begining update/trade loop");
                 loop {
                     if let Err(e) = Self::update_account_data(
                         &om,
@@ -253,6 +264,12 @@ impl AccountManager {
                     .await
                     {
                         log::error!("Error when updating account data: '{}'", e);
+                    }
+
+                    if let Err(e) =
+                        Self::perform_trades(&om, &mut internal_account_data, &investments).await
+                    {
+                        log::error!("Error when executing trades: '{}'", e);
                     }
 
                     tokio::time::sleep(timeout).await;
