@@ -28,8 +28,8 @@ pub struct TradingConfig {
     pub allocations_percent: Vec<AllocationPercent>,
     pub allocations_amount: Vec<AllocationAmount>,
 
-    // will be -infinity to 0.
-    pub margin_debt_limit: f64,
+    // will be -infinity to infinity
+    pub cash_balance: f64,
 }
 
 impl TradingConfig {
