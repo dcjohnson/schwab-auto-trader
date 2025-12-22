@@ -152,6 +152,29 @@ impl AccountManager {
                 .get_account(internal_account_data.read().await.account_hash.as_str())
                 .await?;
             if let Some(securities_account) = account.securities_account {
+                // When the algorithm decides to make a purchase, it must hold all other potential
+                // purches until after that set of orders are fulfilled and it has reflected in the
+                // account balance.
+                // I need to figure out when and how it affects the account balance.
+
+                // Order example
+                // {
+                //  "orderType": "MARKET",
+                //  "session": "NORMAL",
+                //  "duration": "DAY",
+                //  "orderStrategyType": "SINGLE",
+                //  "orderLegCollection": [
+                //   {
+                //    "instruction": "BUY",
+                //    "quantity": 15,
+                //    "instrument": {
+                //     "symbol": "XYZ",
+                //     "assetType": "EQUITY"
+                //    }
+                //   }
+                //  ]
+                // }
+
                 let iad = &mut internal_account_data.write().await;
 
                 iad.account_data.total_account_value =
