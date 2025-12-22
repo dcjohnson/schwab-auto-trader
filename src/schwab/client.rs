@@ -10,7 +10,7 @@ use crate::{
 };
 use chrono::{DateTime, Utc};
 use oauth2::{TokenResponse, reqwest};
-use serde::de::Deserialize;
+use serde::{de::Deserialize, ser::Serialize};
 
 pub struct SchwabClient {
     client: reqwest::Client,
@@ -34,6 +34,28 @@ impl SchwabClient {
             .await?
             .text()
             .await?)
+    }
+
+    pub async fn post(&self, endpoint: String, body: String) -> Result<String, Error> {
+        Ok(self
+            .client
+            .post(endpoint)
+            .body(body)
+            .bearer_auth(self.auth_token.access_token().secret())
+            .send()
+            .await?
+            .text()
+            .await?)
+    }
+
+    pub async fn post_json<S: Serialize, R: for<'a> Deserialize<'a>>(
+        &self,
+        endpoint: String,
+        s: S,
+    ) -> Result<R, Error> {
+        Ok(serde_json::from_str(
+            &self.post(endpoint, serde_json::to_string(&s)?).await?,
+        )?)
     }
 
     pub async fn get_json<T: for<'a> Deserialize<'a>>(&self, endpoint: String) -> Result<T, Error> {

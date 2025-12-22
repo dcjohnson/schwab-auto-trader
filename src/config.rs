@@ -29,7 +29,7 @@ pub struct TradingConfig {
     pub allocations_amount: Vec<AllocationAmount>,
 
     // will be -infinity to infinity
-    pub cash_balance: f64,
+    pub target_cash_balance: f64,
 }
 
 impl TradingConfig {

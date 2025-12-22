@@ -23,8 +23,7 @@ enum Amount {
 struct AccountInvestments {
     priority_queue_investments: Vec<Investment>,
     _enable_tax_loss_harvesting: bool,
-    // debt limit in dollars
-    _margin_debt_limit: f64,
+    _target_cash_balance: f64,
 }
 
 #[derive(Clone)]
@@ -113,7 +112,7 @@ impl AccountManager {
                 )
             },
             _enable_tax_loss_harvesting: false,
-            _margin_debt_limit: trading_config.margin_debt_limit,
+            _target_cash_balance: trading_config.target_cash_balance,
         }
     }
 
