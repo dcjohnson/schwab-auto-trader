@@ -1139,6 +1139,41 @@ pub enum OrderStatus {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct OrderLegCollection {
+
+    /*
+ orderLegType	string
+ Enum:
+ [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
+legId	integer($int64)
+instrument	AccountsInstrument{
+oneOf ->	
+AccountCashEquivalent{...}
+AccountEquity{...}
+AccountFixedIncome{...}
+AccountMutualFund{...}
+AccountOption{...}
+}
+instruction	instructionstring
+Enum:
+[ BUY, SELL, BUY_TO_COVER, SELL_SHORT, BUY_TO_OPEN, BUY_TO_CLOSE, SELL_TO_OPEN, SELL_TO_CLOSE, EXCHANGE, SELL_SHORT_EXEMPT ]
+positionEffect	string
+Enum:
+[ OPENING, CLOSING, AUTOMATIC ]
+quantity	number($double)
+quantityType	string
+Enum:
+[ ALL_SHARES, DOLLARS, SHARES ]
+divCapGains	string
+Enum:
+[ REINVEST, PAYOUT ]
+toSymbol	string
+*/
+
+
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderRequest {
     pub session: OrderSession,
@@ -1159,7 +1194,7 @@ pub struct OrderRequest {
     pub price_link_type: PriceLinkType,
     pub price: f64,
     pub tax_lot_method: TaxLotMethod,
-    //  pub  orderLegCollection	[...]
+    pub  order_leg_collection	: OrderLegCollection, 
     pub activation_price: f64,
     pub special_instruction: SpecialInstruction,
     pub order_strategy_type: OrderStrategyType,
