@@ -751,43 +751,73 @@ pub enum TransactionInstrument {
     */
 }
 
+#[derive(Deserialize, Debug)]
+enum OrderSession {
+    #[serde(rename(deserialize = "NORMAL"))]
+    Normal,
+    #[serde(rename(deserialize = "AM"))]
+    Am,
+    #[serde(rename(deserialize = "PM"))]
+    Pm,
+    #[serde(rename(deserialize = "SEAMLESS"))]
+    Seamless,
+}
+
+#[derive(Deserialize, Debug)]
+enum OrderDuration {
+    #[serde(rename(deserialize = "DAY"))]
+    Day,
+    #[serde(rename(deserialize = "GOOD_TILL_CANCEL"))]
+    GoodTillCancel,
+    #[serde(rename(deserialize = "FILL_OR_KILL"))]
+    FillOrKill,
+    #[serde(rename(deserialize = "IMMEDIATE_OR_CANCEL"))]
+    ImmediateOrCancel,
+    #[serde(rename(deserialize = "END_OF_WEEK"))]
+    EndOfWeek,
+    #[serde(rename(deserialize = "END_OF_MONTH"))]
+    EndOfMonth,
+    #[serde(rename(deserialize = "NEXT_END_OF_MONTH"))]
+    NextEndOfMonth,
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+}
+
 pub struct OrderRequest {
-    /*
-    session	session[...]
-    duration	duration[...]
-    orderType	orderTypeRequest[...]
-    cancelTime	[...]
-    complexOrderStrategyType	complexOrderStrategyType[...]
-    quantity	[...]
-    filledQuantity	[...]
-    remainingQuantity	[...]
-    destinationLinkName	[...]
-    releaseTime	[...]
-    stopPrice	[...]
-    stopPriceLinkBasis	stopPriceLinkBasis[...]
-    stopPriceLinkType	stopPriceLinkType[...]
-    stopPriceOffset	[...]
-    stopType	stopType[...]
-    priceLinkBasis	priceLinkBasis[...]
-    priceLinkType	priceLinkType[...]
-    price	[...]
-    taxLotMethod	taxLotMethod[...]
-    orderLegCollection	[...]
-    activationPrice	[...]
-    specialInstruction	specialInstruction[...]
-    orderStrategyType	orderStrategyType[...]
-    orderId	[...]
-    cancelable	[...]
-    editable	[...]
-    status	status[...]
-    enteredTime	[...]
-    closeTime	[...]
-    accountNumber	[...]
-    orderActivityCollection	[...]
-    replacingOrderCollection	[...]
-    childOrderStrategies	[...]
-    statusDescription	[...]
-        */
+    session: OrderSession,
+    duration: OrderDuration,
+    //    orderType	orderTypeRequest[...]
+    //    cancelTime	[...]
+    //    complexOrderStrategyType	complexOrderStrategyType[...]
+    //    quantity	[...]
+    //    filledQuantity	[...]
+    //    remainingQuantity	[...]
+    //    destinationLinkName	[...]
+    //   releaseTime	[...]
+    //   stopPrice	[...]
+    //   stopPriceLinkBasis	stopPriceLinkBasis[...]
+    //   stopPriceLinkType	stopPriceLinkType[...]
+    //   stopPriceOffset	[...]
+    //   stopType	stopType[...]
+    //   priceLinkBasis	priceLinkBasis[...]
+    //   priceLinkType	priceLinkType[...]
+    //   price	[...]
+    //   taxLotMethod	taxLotMethod[...]
+    //   orderLegCollection	[...]
+    //   activationPrice	[...]
+    //   specialInstruction	specialInstruction[...]
+    //   orderStrategyType	orderStrategyType[...]
+    //   orderId	[...]
+    //   cancelable	[...]
+    //   editable	[...]
+    //   status	status[...]
+    //   enteredTime	[...]
+    //   closeTime	[...]
+    //   accountNumber	[...]
+    //   orderActivityCollection	[...]
+    //   replacingOrderCollection	[...]
+    //   childOrderStrategies	[...]
+    //   statusDescription	[...]
 }
 
 pub struct Order {
