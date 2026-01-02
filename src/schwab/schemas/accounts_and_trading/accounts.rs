@@ -1139,38 +1139,185 @@ pub enum OrderStatus {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct OrderLegCollection {
+pub enum OrderInstruction {
+    #[serde(rename(deserialize = "BUY"))]
+    Buy,
 
-    /*
- orderLegType	string
- Enum:
- [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-legId	integer($int64)
-instrument	AccountsInstrument{
-oneOf ->	
-AccountCashEquivalent{...}
-AccountEquity{...}
-AccountFixedIncome{...}
-AccountMutualFund{...}
-AccountOption{...}
+    #[serde(rename(deserialize = "SELL"))]
+    Sell,
+
+    #[serde(rename(deserialize = "BUY_TO_COVER"))]
+    BuyToCover,
+
+    #[serde(rename(deserialize = "SELL_SHORT"))]
+    SellShort,
+
+    #[serde(rename(deserialize = "BUY_TO_OPEN"))]
+    BuyToOpen,
+
+    #[serde(rename(deserialize = "BUY_TO_CLOSE"))]
+    BuyToClose,
+
+    #[serde(rename(deserialize = "SELL_TO_OPEN"))]
+    SellToOpen,
+
+    #[serde(rename(deserialize = "SELL_TO_CLOSE"))]
+    SellToClose,
+
+    #[serde(rename(deserialize = "EXCHANGE"))]
+    Exchange,
+
+    #[serde(rename(deserialize = "SELL_SHORT_EXEMPT"))]
+    SellShortExempt,
 }
-instruction	instructionstring
-Enum:
-[ BUY, SELL, BUY_TO_COVER, SELL_SHORT, BUY_TO_OPEN, BUY_TO_CLOSE, SELL_TO_OPEN, SELL_TO_CLOSE, EXCHANGE, SELL_SHORT_EXEMPT ]
-positionEffect	string
-Enum:
-[ OPENING, CLOSING, AUTOMATIC ]
-quantity	number($double)
-quantityType	string
-Enum:
-[ ALL_SHARES, DOLLARS, SHARES ]
-divCapGains	string
-Enum:
-[ REINVEST, PAYOUT ]
-toSymbol	string
-*/
 
+#[derive(Deserialize, Debug)]
+pub enum QuantityType {
+    #[serde(rename(deserialize = "ALL_SHARES"))]
+    AllShares,
 
+    #[serde(rename(deserialize = "DOLLAR"))]
+    Dollar,
+
+    #[serde(rename(deserialize = "SHARES"))]
+    Shares,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum DivCapGains {
+    #[serde(rename(deserialize = "REINVEST"))]
+    Reinvest,
+
+    #[serde(rename(deserialize = "PAYOUT"))]
+    Payout,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(tag = "assetType")] // why is this here? 
+pub enum AccountsInstrument {
+    #[serde(rename(deserialize = "ACCOUNT_CASH_EQUIVALENT"))]
+    AccountCashEquivalent {
+        /*
+         assetType*	string
+        Enum:
+        [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
+        cusip	string
+        symbol	string
+        description	string
+        instrumentId	integer($int64)
+        netChange	number($double)
+        type	string
+        Enum:
+        [ SWEEP_VEHICLE, SAVINGS, MONEY_MARKET_FUND, UNKNOWN ]
+         */
+    },
+
+    #[serde(rename(deserialize = "ACCOUNT_EQUITY"))]
+    AccountEquity {
+        /*
+        assetType*	string
+        Enum:
+        [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
+        cusip	string
+        symbol	string
+        description	string
+        instrumentId	integer($int64)
+        netChange	number($double)
+
+                 */
+    },
+
+    #[serde(rename(deserialize = "ACCOUNT_FIXED_INCOME"))]
+    AccountFixedIncome {
+        /*
+        assetType*	string
+        Enum:
+        [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
+        cusip	string
+        symbol	string
+        description	string
+        instrumentId	integer($int64)
+        netChange	number($double)
+        maturityDate	string($date-time)
+        factor	number($double)
+        variableRate	number($double)
+                */
+    },
+
+    #[serde(rename(deserialize = "ACCOUNT_MUTUAL_FUND"))]
+    AccountMutualFund {
+        /*
+        assetType*	string
+        Enum:
+        [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
+        cusip	string
+        symbol	string
+        description	string
+        instrumentId	integer($int64)
+        netChange	number($double)
+                */
+    },
+
+    #[serde(rename(deserialize = "ACCOUNT_OPTION"))]
+    AccountOption {
+        /*
+        assetType*	string
+        Enum:
+        Array [ 8 ]
+        cusip	string
+        symbol	string
+        description	string
+        instrumentId	integer($int64)
+        netChange	number($double)
+        optionDeliverables	[
+        xml: OrderedMap { "name": "optionDeliverables", "wrapped": true }
+        AccountAPIOptionDeliverable{
+        symbol	string($int64)
+        deliverableUnits	number($double)
+        apiCurrencyType	string
+        Enum:
+        [ USD, CAD, EUR, JPY ]
+        assetType	assetTypestring
+        Enum:
+        [ EQUITY, MUTUAL_FUND, OPTION, FUTURE, FOREX, INDEX, CASH_EQUIVALENT, FIXED_INCOME, PRODUCT, CURRENCY, COLLECTIVE_INVESTMENT ]
+        }]
+        putCall	string
+        Enum:
+        [ PUT, CALL, UNKNOWN ]
+        optionMultiplier	integer($int32)
+        type	string
+        Enum:
+        [ VANILLA, BINARY, BARRIER, UNKNOWN ]
+        underlyingSymbol	string
+                */
+    },
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct OrderLegCollection {
+    pub order_leg_type: AssetType,
+    pub leg_id: i64,
+
+    /* instrument	AccountsInstrument{
+    oneOf ->
+    AccountCashEquivalent{...}
+    AccountEquity{...}
+    AccountFixedIncome{...}
+    AccountMutualFund{...}
+    AccountOption{...}
+    } */
+    pub instruction: OrderInstruction,
+
+    pub position_effect: PositionEffect,
+
+    pub quantity: f64,
+
+    pub quantity_type: QuantityType,
+
+    pub div_cap_gains: DivCapGains,
+
+    pub to_symbol: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -1194,7 +1341,7 @@ pub struct OrderRequest {
     pub price_link_type: PriceLinkType,
     pub price: f64,
     pub tax_lot_method: TaxLotMethod,
-    pub  order_leg_collection	: OrderLegCollection, 
+    pub order_leg_collection: OrderLegCollection,
     pub activation_price: f64,
     pub special_instruction: SpecialInstruction,
     pub order_strategy_type: OrderStrategyType,
