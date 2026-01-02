@@ -1298,25 +1298,12 @@ pub enum AccountsInstrument {
 pub struct OrderLegCollection {
     pub order_leg_type: AssetType,
     pub leg_id: i64,
-
-    /* instrument	AccountsInstrument{
-    oneOf ->
-    AccountCashEquivalent{...}
-    AccountEquity{...}
-    AccountFixedIncome{...}
-    AccountMutualFund{...}
-    AccountOption{...}
-    } */
+    pub instrument: AccountsInstrument,
     pub instruction: OrderInstruction,
-
     pub position_effect: PositionEffect,
-
     pub quantity: f64,
-
     pub quantity_type: QuantityType,
-
     pub div_cap_gains: DivCapGains,
-
     pub to_symbol: String,
 }
 
