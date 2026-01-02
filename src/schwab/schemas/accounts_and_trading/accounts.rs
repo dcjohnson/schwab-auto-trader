@@ -752,74 +752,432 @@ pub enum TransactionInstrument {
 }
 
 #[derive(Deserialize, Debug)]
-enum OrderSession {
+pub enum OrderSession {
     #[serde(rename(deserialize = "NORMAL"))]
     Normal,
+
     #[serde(rename(deserialize = "AM"))]
     Am,
+
     #[serde(rename(deserialize = "PM"))]
     Pm,
+
     #[serde(rename(deserialize = "SEAMLESS"))]
     Seamless,
 }
 
 #[derive(Deserialize, Debug)]
-enum OrderDuration {
+pub enum OrderDuration {
     #[serde(rename(deserialize = "DAY"))]
     Day,
+
     #[serde(rename(deserialize = "GOOD_TILL_CANCEL"))]
     GoodTillCancel,
+
     #[serde(rename(deserialize = "FILL_OR_KILL"))]
     FillOrKill,
+
     #[serde(rename(deserialize = "IMMEDIATE_OR_CANCEL"))]
     ImmediateOrCancel,
+
     #[serde(rename(deserialize = "END_OF_WEEK"))]
     EndOfWeek,
+
     #[serde(rename(deserialize = "END_OF_MONTH"))]
     EndOfMonth,
+
     #[serde(rename(deserialize = "NEXT_END_OF_MONTH"))]
     NextEndOfMonth,
+
     #[serde(rename(deserialize = "UNKNOWN"))]
     Unknown,
 }
 
-pub struct OrderRequest {
-    session: OrderSession,
-    duration: OrderDuration,
-    //    orderType	orderTypeRequest[...]
-    //    cancelTime	[...]
-    //    complexOrderStrategyType	complexOrderStrategyType[...]
-    //    quantity	[...]
-    //    filledQuantity	[...]
-    //    remainingQuantity	[...]
-    //    destinationLinkName	[...]
-    //   releaseTime	[...]
-    //   stopPrice	[...]
-    //   stopPriceLinkBasis	stopPriceLinkBasis[...]
-    //   stopPriceLinkType	stopPriceLinkType[...]
-    //   stopPriceOffset	[...]
-    //   stopType	stopType[...]
-    //   priceLinkBasis	priceLinkBasis[...]
-    //   priceLinkType	priceLinkType[...]
-    //   price	[...]
-    //   taxLotMethod	taxLotMethod[...]
-    //   orderLegCollection	[...]
-    //   activationPrice	[...]
-    //   specialInstruction	specialInstruction[...]
-    //   orderStrategyType	orderStrategyType[...]
-    //   orderId	[...]
-    //   cancelable	[...]
-    //   editable	[...]
-    //   status	status[...]
-    //   enteredTime	[...]
-    //   closeTime	[...]
-    //   accountNumber	[...]
-    //   orderActivityCollection	[...]
-    //   replacingOrderCollection	[...]
-    //   childOrderStrategies	[...]
-    //   statusDescription	[...]
+#[derive(Deserialize, Debug)]
+pub enum OrderTypeRequest {
+    #[serde(rename(deserialize = "MARKET"))]
+    Market,
+
+    #[serde(rename(deserialize = "LIMIT"))]
+    Limit,
+
+    #[serde(rename(deserialize = "STOP"))]
+    Stop,
+
+    #[serde(rename(deserialize = "STOP_LIMIT"))]
+    StopLimit,
+
+    #[serde(rename(deserialize = "TRAILING_STOP"))]
+    TrailingStop,
+
+    #[serde(rename(deserialize = "CABINET"))]
+    Cabinet,
+
+    #[serde(rename(deserialize = "NON_MARKETABLE"))]
+    NonMarketable,
+
+    #[serde(rename(deserialize = "MARKET_ON_CLOSE"))]
+    MarketOnClose,
+
+    #[serde(rename(deserialize = "EXERCISE"))]
+    Exercise,
+
+    #[serde(rename(deserialize = "TRAILING_STOP_LIMIT"))]
+    TrailingStopLimit,
+
+    #[serde(rename(deserialize = "NET_DEBIT"))]
+    NetDebit,
+
+    #[serde(rename(deserialize = "NET_CREDIT"))]
+    NetCredit,
+
+    #[serde(rename(deserialize = "NET_ZERO"))]
+    NetZero,
+
+    #[serde(rename(deserialize = "LIMIT_ON_CLOSE"))]
+    LimitOnClose,
 }
 
+#[derive(Deserialize, Debug)]
+pub enum ComplexOrderStrategyType {
+    #[serde(rename(deserialize = "NONE"))]
+    None,
+
+    #[serde(rename(deserialize = "COVERED"))]
+    Covered,
+
+    #[serde(rename(deserialize = "VERTICAL"))]
+    Vertical,
+
+    #[serde(rename(deserialize = "BACK_RATIO"))]
+    BackRatio,
+
+    #[serde(rename(deserialize = "CALENDAR"))]
+    Calendar,
+
+    #[serde(rename(deserialize = "DIAGONAL"))]
+    Diagonal,
+
+    #[serde(rename(deserialize = "STRADDLE"))]
+    Straddle,
+
+    #[serde(rename(deserialize = "STRANGLE"))]
+    Strangle,
+
+    #[serde(rename(deserialize = "COLLAR_SYNTHETIC"))]
+    CollarSynthetic,
+
+    #[serde(rename(deserialize = "BUTTERFLY"))]
+    Butterfly,
+
+    #[serde(rename(deserialize = "CONDOR"))]
+    Condor,
+
+    #[serde(rename(deserialize = "IRON_CONDOR"))]
+    IronCondor,
+
+    #[serde(rename(deserialize = "VERTICAL_ROLL"))]
+    VerticalRoll,
+
+    #[serde(rename(deserialize = "COLLAR_WITH_STOCK"))]
+    CollarWithStock,
+
+    #[serde(rename(deserialize = "DOUBLE_DIAGONAL"))]
+    DoubleDiagonal,
+
+    #[serde(rename(deserialize = "UNBALANCED_BUTTERFLY"))]
+    UnbalancedButterfly,
+
+    #[serde(rename(deserialize = "UNBALANCED_CONDOR"))]
+    UnbalancedCondor,
+
+    #[serde(rename(deserialize = "UNBALANCED_IRON_CONDOR"))]
+    UnbalancedIronCondor,
+
+    #[serde(rename(deserialize = "UNBALANCED_VERTICAL_ROLL"))]
+    UnbalancedVerticalRoll,
+
+    #[serde(rename(deserialize = "MUTUAL_FUND_SWAP"))]
+    MutualFundSwap,
+
+    #[serde(rename(deserialize = "CUSTOM"))]
+    Custom,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum StopPriceLinkBasis {
+    #[serde(rename(deserialize = "MANUAL"))]
+    Manual,
+
+    #[serde(rename(deserialize = "BASE"))]
+    Base,
+
+    #[serde(rename(deserialize = "TRIGGER"))]
+    Trigger,
+
+    #[serde(rename(deserialize = "LAST"))]
+    Last,
+
+    #[serde(rename(deserialize = "BID"))]
+    Bid,
+
+    #[serde(rename(deserialize = "ASK"))]
+    Ask,
+
+    #[serde(rename(deserialize = "ASK_BID"))]
+    AskBid,
+
+    #[serde(rename(deserialize = "MARK"))]
+    Mark,
+
+    #[serde(rename(deserialize = "AVERAGE"))]
+    Average,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum StopPriceLinkType {
+    #[serde(rename(deserialize = "VALUE"))]
+    Value,
+
+    #[serde(rename(deserialize = "PERCENT"))]
+    Percent,
+
+    #[serde(rename(deserialize = "TICK"))]
+    Tick,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum StopType {
+    #[serde(rename(deserialize = "STANDARD"))]
+    Standard,
+
+    #[serde(rename(deserialize = "BID"))]
+    Bid,
+
+    #[serde(rename(deserialize = "ASK"))]
+    Ask,
+
+    #[serde(rename(deserialize = "LAST"))]
+    Last,
+
+    #[serde(rename(deserialize = "MARK"))]
+    Mark,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum PriceLinkBasis {
+    #[serde(rename(deserialize = "MANUAL"))]
+    Manual,
+
+    #[serde(rename(deserialize = "BASE"))]
+    Base,
+
+    #[serde(rename(deserialize = "TRIGGER"))]
+    Trigger,
+
+    #[serde(rename(deserialize = "LAST"))]
+    Last,
+
+    #[serde(rename(deserialize = "BID"))]
+    Bid,
+
+    #[serde(rename(deserialize = "ASK"))]
+    Ask,
+
+    #[serde(rename(deserialize = "ASK_BID"))]
+    AskBid,
+
+    #[serde(rename(deserialize = "MARK"))]
+    Mark,
+
+    #[serde(rename(deserialize = "AVERAGE"))]
+    Average,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum PriceLinkType {
+    #[serde(rename(deserialize = "VALUE"))]
+    Value,
+
+    #[serde(rename(deserialize = "PERCENT"))]
+    Percent,
+
+    #[serde(rename(deserialize = "TICK"))]
+    Tick,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum TaxLotMethod {
+    #[serde(rename(deserialize = "FIFO"))]
+    Fifo,
+
+    #[serde(rename(deserialize = "LIFO"))]
+    Lifo,
+
+    #[serde(rename(deserialize = "HIGH_COST"))]
+    HighCost,
+
+    #[serde(rename(deserialize = "LOW_COST"))]
+    LowCost,
+
+    #[serde(rename(deserialize = "AVERAGE_COST"))]
+    AverageCost,
+
+    #[serde(rename(deserialize = "SPECIFIC_LOT"))]
+    SpecificLot,
+
+    #[serde(rename(deserialize = "LOSS_HARVESTER"))]
+    LossHarvester,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum SpecialInstruction {
+    #[serde(rename(deserialize = "ALL_OR_NONE"))]
+    AllOrNone,
+
+    #[serde(rename(deserialize = "DO_NOT_REDUCE"))]
+    DoNotReduce,
+
+    #[serde(rename(deserialize = "ALL_OR_NONE_DO_NOT_REDUCE"))]
+    AllOrNoneDoNotReduce,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum OrderStrategyType {
+    #[serde(rename(deserialize = "SINGLE"))]
+    Single,
+
+    #[serde(rename(deserialize = "CANCEL"))]
+    Cancel,
+
+    #[serde(rename(deserialize = "RECALL"))]
+    Recall,
+
+    #[serde(rename(deserialize = "PAIR"))]
+    Pair,
+
+    #[serde(rename(deserialize = "FLATTEN"))]
+    Flatten,
+
+    #[serde(rename(deserialize = "TWO_DAY_SWAP"))]
+    TwoDaySwap,
+
+    #[serde(rename(deserialize = "BLAST_ALL"))]
+    BlastAll,
+
+    #[serde(rename(deserialize = "OCO"))]
+    Oco,
+
+    #[serde(rename(deserialize = "TRIGGER"))]
+    Trigger,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum OrderStatus {
+    #[serde(rename(deserialize = "AWAITING_PARENT_ORDER"))]
+    AwaitingParentOrder,
+
+    #[serde(rename(deserialize = "AWAITING_CONDITION"))]
+    AwaitingCondition,
+
+    #[serde(rename(deserialize = "AWAITING_STOP_CONDITION"))]
+    AwaitingStopCondition,
+
+    #[serde(rename(deserialize = "AWAITING_MANUAL_REVIEW"))]
+    AwaitingManualReview,
+
+    #[serde(rename(deserialize = "ACCEPTED"))]
+    Accepted,
+
+    #[serde(rename(deserialize = "AWAITING_UR_OUT"))]
+    AwaitingUrOut,
+
+    #[serde(rename(deserialize = "PENDING_ACTIVATION"))]
+    PendingActivation,
+
+    #[serde(rename(deserialize = "QUEUED"))]
+    Queued,
+
+    #[serde(rename(deserialize = "WORKING"))]
+    Working,
+
+    #[serde(rename(deserialize = "REJECTED"))]
+    Rejected,
+
+    #[serde(rename(deserialize = "PENDING_CANCEL"))]
+    PendingCancel,
+
+    #[serde(rename(deserialize = "CANCELED"))]
+    Canceled,
+
+    #[serde(rename(deserialize = "PENDING_REPLACE"))]
+    PendingReplace,
+
+    #[serde(rename(deserialize = "REPLACED"))]
+    Replaced,
+
+    #[serde(rename(deserialize = "FILLED"))]
+    Filled,
+
+    #[serde(rename(deserialize = "EXPIRED"))]
+    Expired,
+
+    #[serde(rename(deserialize = "NEW"))]
+    New,
+
+    #[serde(rename(deserialize = "AWAITING_RELEASE_TIME"))]
+    AwaitingReleaseTime,
+
+    #[serde(rename(deserialize = "PENDING_ACKNOWLEDGEMENT"))]
+    PendingAcknowledgement,
+
+    #[serde(rename(deserialize = "PENDING_RECALL"))]
+    PendingRecall,
+
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct OrderRequest {
+    pub session: OrderSession,
+    pub order_type: OrderTypeRequest,
+    pub cancel_time: String, // this is a date time, figure out how to auto parse this.
+    pub complex_order_strategy_type: ComplexOrderStrategyType,
+    pub quantity: f64,
+    pub filled_quantity: f64,
+    pub remaining_quantity: f64,
+    pub destination_link_name: String,
+    pub release_time: String,
+    pub stop_price: f64,
+    pub stop_price_link_basis: StopPriceLinkBasis,
+    pub stop_price_link_type: StopPriceLinkType,
+    pub stop_price_offset: f64,
+    pub stop_type: StopType,
+    pub price_link_basis: PriceLinkBasis,
+    pub price_link_type: PriceLinkType,
+    pub price: f64,
+    pub tax_lot_method: TaxLotMethod,
+    //  pub  orderLegCollection	[...]
+    pub activation_price: f64,
+    pub special_instruction: SpecialInstruction,
+    pub order_strategy_type: OrderStrategyType,
+    pub order_id: i64,
+    pub cancelable: bool,
+    pub editable: bool,
+    pub status: OrderStatus,
+    pub entered_time: String,
+    pub close_time: String,
+    pub account_number: i64,
+    //pub    orderActivityCollection	[...]
+    //   pub replacingOrderCollection	[...]
+    //  pub  childOrderStrategies	[...]
+    pub status_description: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Order {
     /*
     session	session[...]
