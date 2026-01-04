@@ -1310,6 +1310,31 @@ pub struct OrderLegCollection {
     pub to_symbol: String,
 }
 
+pub struct OrderActivity {
+
+    orderActivityCollection	[
+xml: OrderedMap { "name": "orderActivity", "wrapped": true }
+OrderActivity{
+activityType	string
+Enum:
+[ EXECUTION, ORDER_ACTION ]
+executionType	string
+Enum:
+[ FILL ]
+quantity	number($double)
+orderRemainingQuantity	number($double)
+executionLegs	[
+xml: OrderedMap { "name": "executionLegs", "wrapped": true }
+ExecutionLeg{
+legId	integer($int64)
+price	number($double)
+quantity	number($double)
+mismarkedQuantity	number($double)
+instrumentId	integer($int64)
+time	string($date-time)
+}]
+}]
+
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderRequest {
@@ -1342,9 +1367,9 @@ pub struct OrderRequest {
     pub entered_time: String,
     pub close_time: String,
     pub account_number: i64,
-    //pub    orderActivityCollection	[...]
-    //   pub replacingOrderCollection	[...]
-    //  pub  childOrderStrategies	[...]
+    pub    order_activity_collection	: Vec<OrderActivity>,
+    //   pub replacingOrderCollection	[...] // These have blank definitions? 
+    //  pub  childOrderStrategies	[...] // These have blank definitions?
     pub status_description: String,
 }
 
