@@ -1197,19 +1197,22 @@ pub enum DivCapGains {
 pub enum AccountsInstrument {
     #[serde(rename(deserialize = "ACCOUNT_CASH_EQUIVALENT"))]
     AccountCashEquivalent {
-        /*
-         assetType*	string
-        Enum:
-        [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-        cusip	string
-        symbol	string
-        description	string
-        instrumentId	integer($int64)
-        netChange	number($double)
-        type	string
-        Enum:
-        [ SWEEP_VEHICLE, SAVINGS, MONEY_MARKET_FUND, UNKNOWN ]
-         */
+        #[serde(rename(deserialize = "assetType"))]
+        asset_type: AssetType,
+
+        cusip: string,
+
+        symbol: String,
+
+        description: String,
+
+        #[serde(rename(deserialize = "instrumentId"))]
+        instrument_id: i64,
+
+        #[serde(rename(deserialize = "netChange"))]
+        net_change: f64,
+
+        r#type: TransactionCashEquivalentType,
     },
 
     #[serde(rename(deserialize = "ACCOUNT_EQUITY"))]
