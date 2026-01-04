@@ -1310,31 +1310,30 @@ pub struct OrderLegCollection {
     pub to_symbol: String,
 }
 
+pub struct ExecutionLeg {
+//legId	integer($int64)
+//price	number($double)
+//quantity	number($double)
+//mismarkedQuantity	number($double)
+//instrumentId	integer($int64)
+//time	string($date-time)
+
+
+}
+
 pub struct OrderActivity {
 
-    orderActivityCollection	[
-xml: OrderedMap { "name": "orderActivity", "wrapped": true }
-OrderActivity{
-activityType	string
-Enum:
-[ EXECUTION, ORDER_ACTION ]
-executionType	string
-Enum:
-[ FILL ]
-quantity	number($double)
-orderRemainingQuantity	number($double)
-executionLegs	[
-xml: OrderedMap { "name": "executionLegs", "wrapped": true }
-ExecutionLeg{
-legId	integer($int64)
-price	number($double)
-quantity	number($double)
-mismarkedQuantity	number($double)
-instrumentId	integer($int64)
-time	string($date-time)
-}]
-}]
+//activityType	string
+//Enum:
+//[ EXECUTION, ORDER_ACTION ]
+//executionType	string
+//Enum:
+//[ FILL ]
+//quantity	number($double)
+//orderRemainingQuantity	number($double)
+pub execution_legs : Vec<ExecutionLeg>, 
 
+    }
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderRequest {
