@@ -23,6 +23,7 @@ pub mod html {
     pub struct Root {
         pub account_value: f64,
         pub total_cash: f64,
+        pub target_cash_balance: f64,
         pub total_market_value: f64,
         pub total_day_change: f64,
         pub total_profit_loss: f64,

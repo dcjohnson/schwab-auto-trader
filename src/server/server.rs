@@ -142,7 +142,8 @@ impl hyper::service::Service<Request<Incoming>> for Svc {
                             let account_data = svc.account_data_watcher.borrow();
                             html::Root {
                                 account_value: account_data.total_account_value,
-                                total_cash: account_data.total_cash,
+                                total_cash: account_data.total_cash_balance,
+                                target_cash_balance: account_data.target_cash_balance,
                                 total_market_value: account_data.total_market_value,
                                 total_day_change: account_data.total_day_change,
                                 total_profit_loss: account_data.total_profit_loss,

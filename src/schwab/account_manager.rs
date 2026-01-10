@@ -48,7 +48,8 @@ pub struct Security {
 #[derive(Default, Clone)]
 pub struct AccountData {
     pub total_account_value: f64,
-    pub total_cash: f64,
+    pub total_cash_balance: f64,
+    pub target_cash_balance: f64,
     pub total_market_value: f64,
     pub total_day_change: f64,
     pub total_profit_loss: f64,
@@ -72,7 +73,11 @@ impl AccountManager {
             investments: Self::account_config_from_trading_config(&trading_config),
             om,
             account_data: {
-                let (s, _) = watch::channel(AccountData::default());
+                let (s, _) = watch::channel({
+                    let mut ad = AccountData::default();
+                    ad.target_cash_balance = trading_config.target_cash_balance;
+                    ad
+                });
                 s
             },
             internal_account_data: std::sync::Arc::new(tokio::sync::RwLock::new(
@@ -177,7 +182,7 @@ impl AccountManager {
                 // Update the account data
                 iad.account_data.total_account_value =
                     securities_account.initial_balances.account_value;
-                iad.account_data.total_cash =
+                iad.account_data.total_cash_balance =
                     match securities_account.initial_balances.total_cash > 0.0 {
                         true => securities_account.initial_balances.total_cash,
                         false => securities_account.initial_balances.margin_balance,
