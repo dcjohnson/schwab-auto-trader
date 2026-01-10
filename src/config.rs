@@ -71,6 +71,10 @@ impl TradingConfig {
                 return Err(format!("'{}' is not a known collection", id).into());
             }
 
+            if *a < 0.0 {
+                return Err(format!("Collection {} has a negative percentage: {}", id, a).into());
+            }
+
             sum += a;
         }
 

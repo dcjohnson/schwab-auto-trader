@@ -19,7 +19,6 @@ enum Amount {
 #[derive(Clone)]
 struct AccountInvestments {
     priority_queue_investments: Vec<Investment>,
-    _enable_tax_loss_harvesting: bool,
     _target_cash_balance: f64,
 }
 
@@ -45,6 +44,7 @@ pub struct Security {
     pub total_value: f64,
 }
 
+// this is the data which is displayed on the website.
 #[derive(Default, Clone)]
 pub struct AccountData {
     pub total_account_value: f64,
@@ -113,7 +113,6 @@ impl AccountManager {
                     },
                 )
             },
-            _enable_tax_loss_harvesting: false,
             _target_cash_balance: trading_config.target_cash_balance,
         }
     }
@@ -271,7 +270,12 @@ impl AccountManager {
         _internal_account_data: &mut std::sync::Arc<tokio::sync::RwLock<InternalAccountData>>,
         _target_investments: &AccountInvestments,
     ) -> Result<(), Error> {
-        if let Some(Ok(_token)) = om.lock().await.get_unexpired_token() {}
+        if let Some(Ok(_token)) = om.lock().await.get_unexpired_token() {
+            // Calculate allocations and perform trades sequentially. If the amount allocated is
+            // not enough to buy that position, buy the alternate.
+            // For each trade, it should determine if a position for that stock had been sold
+            // recently so it can buy the alternate.
+        }
         Ok(())
     }
 
