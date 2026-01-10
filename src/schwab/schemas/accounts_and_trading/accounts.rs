@@ -1265,29 +1265,38 @@ pub enum AccountsInstrument {
         instrument_id: i64,
         #[serde(rename(deserialize = "netChange"))]
         net_change: f64,
-        /*
-        optionDeliverables	[
-        xml: OrderedMap { "name": "optionDeliverables", "wrapped": true }
-        AccountAPIOptionDeliverable{
-        symbol	string($int64)
-        deliverableUnits	number($double)
-        apiCurrencyType	string
-        Enum:
-        [ USD, CAD, EUR, JPY ]
-        assetType	assetTypestring
-        Enum:
-        [ EQUITY, MUTUAL_FUND, OPTION, FUTURE, FOREX, INDEX, CASH_EQUIVALENT, FIXED_INCOME, PRODUCT, CURRENCY, COLLECTIVE_INVESTMENT ]
-        }]
-        putCall	string
-        Enum:
-        [ PUT, CALL, UNKNOWN ]
-        optionMultiplier	integer($int32)
-        type	string
-        Enum:
-        [ VANILLA, BINARY, BARRIER, UNKNOWN ]
-        underlyingSymbol	string
-                */
+        #[serde(rename(deserialize = "optionDeliverables"))]
+        option_deliverables: Vec<AccountApiOptionDeliverable>,
+         #[serde(rename(deserialize = "putCall"))]
+        pub_call: PutCallType,
+        #[serde(rename(deserialize = "optionMultiplier"))]
+        option_multiplier: i32,
+        #[serde(rename(deserialize = "type"))]
+        r#type: TransactionOptionType, 
+        #[serde(rename(deserialize = "underlyingSymbol"))]
+        underlying_sumbol: String, 
     },
+}
+
+#[derive(Deserialie, Debug)]
+enum ApiCurrencyType {
+        #[serde(rename(deserialize = "USD"))]
+    Usd, 
+        #[serde(rename(deserialize = "CAD"))]
+    Cad, 
+        #[serde(rename(deserialize = "EUR"))]
+    Eur, 
+        #[serde(rename(deserialize = "JPY"))]
+    Jpy, 
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountApiOptionDeliverable {
+     symbol: String,
+     deliverable_units: f64,
+     api_currency_type: ApiCurrencyType,
+     asset_type: AssetType,
 }
 
 #[derive(Deserialize, Debug)]
@@ -1304,15 +1313,19 @@ pub struct OrderLegCollection {
     pub to_symbol: String,
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ExecutionLeg {
-    //legId	integer($int64)
-    //price	number($double)
-    //quantity	number($double)
-    //mismarkedQuantity	number($double)
-    //instrumentId	integer($int64)
-    //time	string($date-time)
+    leg_id: i64,
+    price: f64,
+    quantity: f64,
+    mismarked_quantity: f64,
+    instrument_id: i64,
+    time: String,
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct OrderActivity {
     //activityType	string
     //Enum:
