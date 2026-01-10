@@ -1199,79 +1199,73 @@ pub enum AccountsInstrument {
     AccountCashEquivalent {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-
         cusip: string,
-
         symbol: String,
-
         description: String,
-
         #[serde(rename(deserialize = "instrumentId"))]
         instrument_id: i64,
-
         #[serde(rename(deserialize = "netChange"))]
         net_change: f64,
-
         r#type: TransactionCashEquivalentType,
     },
 
+    // same as account mutual fund!
     #[serde(rename(deserialize = "ACCOUNT_EQUITY"))]
     AccountEquity {
-        /*
-        assetType*	string
-        Enum:
-        [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-        cusip	string
-        symbol	string
-        description	string
-        instrumentId	integer($int64)
-        netChange	number($double)
-
-                 */
+        #[serde(rename(deserialize = "assetType"))]
+        asset_type: AssetType,
+        cusip: string,
+        symbol: String,
+        description: String,
+        #[serde(rename(deserialize = "instrumentId"))]
+        instrument_id: i64,
+        #[serde(rename(deserialize = "netChange"))]
+        net_change: f64,
     },
 
     #[serde(rename(deserialize = "ACCOUNT_FIXED_INCOME"))]
     AccountFixedIncome {
-        /*
-        assetType*	string
-        Enum:
-        [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-        cusip	string
-        symbol	string
-        description	string
-        instrumentId	integer($int64)
-        netChange	number($double)
-        maturityDate	string($date-time)
-        factor	number($double)
-        variableRate	number($double)
-                */
+        #[serde(rename(deserialize = "assetType"))]
+        asset_type: AssetType,
+        cusip: string,
+        symbol: String,
+        description: String,
+        #[serde(rename(deserialize = "instrumentId"))]
+        instrument_id: i64,
+        #[serde(rename(deserialize = "netChange"))]
+        net_change: f64,
+        #[serde(rename(deserialize = "maturityDate"))]
+        maturity_date: String,
+        factor: f64,
+        variableRate: f64,
     },
 
+    // same as account equity
     #[serde(rename(deserialize = "ACCOUNT_MUTUAL_FUND"))]
     AccountMutualFund {
-        /*
-        assetType*	string
-        Enum:
-        [ EQUITY, OPTION, INDEX, MUTUAL_FUND, CASH_EQUIVALENT, FIXED_INCOME, CURRENCY, COLLECTIVE_INVESTMENT ]
-        cusip	string
-        symbol	string
-        description	string
-        instrumentId	integer($int64)
-        netChange	number($double)
-                */
+        #[serde(rename(deserialize = "assetType"))]
+        asset_type: AssetType,
+        cusip: string,
+        symbol: String,
+        description: String,
+        #[serde(rename(deserialize = "instrumentId"))]
+        instrument_id: i64,
+        #[serde(rename(deserialize = "netChange"))]
+        net_change: f64,
     },
 
     #[serde(rename(deserialize = "ACCOUNT_OPTION"))]
     AccountOption {
+        #[serde(rename(deserialize = "assetType"))]
+        asset_type: AssetType,
+        cusip: string,
+        symbol: String,
+        description: String,
+        #[serde(rename(deserialize = "instrumentId"))]
+        instrument_id: i64,
+        #[serde(rename(deserialize = "netChange"))]
+        net_change: f64,
         /*
-        assetType*	string
-        Enum:
-        Array [ 8 ]
-        cusip	string
-        symbol	string
-        description	string
-        instrumentId	integer($int64)
-        netChange	number($double)
         optionDeliverables	[
         xml: OrderedMap { "name": "optionDeliverables", "wrapped": true }
         AccountAPIOptionDeliverable{
@@ -1311,29 +1305,25 @@ pub struct OrderLegCollection {
 }
 
 pub struct ExecutionLeg {
-//legId	integer($int64)
-//price	number($double)
-//quantity	number($double)
-//mismarkedQuantity	number($double)
-//instrumentId	integer($int64)
-//time	string($date-time)
-
-
+    //legId	integer($int64)
+    //price	number($double)
+    //quantity	number($double)
+    //mismarkedQuantity	number($double)
+    //instrumentId	integer($int64)
+    //time	string($date-time)
 }
 
 pub struct OrderActivity {
-
-//activityType	string
-//Enum:
-//[ EXECUTION, ORDER_ACTION ]
-//executionType	string
-//Enum:
-//[ FILL ]
-//quantity	number($double)
-//orderRemainingQuantity	number($double)
-pub execution_legs : Vec<ExecutionLeg>, 
-
-    }
+    //activityType	string
+    //Enum:
+    //[ EXECUTION, ORDER_ACTION ]
+    //executionType	string
+    //Enum:
+    //[ FILL ]
+    //quantity	number($double)
+    //orderRemainingQuantity	number($double)
+    pub execution_legs: Vec<ExecutionLeg>,
+}
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderRequest {
@@ -1366,8 +1356,8 @@ pub struct OrderRequest {
     pub entered_time: String,
     pub close_time: String,
     pub account_number: i64,
-    pub    order_activity_collection	: Vec<OrderActivity>,
-    //   pub replacingOrderCollection	[...] // These have blank definitions? 
+    pub order_activity_collection: Vec<OrderActivity>,
+    //   pub replacingOrderCollection	[...] // These have blank definitions?
     //  pub  childOrderStrategies	[...] // These have blank definitions?
     pub status_description: String,
 }
