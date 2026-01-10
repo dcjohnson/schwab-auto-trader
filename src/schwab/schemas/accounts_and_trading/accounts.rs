@@ -688,7 +688,7 @@ pub enum TransactionInstrument {
         #[serde(rename(deserialize = "closingPrice"))]
         closing_price: f64,
         #[serde(rename(deserialize = "type"))]
-        ci_ype: CollectiveInvestmentType,
+        ci_type: CollectiveInvestmentType,
     },
 
     TransactionOption {
@@ -1316,12 +1316,12 @@ pub struct OrderLegCollection {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutionLeg {
-    leg_id: i64,
-    price: f64,
-    quantity: f64,
-    mismarked_quantity: f64,
-    instrument_id: i64,
-    time: String,
+    pub leg_id: i64,
+    pub price: f64,
+    pub quantity: f64,
+    pub mismarked_quantity: f64,
+    pub instrument_id: i64,
+    pub time: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -1341,10 +1341,10 @@ pub enum OrderExecutionType {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderActivity {
-    activity_type: OrderActivityType,
-    execution_type: OrderExecutionType,
-    quantity: f64,
-    order_remaining_quantity: f64,
+    pub activity_type: OrderActivityType,
+    pub execution_type: OrderExecutionType,
+    pub quantity: f64,
+    pub order_remaining_quantity: f64,
     pub execution_legs: Vec<ExecutionLeg>,
 }
 #[derive(Deserialize, Debug)]
@@ -1396,7 +1396,7 @@ pub struct Order {
     pub quantity: f64,
     pub filled_quantity: f64,
     pub remaining_quantity: f64,
-    //    requestedDestination	requestedDestination[...]
+    // pub  requestedDestination	requestedDestination[...]
     pub destination_link_name: String,
     pub release_time: String,
     pub stop_price: f64,
@@ -1420,7 +1420,7 @@ pub struct Order {
     pub close_time: String,
     pub account_number: i64,
     pub order_activity_collection: Vec<OrderActivity>,
-    //    tag	[...]
+    // pub   tag	[...]
     //   pub replacingOrderCollection	[...] // These have blank definitions?
     //  pub  childOrderStrategies	[...] // These have blank definitions?
     pub status_description: String,
