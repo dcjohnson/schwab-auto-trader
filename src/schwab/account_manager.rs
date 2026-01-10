@@ -253,10 +253,10 @@ impl AccountManager {
 
     async fn perform_trades(
         om: &std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
-        internal_account_data: &mut std::sync::Arc<tokio::sync::RwLock<InternalAccountData>>,
-        target_investments: &AccountInvestments,
+        _internal_account_data: &mut std::sync::Arc<tokio::sync::RwLock<InternalAccountData>>,
+        _target_investments: &AccountInvestments,
     ) -> Result<(), Error> {
-        if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {}
+        if let Some(Ok(_token)) = om.lock().await.get_unexpired_token() {}
         Ok(())
     }
 
