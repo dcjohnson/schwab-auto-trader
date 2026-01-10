@@ -1325,16 +1325,26 @@ pub struct ExecutionLeg {
 }
 
 #[derive(Deserialize, Debug)]
+pub enum OrderActivityType {
+        #[serde(rename(deserialize = "EXECUTION"))]
+Execution,
+#[serde(rename(deserialize = "ORDER_ACTION"))]
+OrderAction,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum OrderExecutionType {
+        #[serde(rename(deserialize = "FILL"))]
+Fill,
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderActivity {
-    //activityType	string
-    //Enum:
-    //[ EXECUTION, ORDER_ACTION ]
-    //executionType	string
-    //Enum:
-    //[ FILL ]
-    //quantity	number($double)
-    //orderRemainingQuantity	number($double)
+    activity_type: OrderActivityType,
+    execution_type: OrderExecutionType, 
+    quantity: f64, 
+order_remaining_quantity: f64,
     pub execution_legs: Vec<ExecutionLeg>,
 }
 #[derive(Deserialize, Debug)]
