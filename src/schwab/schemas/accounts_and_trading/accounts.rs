@@ -1284,10 +1284,10 @@ pub enum ApiCurrencyType {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountApiOptionDeliverable {
-  pub  symbol: String,
-  pub  deliverable_units: f64,
+    pub symbol: String,
+    pub deliverable_units: f64,
     pub api_currency_type: ApiCurrencyType,
-   pub  asset_type: AssetType,
+    pub asset_type: AssetType,
 }
 
 #[derive(Deserialize, Debug)]
