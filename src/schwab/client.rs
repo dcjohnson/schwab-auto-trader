@@ -4,7 +4,8 @@ use crate::{
     schwab::{
         endpoints,
         schemas::accounts_and_trading::accounts::{
-            AccountNumbers, AccountTypes, Accounts, Transaction, TransactionType, Transactions,
+            AccountNumbers, AccountTypes, Accounts, Order, Transaction, TransactionType,
+            Transactions,
         },
     },
 };
@@ -85,8 +86,8 @@ impl SchwabClient {
         account_hash: &str,
         from_entered_time: DateTime<Utc>,
         to_entered_time: DateTime<Utc>,
-    ) -> Result<String, Error> {
-        self.get(endpoints::orders(
+    ) -> Result<Vec<Order>, Error> {
+        self.get_json(endpoints::orders(
             account_hash,
             from_entered_time,
             to_entered_time,
