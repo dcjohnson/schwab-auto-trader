@@ -69,15 +69,6 @@ impl AccountInstrument {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct AccountApiOptionDeliverable {
-    pub symbol: String,
-    pub deliverable_units: f64,
-    pub api_currency_type: String,
-    pub asset_type: String,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct Position {
     pub short_quantity: f64,
     pub average_price: f64,
@@ -1193,13 +1184,12 @@ pub enum DivCapGains {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(tag = "assetType")] // why is this here? 
 pub enum AccountsInstrument {
     #[serde(rename(deserialize = "ACCOUNT_CASH_EQUIVALENT"))]
     AccountCashEquivalent {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        cusip: string,
+        cusip: String,
         symbol: String,
         description: String,
         #[serde(rename(deserialize = "instrumentId"))]
@@ -1214,7 +1204,7 @@ pub enum AccountsInstrument {
     AccountEquity {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        cusip: string,
+        cusip: String,
         symbol: String,
         description: String,
         #[serde(rename(deserialize = "instrumentId"))]
@@ -1227,7 +1217,7 @@ pub enum AccountsInstrument {
     AccountFixedIncome {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        cusip: string,
+        cusip: String,
         symbol: String,
         description: String,
         #[serde(rename(deserialize = "instrumentId"))]
@@ -1237,7 +1227,8 @@ pub enum AccountsInstrument {
         #[serde(rename(deserialize = "maturityDate"))]
         maturity_date: String,
         factor: f64,
-        variableRate: f64,
+        #[serde(rename(deserialize = "variableRate"))]
+        variable_rate: f64,
     },
 
     // same as account equity
@@ -1245,7 +1236,7 @@ pub enum AccountsInstrument {
     AccountMutualFund {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        cusip: string,
+        cusip: String,
         symbol: String,
         description: String,
         #[serde(rename(deserialize = "instrumentId"))]
@@ -1258,7 +1249,7 @@ pub enum AccountsInstrument {
     AccountOption {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        cusip: string,
+        cusip: String,
         symbol: String,
         description: String,
         #[serde(rename(deserialize = "instrumentId"))]
@@ -1278,8 +1269,8 @@ pub enum AccountsInstrument {
     },
 }
 
-#[derive(Deserialie, Debug)]
-enum ApiCurrencyType {
+#[derive(Deserialize, Debug)]
+pub enum ApiCurrencyType {
     #[serde(rename(deserialize = "USD"))]
     Usd,
     #[serde(rename(deserialize = "CAD"))]
@@ -1293,10 +1284,10 @@ enum ApiCurrencyType {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountApiOptionDeliverable {
-    symbol: String,
-    deliverable_units: f64,
-    api_currency_type: ApiCurrencyType,
-    asset_type: AssetType,
+  pub  symbol: String,
+  pub  deliverable_units: f64,
+    pub api_currency_type: ApiCurrencyType,
+   pub  asset_type: AssetType,
 }
 
 #[derive(Deserialize, Debug)]
