@@ -1388,42 +1388,40 @@ pub struct OrderRequest {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Order {
-    /*
-    session	session[...]
-    duration	duration[...]
-    orderType	orderType[...]
-    cancelTime	[...]
-    complexOrderStrategyType	complexOrderStrategyType[...]
-    quantity	[...]
-    filledQuantity	[...]
-    remainingQuantity	[...]
-    requestedDestination	requestedDestination[...]
-    destinationLinkName	[...]
-    releaseTime	[...]
-    stopPrice	[...]
-    stopPriceLinkBasis	stopPriceLinkBasis[...]
-    stopPriceLinkType	stopPriceLinkType[...]
-    stopPriceOffset	[...]
-    stopType	stopType[...]
-    priceLinkBasis	priceLinkBasis[...]
-    priceLinkType	priceLinkType[...]
-    price	[...]
-    taxLotMethod	taxLotMethod[...]
-    orderLegCollection	[...]
-    activationPrice	[...]
-    specialInstruction	specialInstruction[...]
-    orderStrategyType	orderStrategyType[...]
-    orderId	[...]
-    cancelable	[...]
-    editable	[...]
-    status	status[...]
-    enteredTime	[...]
-    closeTime	[...]
-    tag	[...]
-    accountNumber	[...]
-    orderActivityCollection	[...]
-    replacingOrderCollection	[...]
-    childOrderStrategies	[...]
-    statusDescription	[...]
-        */
+    pub session: OrderSession,
+//    duration	duration[...]
+    pub order_type: OrderTypeRequest,
+    pub cancel_time: String, // this is a date time, figure out how to auto parse this.
+    pub complex_order_strategy_type: ComplexOrderStrategyType,
+    pub quantity: f64,
+    pub filled_quantity: f64,
+    pub remaining_quantity: f64,
+//    requestedDestination	requestedDestination[...]
+    pub destination_link_name: String,
+    pub release_time: String,
+    pub stop_price: f64,
+    pub stop_price_link_basis: StopPriceLinkBasis,
+    pub stop_price_link_type: StopPriceLinkType,
+    pub stop_price_offset: f64,
+    pub stop_type: StopType,
+    pub price_link_basis: PriceLinkBasis,
+    pub price_link_type: PriceLinkType,
+    pub price: f64,
+    pub tax_lot_method: TaxLotMethod,
+    pub order_leg_collection: OrderLegCollection,
+    pub activation_price: f64,
+    pub special_instruction: SpecialInstruction,
+    pub order_strategy_type: OrderStrategyType,
+    pub order_id: i64,
+    pub cancelable: bool,
+    pub editable: bool,
+    pub status: OrderStatus,
+    pub entered_time: String,
+    pub close_time: String,
+    pub account_number: i64,
+    pub order_activity_collection: Vec<OrderActivity>,
+//    tag	[...]
+    //   pub replacingOrderCollection	[...] // These have blank definitions?
+    //  pub  childOrderStrategies	[...] // These have blank definitions?
+    pub status_description: String,
 }
