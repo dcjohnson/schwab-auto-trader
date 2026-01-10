@@ -174,6 +174,7 @@ impl AccountManager {
 
                 let iad = &mut internal_account_data.write().await;
 
+                // Update the account data
                 iad.account_data.total_account_value =
                     securities_account.initial_balances.account_value;
                 iad.account_data.total_cash =
@@ -251,6 +252,15 @@ impl AccountManager {
         Ok(())
     }
 
+    async fn has_unsettled_trades(
+        om: &std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
+    ) -> Result<bool, Error> {
+        match om.lock().await.get_unexpired_token() {
+            Some(Ok(_token)) => Ok(true),
+            _ => Err("Couldn't get valid oauth token".into()),
+        }
+    }
+
     async fn perform_trades(
         om: &std::sync::Arc<tokio::sync::Mutex<OauthManager>>,
         _internal_account_data: &mut std::sync::Arc<tokio::sync::RwLock<InternalAccountData>>,
@@ -285,10 +295,13 @@ impl AccountManager {
                         log::error!("Error when updating account data: '{}'", e);
                     }
 
-                    if let Err(e) =
-                        Self::perform_trades(&om, &mut internal_account_data, &investments).await
-                    {
-                        log::error!("Error when executing trades: '{}'", e);
+                    if let Ok(false) = Self::has_unsettled_trades(&om).await {
+                        if let Err(e) =
+                            Self::perform_trades(&om, &mut internal_account_data, &investments)
+                                .await
+                        {
+                            log::error!("Error when executing trades: '{}'", e);
+                        }
                     }
 
                     tokio::time::sleep(timeout).await;
