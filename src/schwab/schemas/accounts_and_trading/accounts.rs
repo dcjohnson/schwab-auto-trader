@@ -1267,36 +1267,36 @@ pub enum AccountsInstrument {
         net_change: f64,
         #[serde(rename(deserialize = "optionDeliverables"))]
         option_deliverables: Vec<AccountApiOptionDeliverable>,
-         #[serde(rename(deserialize = "putCall"))]
+        #[serde(rename(deserialize = "putCall"))]
         pub_call: PutCallType,
         #[serde(rename(deserialize = "optionMultiplier"))]
         option_multiplier: i32,
         #[serde(rename(deserialize = "type"))]
-        r#type: TransactionOptionType, 
+        r#type: TransactionOptionType,
         #[serde(rename(deserialize = "underlyingSymbol"))]
-        underlying_sumbol: String, 
+        underlying_sumbol: String,
     },
 }
 
 #[derive(Deserialie, Debug)]
 enum ApiCurrencyType {
-        #[serde(rename(deserialize = "USD"))]
-    Usd, 
-        #[serde(rename(deserialize = "CAD"))]
-    Cad, 
-        #[serde(rename(deserialize = "EUR"))]
-    Eur, 
-        #[serde(rename(deserialize = "JPY"))]
-    Jpy, 
+    #[serde(rename(deserialize = "USD"))]
+    Usd,
+    #[serde(rename(deserialize = "CAD"))]
+    Cad,
+    #[serde(rename(deserialize = "EUR"))]
+    Eur,
+    #[serde(rename(deserialize = "JPY"))]
+    Jpy,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountApiOptionDeliverable {
-     symbol: String,
-     deliverable_units: f64,
-     api_currency_type: ApiCurrencyType,
-     asset_type: AssetType,
+    symbol: String,
+    deliverable_units: f64,
+    api_currency_type: ApiCurrencyType,
+    asset_type: AssetType,
 }
 
 #[derive(Deserialize, Debug)]
@@ -1326,25 +1326,25 @@ pub struct ExecutionLeg {
 
 #[derive(Deserialize, Debug)]
 pub enum OrderActivityType {
-        #[serde(rename(deserialize = "EXECUTION"))]
-Execution,
-#[serde(rename(deserialize = "ORDER_ACTION"))]
-OrderAction,
+    #[serde(rename(deserialize = "EXECUTION"))]
+    Execution,
+    #[serde(rename(deserialize = "ORDER_ACTION"))]
+    OrderAction,
 }
 
 #[derive(Deserialize, Debug)]
 pub enum OrderExecutionType {
-        #[serde(rename(deserialize = "FILL"))]
-Fill,
+    #[serde(rename(deserialize = "FILL"))]
+    Fill,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderActivity {
     activity_type: OrderActivityType,
-    execution_type: OrderExecutionType, 
-    quantity: f64, 
-order_remaining_quantity: f64,
+    execution_type: OrderExecutionType,
+    quantity: f64,
+    order_remaining_quantity: f64,
     pub execution_legs: Vec<ExecutionLeg>,
 }
 #[derive(Deserialize, Debug)]
@@ -1389,14 +1389,14 @@ pub struct OrderRequest {
 #[serde(rename_all = "camelCase")]
 pub struct Order {
     pub session: OrderSession,
-//    duration	duration[...]
+    //    duration	duration[...]
     pub order_type: OrderTypeRequest,
     pub cancel_time: String, // this is a date time, figure out how to auto parse this.
     pub complex_order_strategy_type: ComplexOrderStrategyType,
     pub quantity: f64,
     pub filled_quantity: f64,
     pub remaining_quantity: f64,
-//    requestedDestination	requestedDestination[...]
+    //    requestedDestination	requestedDestination[...]
     pub destination_link_name: String,
     pub release_time: String,
     pub stop_price: f64,
@@ -1420,7 +1420,7 @@ pub struct Order {
     pub close_time: String,
     pub account_number: i64,
     pub order_activity_collection: Vec<OrderActivity>,
-//    tag	[...]
+    //    tag	[...]
     //   pub replacingOrderCollection	[...] // These have blank definitions?
     //  pub  childOrderStrategies	[...] // These have blank definitions?
     pub status_description: String,
