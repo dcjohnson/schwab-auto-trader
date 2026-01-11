@@ -149,9 +149,18 @@ impl AccountManager {
         target_investments: &AccountInvestments,
     ) -> Result<(), Error> {
         if let Some(Ok(token)) = om.lock().await.get_unexpired_token() {
-            let account = SchwabClient::new(token)
-                .get_account(internal_account_data.read().await.account_hash.as_str())
-                .await?;
+            let account_hash = internal_account_data.read().await.account_hash.clone();
+            let client = SchwabClient::new(token);
+            let account = client.get_account(account_hash.as_str()).await?;
+            let now = chrono::Utc::now();
+
+            println!(
+                "ORDERS: {:#?}",
+                client
+                    .get_orders(account_hash.as_str(), now, now - chrono::Days::new(365))
+                    .await?
+            );
+
             if let Some(securities_account) = account.securities_account {
                 // When the algorithm decides to make a purchase, it must hold all other potential
                 // purches until after that set of orders are fulfilled and it has reflected in the
