@@ -758,33 +758,6 @@ pub enum OrderSession {
 }
 
 #[derive(Deserialize, Debug)]
-pub enum OrderDuration {
-    #[serde(rename(deserialize = "DAY"))]
-    Day,
-
-    #[serde(rename(deserialize = "GOOD_TILL_CANCEL"))]
-    GoodTillCancel,
-
-    #[serde(rename(deserialize = "FILL_OR_KILL"))]
-    FillOrKill,
-
-    #[serde(rename(deserialize = "IMMEDIATE_OR_CANCEL"))]
-    ImmediateOrCancel,
-
-    #[serde(rename(deserialize = "END_OF_WEEK"))]
-    EndOfWeek,
-
-    #[serde(rename(deserialize = "END_OF_MONTH"))]
-    EndOfMonth,
-
-    #[serde(rename(deserialize = "NEXT_END_OF_MONTH"))]
-    NextEndOfMonth,
-
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
-}
-
-#[derive(Deserialize, Debug)]
 pub enum OrderTypeRequest {
     #[serde(rename(deserialize = "MARKET"))]
     Market,
@@ -1371,23 +1344,87 @@ pub struct OrderRequest {
     pub close_time: String,
     pub account_number: i64,
     pub order_activity_collection: Vec<OrderActivity>,
-    //   pub replacingOrderCollection	[...] // These have blank definitions?
-    //  pub  childOrderStrategies	[...] // These have blank definitions?
     pub status_description: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum OrderDuration {
+    #[serde(rename(deserialize = "DAY"))]
+    Day,
+
+    #[serde(rename(deserialize = "GOOD_TILL_CANCEL"))]
+    GoodTillCancel,
+
+    #[serde(rename(deserialize = "FILL_OR_KILL"))]
+    FillOrKill,
+
+    #[serde(rename(deserialize = "IMMEDIATE_OR_CANCEL"))]
+    ImmediateOrCancel,
+
+    #[serde(rename(deserialize = "END_OF_WEEK"))]
+    EndOfWeek,
+
+    #[serde(rename(deserialize = "END_OF_MONTH"))]
+    EndOfMonth,
+
+    #[serde(rename(deserialize = "NEXT_END_OF_MONTH"))]
+    NextEndOfMonth,
+
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+}
+
+#[derive(Deserialize, Debug)]
+pub enum RequestedDestination {
+    #[serde(rename(deserialize = "INET"))]
+    Inet,
+
+    #[serde(rename(deserialize = "ECN_ARCA"))]
+    EcnArca,
+
+    #[serde(rename(deserialize = "CBOE"))]
+    Cboe,
+
+    #[serde(rename(deserialize = "AMEX"))]
+    Amex,
+
+    #[serde(rename(deserialize = "PHLX"))]
+    Phlx,
+
+    #[serde(rename(deserialize = "ISE"))]
+    Ise,
+
+    #[serde(rename(deserialize = "BOX"))]
+    Box,
+
+    #[serde(rename(deserialize = "NYSE"))]
+    Nyse,
+
+    #[serde(rename(deserialize = "NASDAQ"))]
+    Nasdaq,
+
+    #[serde(rename(deserialize = "BATS"))]
+    Bats,
+
+    #[serde(rename(deserialize = "C2"))]
+    C2,
+
+    #[serde(rename(deserialize = "AUTO"))]
+    Auto,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Order {
     pub session: OrderSession,
-    //    duration	duration[...]
+    pub duration: OrderDuration,
     pub order_type: OrderTypeRequest,
     pub cancel_time: String, // this is a date time, figure out how to auto parse this.
     pub complex_order_strategy_type: ComplexOrderStrategyType,
     pub quantity: f64,
     pub filled_quantity: f64,
     pub remaining_quantity: f64,
-    // pub  requestedDestination	requestedDestination[...]
+    pub requested_destination: RequestedDestination,
     pub destination_link_name: String,
     pub release_time: String,
     pub stop_price: f64,
@@ -1411,8 +1448,6 @@ pub struct Order {
     pub close_time: String,
     pub account_number: i64,
     pub order_activity_collection: Vec<OrderActivity>,
-    // pub   tag	[...]
-    //   pub replacingOrderCollection	[...] // These have blank definitions?
-    //  pub  childOrderStrategies	[...] // These have blank definitions?
+    pub tag: String,
     pub status_description: String,
 }
