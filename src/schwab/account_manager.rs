@@ -157,7 +157,7 @@ impl AccountManager {
             println!(
                 "ORDERS: {:#?}",
                 client
-                    .get_orders(account_hash.as_str(), now, now - chrono::Days::new(365))
+                    .get_orders(account_hash.as_str(), now - chrono::Days::new(365), now)
                     .await?
             );
 

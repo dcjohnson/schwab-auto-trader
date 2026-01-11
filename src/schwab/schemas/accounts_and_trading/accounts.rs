@@ -412,18 +412,25 @@ pub enum PositionEffect {
 pub enum AssetType {
     #[serde(rename(deserialize = "EQUITY"))]
     Equity,
+
     #[serde(rename(deserialize = "OPTION"))]
     Option,
+
     #[serde(rename(deserialize = "INDEX"))]
     Index,
+
     #[serde(rename(deserialize = "MUTUAL_FUND"))]
     MutualFund,
+
     #[serde(rename(deserialize = "CASH_EQUIVALENT"))]
     CashEquivalent,
+
     #[serde(rename(deserialize = "FIXED_INCOME"))]
     FixedIncome,
+
     #[serde(rename(deserialize = "CURRENCY"))]
     Currency,
+
     #[serde(rename(deserialize = "COLLECTIVE_INVESTMENT"))]
     CollectiveInvestment,
 }
@@ -1140,8 +1147,8 @@ pub enum QuantityType {
     #[serde(rename(deserialize = "ALL_SHARES"))]
     AllShares,
 
-    #[serde(rename(deserialize = "DOLLAR"))]
-    Dollar,
+    #[serde(rename(deserialize = "DOLLARS"))]
+    Dollars,
 
     #[serde(rename(deserialize = "SHARES"))]
     Shares,
@@ -1157,8 +1164,8 @@ pub enum DivCapGains {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(untagged)]
 pub enum AccountsInstrument {
-    #[serde(rename(deserialize = "ACCOUNT_CASH_EQUIVALENT"))]
     AccountCashEquivalent {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -1172,9 +1179,16 @@ pub enum AccountsInstrument {
         r#type: TransactionCashEquivalentType,
     },
 
-    // same as account mutual fund!
-    #[serde(rename(deserialize = "ACCOUNT_EQUITY"))]
     AccountEquity {
+        #[serde(rename(deserialize = "assetType"))]
+        asset_type: AssetType,
+        cusip: String,
+        symbol: String,
+        #[serde(rename(deserialize = "instrumentId"))]
+        instrument_id: i64,
+    },
+
+    AccountCollectiveInvestment {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
         cusip: String,
@@ -1182,11 +1196,9 @@ pub enum AccountsInstrument {
         description: String,
         #[serde(rename(deserialize = "instrumentId"))]
         instrument_id: i64,
-        #[serde(rename(deserialize = "netChange"))]
-        net_change: f64,
+        r#type: CollectiveInvestmentType,
     },
 
-    #[serde(rename(deserialize = "ACCOUNT_FIXED_INCOME"))]
     AccountFixedIncome {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -1204,8 +1216,6 @@ pub enum AccountsInstrument {
         variable_rate: f64,
     },
 
-    // same as account equity
-    #[serde(rename(deserialize = "ACCOUNT_MUTUAL_FUND"))]
     AccountMutualFund {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -1218,7 +1228,6 @@ pub enum AccountsInstrument {
         net_change: f64,
     },
 
-    #[serde(rename(deserialize = "ACCOUNT_OPTION"))]
     AccountOption {
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -1272,9 +1281,9 @@ pub struct OrderLegCollection {
     pub instruction: OrderInstruction,
     pub position_effect: PositionEffect,
     pub quantity: f64,
-    pub quantity_type: QuantityType,
-    pub div_cap_gains: DivCapGains,
-    pub to_symbol: String,
+    pub quantity_type: Option<QuantityType>,
+    pub div_cap_gains: Option<DivCapGains>,
+    pub to_symbol: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -1300,6 +1309,9 @@ pub enum OrderActivityType {
 pub enum OrderExecutionType {
     #[serde(rename(deserialize = "FILL"))]
     Fill,
+
+    #[serde(rename(deserialize = "CANCELED"))]
+    Canceled,
 }
 
 #[derive(Deserialize, Debug)]
@@ -1436,9 +1448,9 @@ pub struct Order {
     pub stop_type: Option<StopType>,
     pub price_link_basis: Option<PriceLinkBasis>,
     pub price_link_type: Option<PriceLinkType>,
-    pub price: f64,
+    pub price: Option<f64>,
     pub tax_lot_method: Option<TaxLotMethod>,
-    pub order_leg_collection: OrderLegCollection,
+    pub order_leg_collection: Vec<OrderLegCollection>,
     pub activation_price: Option<f64>,
     pub special_instruction: Option<SpecialInstruction>,
     pub order_strategy_type: OrderStrategyType,
