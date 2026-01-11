@@ -46,11 +46,11 @@ pub fn transaction(account_number: &str, transaction_id: &str) -> String {
     )
 }
 
-pub fn order(account_number: &str) -> String {
+pub fn orders(account_number: &str) -> String {
     format!("{}/accounts/{}/orders", TRADER_ENDPOINT, account_number)
 }
 
-pub fn orders(
+pub fn orders_range(
     account_number: &str,
     from_entered_time: DateTime<Utc>,
     to_entered_time: DateTime<Utc>,
