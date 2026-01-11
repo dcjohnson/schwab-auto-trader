@@ -19,7 +19,7 @@ enum Amount {
 #[derive(Clone)]
 struct AccountInvestments {
     priority_queue_investments: Vec<Investment>,
-    _target_cash_balance: f64,
+    target_cash_balance: f64,
 }
 
 #[derive(Clone)]
@@ -73,11 +73,7 @@ impl AccountManager {
             investments: Self::account_config_from_trading_config(&trading_config),
             om,
             account_data: {
-                let (s, _) = watch::channel({
-                    let mut ad = AccountData::default();
-                    ad.target_cash_balance = trading_config.target_cash_balance;
-                    ad
-                });
+                let (s, _) = watch::channel(AccountData::default());
                 s
             },
             internal_account_data: std::sync::Arc::new(tokio::sync::RwLock::new(
@@ -113,7 +109,7 @@ impl AccountManager {
                     },
                 )
             },
-            _target_cash_balance: trading_config.target_cash_balance,
+            target_cash_balance: trading_config.target_cash_balance,
         }
     }
 
@@ -195,6 +191,7 @@ impl AccountManager {
                         true => securities_account.initial_balances.total_cash,
                         false => securities_account.initial_balances.margin_balance,
                     };
+                iad.account_data.target_cash_balance = target_investments.target_cash_balance;
 
                 (
                     iad.account_data.total_market_value,
