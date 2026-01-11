@@ -3,7 +3,7 @@ use std::fmt;
 
 pub type AccountNumbers = Vec<AccountNumber>;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountNumber {
     pub account_number: String,
@@ -12,14 +12,14 @@ pub struct AccountNumber {
 
 pub type Accounts = Vec<AccountTypes>;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountTypes {
     pub securities_account: Option<SecuritiesAccount>,
     pub cash_account: Option<CashAccount>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(tag = "assetType")] // why is this here? 
 pub enum AccountInstrument {
     #[serde(rename(serialize = "COLLECTIVE_INVESTMENT"))]
@@ -74,7 +74,7 @@ impl AccountInstrument {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Position {
     pub short_quantity: f64,
@@ -99,7 +99,7 @@ pub struct Position {
     pub current_day_cost: f64,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct MarginInitialBalance {
     pub accrued_interest: f64,
@@ -137,7 +137,7 @@ pub struct MarginInitialBalance {
     pub account_value: f64,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct MarginBalance {
     pub available_funds: f64,
@@ -161,7 +161,7 @@ pub struct MarginBalance {
     pub option_buying_power: Option<f64>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct SecuritiesAccount {
     pub account_number: String,
@@ -175,13 +175,13 @@ pub struct SecuritiesAccount {
     pub projected_balances: MarginBalance,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct CashAccount {}
 
 pub type Transactions = Vec<Transaction>;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Transaction {
     pub activity_id: i64,
@@ -201,7 +201,7 @@ pub struct Transaction {
     pub transfer_items: Vec<TransferItem>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct UserDetails {
     pub cd_domain_id: String,
@@ -214,7 +214,7 @@ pub struct UserDetails {
     pub broker_rep_code: String,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum UserDetailsType {
     #[serde(rename(serialize = "ADVISOR_USER"))]
     #[serde(rename(deserialize = "ADVISOR_USER"))]
@@ -233,7 +233,7 @@ pub enum UserDetailsType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionType {
     #[serde(rename(serialize = "TRADE"))]
     #[serde(rename(deserialize = "TRADE"))]
@@ -322,7 +322,7 @@ impl fmt::Display for TransactionType {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionStatus {
     #[serde(rename(serialize = "VALID"))]
     #[serde(rename(deserialize = "VALID"))]
@@ -341,7 +341,7 @@ pub enum TransactionStatus {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum SubAccount {
     #[serde(rename(serialize = "CASH"))]
     #[serde(rename(deserialize = "CASH"))]
@@ -368,7 +368,7 @@ pub enum SubAccount {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionActivityType {
     #[serde(rename(serialize = "ACTIVITY_CORRECTION"))]
     #[serde(rename(deserialize = "ACTIVITY_CORRECTION"))]
@@ -391,7 +391,7 @@ pub enum TransactionActivityType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct TransferItem {
     pub instrument: TransactionInstrument,
@@ -402,7 +402,7 @@ pub struct TransferItem {
     pub position_effect: Option<PositionEffect>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum FeeType {
     #[serde(rename(serialize = "COMMISSION"))]
     #[serde(rename(deserialize = "COMMISSION"))]
@@ -454,7 +454,7 @@ pub enum FeeType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum PositionEffect {
     #[serde(rename(serialize = "OPENING"))]
     #[serde(rename(deserialize = "OPENING"))]
@@ -470,7 +470,7 @@ pub enum PositionEffect {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum AssetType {
     #[serde(rename(serialize = "EQUITY"))]
     #[serde(rename(deserialize = "EQUITY"))]
@@ -505,7 +505,7 @@ pub enum AssetType {
     CollectiveInvestment,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionCashEquivalentType {
     #[serde(rename(serialize = "SWEEP_VEHICLE"))]
     #[serde(rename(deserialize = "SWEEP_VEHICLE"))]
@@ -521,7 +521,7 @@ pub enum TransactionCashEquivalentType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum CollectiveInvestmentType {
     #[serde(rename(serialize = "UNIT_INVESTMENT_TRUST"))]
     #[serde(rename(deserialize = "UNIT_INVESTMENT_TRUST"))]
@@ -540,7 +540,7 @@ pub enum CollectiveInvestmentType {
     Units,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionEquityType {
     #[serde(rename(serialize = "COMMON_STOCK"))]
     #[serde(rename(deserialize = "COMMON_STOCK"))]
@@ -583,7 +583,7 @@ pub enum TransactionEquityType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionFixedIncomeType {
     #[serde(rename(serialize = "BOND_UNIT"))]
     #[serde(rename(deserialize = "BOND_UNIT"))]
@@ -662,7 +662,7 @@ pub enum TransactionFixedIncomeType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum ForexType {
     #[serde(rename(serialize = "STANDARD"))]
     #[serde(rename(deserialize = "STANDARD"))]
@@ -675,7 +675,7 @@ pub enum ForexType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Currency {
     pub asset_type: AssetType,
@@ -686,7 +686,7 @@ pub struct Currency {
     pub net_change: f64,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum FutureType {
     #[serde(rename(serialize = "STANDARD"))]
     #[serde(rename(deserialize = "STANDARD"))]
@@ -696,7 +696,7 @@ pub enum FutureType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum IndexType {
     #[serde(rename(serialize = "BROAD_BASED"))]
     #[serde(rename(deserialize = "BROAD_BASED"))]
@@ -709,7 +709,7 @@ pub enum IndexType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionMutualFundType {
     #[serde(rename(serialize = "NOT_APPLICABLE"))]
     #[serde(rename(deserialize = "NOT_APPLICABLE"))]
@@ -731,7 +731,7 @@ pub enum TransactionMutualFundType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum PutCallType {
     #[serde(rename(serialize = "PUT"))]
     #[serde(rename(deserialize = "PUT"))]
@@ -744,7 +744,7 @@ pub enum PutCallType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionOptionType {
     #[serde(rename(serialize = "VANILLA"))]
     #[serde(rename(deserialize = "VANILLA"))]
@@ -760,7 +760,7 @@ pub enum TransactionOptionType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum ProductType {
     #[serde(rename(serialize = "TBD"))]
     #[serde(rename(deserialize = "TBD"))]
@@ -770,7 +770,7 @@ pub enum ProductType {
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct TransactionAPIOptionDeliverable {
     pub root_symbol: String,
@@ -781,7 +781,7 @@ pub struct TransactionAPIOptionDeliverable {
     pub deliverable: TransactionInstrument,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct CollectiveInvestment {
     pub asset_type: AssetType,
@@ -793,7 +793,7 @@ pub struct CollectiveInvestment {
     pub r#type: CollectiveInvestmentType,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(untagged)]
 pub enum TransactionInstrument {
     TransactionEquity {
@@ -906,7 +906,7 @@ pub enum TransactionInstrument {
     */
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderSession {
     #[serde(rename(serialize = "NORMAL"))]
     #[serde(rename(deserialize = "NORMAL"))]
@@ -925,7 +925,7 @@ pub enum OrderSession {
     Seamless,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderTypeRequest {
     #[serde(rename(serialize = "MARKET"))]
     #[serde(rename(deserialize = "MARKET"))]
@@ -984,7 +984,7 @@ pub enum OrderTypeRequest {
     LimitOnClose,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum ComplexOrderStrategyType {
     #[serde(rename(serialize = "NONE"))]
     #[serde(rename(deserialize = "NONE"))]
@@ -1071,7 +1071,7 @@ pub enum ComplexOrderStrategyType {
     Custom,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum StopPriceLinkBasis {
     #[serde(rename(serialize = "MANUAL"))]
     #[serde(rename(deserialize = "MANUAL"))]
@@ -1110,7 +1110,7 @@ pub enum StopPriceLinkBasis {
     Average,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum StopPriceLinkType {
     #[serde(rename(serialize = "VALUE"))]
     #[serde(rename(deserialize = "VALUE"))]
@@ -1125,7 +1125,7 @@ pub enum StopPriceLinkType {
     Tick,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum StopType {
     #[serde(rename(serialize = "STANDARD"))]
     #[serde(rename(deserialize = "STANDARD"))]
@@ -1148,7 +1148,7 @@ pub enum StopType {
     Mark,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum PriceLinkBasis {
     #[serde(rename(serialize = "MANUAL"))]
     #[serde(rename(deserialize = "MANUAL"))]
@@ -1187,7 +1187,7 @@ pub enum PriceLinkBasis {
     Average,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum PriceLinkType {
     #[serde(rename(serialize = "VALUE"))]
     #[serde(rename(deserialize = "VALUE"))]
@@ -1202,7 +1202,7 @@ pub enum PriceLinkType {
     Tick,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TaxLotMethod {
     #[serde(rename(serialize = "FIFO"))]
     #[serde(rename(deserialize = "FIFO"))]
@@ -1233,7 +1233,7 @@ pub enum TaxLotMethod {
     LossHarvester,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum SpecialInstruction {
     #[serde(rename(serialize = "ALL_OR_NONE"))]
     #[serde(rename(deserialize = "ALL_OR_NONE"))]
@@ -1248,7 +1248,7 @@ pub enum SpecialInstruction {
     AllOrNoneDoNotReduce,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderStrategyType {
     #[serde(rename(serialize = "SINGLE"))]
     #[serde(rename(deserialize = "SINGLE"))]
@@ -1287,7 +1287,7 @@ pub enum OrderStrategyType {
     Trigger,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderStatus {
     #[serde(rename(serialize = "AWAITING_PARENT_ORDER"))]
     #[serde(rename(deserialize = "AWAITING_PARENT_ORDER"))]
@@ -1369,12 +1369,13 @@ pub enum OrderStatus {
     #[serde(rename(deserialize = "PENDING_RECALL"))]
     PendingRecall,
 
+    #[default]
     #[serde(rename(serialize = "UNKNOWN"))]
     #[serde(rename(deserialize = "UNKNOWN"))]
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderInstruction {
     #[serde(rename(serialize = "BUY"))]
     #[serde(rename(deserialize = "BUY"))]
@@ -1417,7 +1418,7 @@ pub enum OrderInstruction {
     SellShortExempt,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum QuantityType {
     #[serde(rename(serialize = "ALL_SHARES"))]
     #[serde(rename(deserialize = "ALL_SHARES"))]
@@ -1432,7 +1433,7 @@ pub enum QuantityType {
     Shares,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum DivCapGains {
     #[serde(rename(serialize = "REINVEST"))]
     #[serde(rename(deserialize = "REINVEST"))]
@@ -1443,10 +1444,10 @@ pub enum DivCapGains {
     Payout,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(untagged)]
 pub enum AccountsInstrument {
-    AccountCashEquivalent {
+    CashEquivalent {
         #[serde(rename(serialize = "assetType"))]
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -1462,7 +1463,7 @@ pub enum AccountsInstrument {
         r#type: TransactionCashEquivalentType,
     },
 
-    AccountEquity {
+    Equity {
         #[serde(rename(serialize = "assetType"))]
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -1473,20 +1474,23 @@ pub enum AccountsInstrument {
         instrument_id: i64,
     },
 
-    AccountCollectiveInvestment {
+    CollectiveInvestment {
         #[serde(rename(serialize = "assetType"))]
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
-        cusip: String,
+
+        cusip: Option<String>,
         symbol: String,
-        description: String,
+        description: Option<String>,
+
         #[serde(rename(serialize = "instrumentId"))]
         #[serde(rename(deserialize = "instrumentId"))]
-        instrument_id: i64,
-        r#type: CollectiveInvestmentType,
+        instrument_id: Option<i64>,
+
+        r#type: Option<CollectiveInvestmentType>,
     },
 
-    AccountFixedIncome {
+    FixedIncome {
         #[serde(rename(serialize = "assetType"))]
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -1508,7 +1512,7 @@ pub enum AccountsInstrument {
         variable_rate: f64,
     },
 
-    AccountMutualFund {
+    MutualFund {
         #[serde(rename(serialize = "assetType"))]
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -1523,7 +1527,7 @@ pub enum AccountsInstrument {
         net_change: f64,
     },
 
-    AccountOption {
+    Option {
         #[serde(rename(serialize = "assetType"))]
         #[serde(rename(deserialize = "assetType"))]
         asset_type: AssetType,
@@ -1554,7 +1558,7 @@ pub enum AccountsInstrument {
     },
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum ApiCurrencyType {
     #[serde(rename(serialize = "USD"))]
     #[serde(rename(deserialize = "USD"))]
@@ -1570,7 +1574,7 @@ pub enum ApiCurrencyType {
     Jpy,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountApiOptionDeliverable {
     pub symbol: String,
@@ -1579,21 +1583,21 @@ pub struct AccountApiOptionDeliverable {
     pub asset_type: AssetType,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderLegCollection {
-    pub order_leg_type: AssetType,
-    pub leg_id: i64,
+    pub order_leg_type: Option<AssetType>,
+    pub leg_id: Option<i64>,
     pub instrument: AccountsInstrument,
     pub instruction: OrderInstruction,
-    pub position_effect: PositionEffect,
+    pub position_effect: Option<PositionEffect>,
     pub quantity: f64,
     pub quantity_type: Option<QuantityType>,
     pub div_cap_gains: Option<DivCapGains>,
     pub to_symbol: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutionLeg {
     pub leg_id: i64,
@@ -1635,13 +1639,13 @@ pub struct OrderActivity {
     pub execution_legs: Vec<ExecutionLeg>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderRequest {
-    pub session: OrderSession,        //
-    pub order_type: OrderTypeRequest, //
-    pub cancel_time: Option<String>,  // this is a date time, figure out how to auto parse this.
-    pub duration: OrderDuration,      //
+    pub session: OrderSession,
+    pub order_type: OrderTypeRequest,
+    pub cancel_time: Option<String>,
+    pub duration: OrderDuration,
     pub complex_order_strategy_type: Option<ComplexOrderStrategyType>,
     pub quantity: Option<f64>,
     pub filled_quantity: Option<f64>,
@@ -1657,10 +1661,10 @@ pub struct OrderRequest {
     pub price_link_type: Option<PriceLinkType>,
     pub price: Option<f64>,
     pub tax_lot_method: Option<TaxLotMethod>,
-    pub order_leg_collection: OrderLegCollection, //
+    pub order_leg_collection: Vec<OrderLegCollection>,
     pub activation_price: Option<f64>,
     pub special_instruction: Option<SpecialInstruction>,
-    pub order_strategy_type: OrderStrategyType, //
+    pub order_strategy_type: OrderStrategyType,
     pub order_id: Option<i64>,
     pub cancelable: Option<bool>,
     pub editable: Option<bool>,
@@ -1672,7 +1676,37 @@ pub struct OrderRequest {
     pub status_description: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+impl OrderRequest {
+    pub fn new_fill_or_kill_etf(quantity: f64, symbol: String) -> Self {
+        let mut s = Self::default();
+        s.order_type = OrderTypeRequest::Market;
+        s.session = OrderSession::Normal;
+        s.duration = OrderDuration::FillOrKill;
+        s.order_strategy_type = OrderStrategyType::Single;
+        s.order_leg_collection = vec![OrderLegCollection {
+            instruction: OrderInstruction::Buy,
+            quantity,
+            instrument: AccountsInstrument::CollectiveInvestment {
+                asset_type: AssetType::CollectiveInvestment,
+                symbol,
+                cusip: None,
+                description: None,
+                instrument_id: None,
+                r#type: None,
+            },
+            div_cap_gains: None,
+            leg_id: None,
+            order_leg_type: None,
+            position_effect: None,
+            quantity_type: None,
+            to_symbol: None,
+        }];
+
+        s
+    }
+}
+
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderDuration {
     #[serde(rename(serialize = "DAY"))]
     #[serde(rename(deserialize = "DAY"))]
@@ -1702,12 +1736,13 @@ pub enum OrderDuration {
     #[serde(rename(deserialize = "NEXT_END_OF_MONTH"))]
     NextEndOfMonth,
 
+    #[default]
     #[serde(rename(serialize = "UNKNOWN"))]
     #[serde(rename(deserialize = "UNKNOWN"))]
     Unknown,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 pub enum RequestedDestination {
     #[serde(rename(serialize = "INET"))]
     #[serde(rename(deserialize = "INET"))]
@@ -1753,12 +1788,13 @@ pub enum RequestedDestination {
     #[serde(rename(deserialize = "C2"))]
     C2,
 
+    #[default]
     #[serde(rename(serialize = "AUTO"))]
     #[serde(rename(deserialize = "AUTO"))]
     Auto,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Order {
     pub session: OrderSession,
@@ -1795,4 +1831,17 @@ pub struct Order {
     pub order_activity_collection: Vec<OrderActivity>,
     pub tag: Option<String>,
     pub status_description: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct ApiError {
+    /*
+        {
+      "message": "string",
+      "errors": [
+        "string"
+      ]
+        }
+    */
 }
