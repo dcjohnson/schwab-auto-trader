@@ -22,6 +22,9 @@ pub struct AccountTypes {
 #[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(tag = "assetType")] // why is this here? 
 pub enum AccountInstrument {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "COLLECTIVE_INVESTMENT"))]
     #[serde(rename(deserialize = "COLLECTIVE_INVESTMENT"))]
     CollectiveInvestment {
@@ -64,13 +67,13 @@ pub enum AccountInstrument {
 }
 
 impl AccountInstrument {
-    pub fn symbol(&self) -> String {
-        (match self {
-            Self::CollectiveInvestment { symbol, .. } => symbol,
-            Self::Option { symbol, .. } => symbol,
-            Self::Equity { symbol, .. } => symbol,
-        })
-        .clone()
+    pub fn symbol(&self) -> Option<String> {
+        match self {
+            Self::Unknown => None,
+            Self::CollectiveInvestment { symbol, .. } => Some(symbol.clone()),
+            Self::Option { symbol, .. } => Some(symbol.clone()),
+            Self::Equity { symbol, .. } => Some(symbol.clone()),
+        }
     }
 }
 
@@ -216,6 +219,10 @@ pub struct UserDetails {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum UserDetailsType {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
     #[serde(rename(serialize = "ADVISOR_USER"))]
     #[serde(rename(deserialize = "ADVISOR_USER"))]
     AdvisorUser,
@@ -228,13 +235,13 @@ pub enum UserDetailsType {
     #[serde(rename(serialize = "SYSTEM_USER"))]
     #[serde(rename(deserialize = "SYSTEM_USER"))]
     SystemUser,
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionType {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "TRADE"))]
     #[serde(rename(deserialize = "TRADE"))]
     Trade,
@@ -317,6 +324,7 @@ impl fmt::Display for TransactionType {
                 TransactionType::MarginCall => "MARGIN_CALL",
                 TransactionType::MoneyMarket => "MONEY_MARKET",
                 TransactionType::SmaAdjustment => "SMA_ADJUSTMENT",
+                TransactionType::Unknown => "UNKNOWN",
             }
         )
     }
@@ -324,6 +332,11 @@ impl fmt::Display for TransactionType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionStatus {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+
     #[serde(rename(serialize = "VALID"))]
     #[serde(rename(deserialize = "VALID"))]
     Valid,
@@ -335,14 +348,15 @@ pub enum TransactionStatus {
     #[serde(rename(serialize = "PENDING"))]
     #[serde(rename(deserialize = "PENDING"))]
     Pending,
-
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum SubAccount {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+
     #[serde(rename(serialize = "CASH"))]
     #[serde(rename(deserialize = "CASH"))]
     Cash,
@@ -362,14 +376,15 @@ pub enum SubAccount {
     #[serde(rename(serialize = "INCOME"))]
     #[serde(rename(deserialize = "INCOME"))]
     Income,
-
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionActivityType {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+
     #[serde(rename(serialize = "ACTIVITY_CORRECTION"))]
     #[serde(rename(deserialize = "ACTIVITY_CORRECTION"))]
     ActivityCorrection,
@@ -385,10 +400,6 @@ pub enum TransactionActivityType {
     #[serde(rename(serialize = "TRANSFER"))]
     #[serde(rename(deserialize = "TRANSFER"))]
     Transfer,
-
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
@@ -404,6 +415,10 @@ pub struct TransferItem {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum FeeType {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
     #[serde(rename(serialize = "COMMISSION"))]
     #[serde(rename(deserialize = "COMMISSION"))]
     Commission,
@@ -449,13 +464,14 @@ pub enum FeeType {
     #[serde(rename(serialize = "INDEX_OPTION_FEE"))]
     #[serde(rename(deserialize = "INDEX_OPTION_FEE"))]
     IndexOptionFee,
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum PositionEffect {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
     #[serde(rename(serialize = "OPENING"))]
     #[serde(rename(deserialize = "OPENING"))]
     Opening,
@@ -465,13 +481,13 @@ pub enum PositionEffect {
     #[serde(rename(serialize = "AUTOMATIC"))]
     #[serde(rename(deserialize = "AUTOMATIC"))]
     Automatic,
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum AssetType {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "EQUITY"))]
     #[serde(rename(deserialize = "EQUITY"))]
     Equity,
@@ -507,6 +523,10 @@ pub enum AssetType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionCashEquivalentType {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
     #[serde(rename(serialize = "SWEEP_VEHICLE"))]
     #[serde(rename(deserialize = "SWEEP_VEHICLE"))]
     SweepVehicle,
@@ -516,13 +536,13 @@ pub enum TransactionCashEquivalentType {
     #[serde(rename(serialize = "MONEY_MARKET_FUND"))]
     #[serde(rename(deserialize = "MONEY_MARKET_FUND"))]
     MoneyMarketFund,
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum CollectiveInvestmentType {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "UNIT_INVESTMENT_TRUST"))]
     #[serde(rename(deserialize = "UNIT_INVESTMENT_TRUST"))]
     UnitInvestmentTrust,
@@ -542,6 +562,10 @@ pub enum CollectiveInvestmentType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionEquityType {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
     #[serde(rename(serialize = "COMMON_STOCK"))]
     #[serde(rename(deserialize = "COMMON_STOCK"))]
     CommonStock,
@@ -578,13 +602,15 @@ pub enum TransactionEquityType {
     #[serde(rename(serialize = "WHEN_ISSUED"))]
     #[serde(rename(deserialize = "WHEN_ISSUED"))]
     WhenIssued,
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionFixedIncomeType {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+
     #[serde(rename(serialize = "BOND_UNIT"))]
     #[serde(rename(deserialize = "BOND_UNIT"))]
     BondUnit,
@@ -656,23 +682,20 @@ pub enum TransactionFixedIncomeType {
     #[serde(rename(serialize = "ASSET_BACKED_SECURITY"))]
     #[serde(rename(deserialize = "ASSET_BACKED_SECURITY"))]
     AssetBackedSecurity,
-
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum ForexType {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
     #[serde(rename(serialize = "STANDARD"))]
     #[serde(rename(deserialize = "STANDARD"))]
     Standard,
     #[serde(rename(serialize = "NBBO"))]
     #[serde(rename(deserialize = "NBBO"))]
     Nbbo,
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
@@ -688,29 +711,35 @@ pub struct Currency {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum FutureType {
-    #[serde(rename(serialize = "STANDARD"))]
-    #[serde(rename(deserialize = "STANDARD"))]
-    Standard,
+    #[default]
     #[serde(rename(serialize = "UNKNOWN"))]
     #[serde(rename(deserialize = "UNKNOWN"))]
     Unknown,
+    #[serde(rename(serialize = "STANDARD"))]
+    #[serde(rename(deserialize = "STANDARD"))]
+    Standard,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum IndexType {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
     #[serde(rename(serialize = "BROAD_BASED"))]
     #[serde(rename(deserialize = "BROAD_BASED"))]
     BroadBased,
     #[serde(rename(serialize = "NARROW_BASED"))]
     #[serde(rename(deserialize = "NARROW_BASED"))]
     NarrowBased,
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TransactionMutualFundType {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
     #[serde(rename(serialize = "NOT_APPLICABLE"))]
     #[serde(rename(deserialize = "NOT_APPLICABLE"))]
     NotApplicable,
@@ -726,22 +755,22 @@ pub enum TransactionMutualFundType {
     #[serde(rename(serialize = "NO_LOAD_TAXABLE"))]
     #[serde(rename(deserialize = "NO_LOAD_TAXABLE"))]
     NoLoadTaxable,
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum PutCallType {
-    #[serde(rename(serialize = "PUT"))]
-    #[serde(rename(deserialize = "PUT"))]
-    Put,
-    #[serde(rename(serialize = "CALL"))]
-    #[serde(rename(deserialize = "CALL"))]
-    Call,
+    #[default]
     #[serde(rename(serialize = "UNKNOWN"))]
     #[serde(rename(deserialize = "UNKNOWN"))]
     Unknown,
+
+    #[serde(rename(serialize = "PUT"))]
+    #[serde(rename(deserialize = "PUT"))]
+    Put,
+
+    #[serde(rename(serialize = "CALL"))]
+    #[serde(rename(deserialize = "CALL"))]
+    Call,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
@@ -755,6 +784,7 @@ pub enum TransactionOptionType {
     #[serde(rename(serialize = "BARRIER"))]
     #[serde(rename(deserialize = "BARRIER"))]
     Barrier,
+    #[default]
     #[serde(rename(serialize = "UNKNOWN"))]
     #[serde(rename(deserialize = "UNKNOWN"))]
     Unknown,
@@ -762,12 +792,13 @@ pub enum TransactionOptionType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum ProductType {
-    #[serde(rename(serialize = "TBD"))]
-    #[serde(rename(deserialize = "TBD"))]
-    Tbd,
+    #[default]
     #[serde(rename(serialize = "UNKNOWN"))]
     #[serde(rename(deserialize = "UNKNOWN"))]
     Unknown,
+    #[serde(rename(serialize = "TBD"))]
+    #[serde(rename(deserialize = "TBD"))]
+    Tbd,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
@@ -796,6 +827,9 @@ pub struct CollectiveInvestment {
 #[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(untagged)]
 pub enum TransactionInstrument {
+    #[default]
+    Unknown,
+
     TransactionEquity {
         #[serde(rename(serialize = "assetType"))]
         #[serde(rename(deserialize = "assetType"))]
@@ -908,6 +942,7 @@ pub enum TransactionInstrument {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderSession {
+    #[default]
     #[serde(rename(serialize = "NORMAL"))]
     #[serde(rename(deserialize = "NORMAL"))]
     Normal,
@@ -927,6 +962,9 @@ pub enum OrderSession {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderTypeRequest {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "MARKET"))]
     #[serde(rename(deserialize = "MARKET"))]
     Market,
@@ -986,9 +1024,10 @@ pub enum OrderTypeRequest {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum ComplexOrderStrategyType {
+    #[default]
     #[serde(rename(serialize = "NONE"))]
     #[serde(rename(deserialize = "NONE"))]
-    None,
+    Unknown,
 
     #[serde(rename(serialize = "COVERED"))]
     #[serde(rename(deserialize = "COVERED"))]
@@ -1073,6 +1112,9 @@ pub enum ComplexOrderStrategyType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum StopPriceLinkBasis {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "MANUAL"))]
     #[serde(rename(deserialize = "MANUAL"))]
     Manual,
@@ -1112,6 +1154,9 @@ pub enum StopPriceLinkBasis {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum StopPriceLinkType {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "VALUE"))]
     #[serde(rename(deserialize = "VALUE"))]
     Value,
@@ -1127,6 +1172,9 @@ pub enum StopPriceLinkType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum StopType {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "STANDARD"))]
     #[serde(rename(deserialize = "STANDARD"))]
     Standard,
@@ -1150,6 +1198,9 @@ pub enum StopType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum PriceLinkBasis {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "MANUAL"))]
     #[serde(rename(deserialize = "MANUAL"))]
     Manual,
@@ -1189,6 +1240,9 @@ pub enum PriceLinkBasis {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum PriceLinkType {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "VALUE"))]
     #[serde(rename(deserialize = "VALUE"))]
     Value,
@@ -1204,6 +1258,9 @@ pub enum PriceLinkType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum TaxLotMethod {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "FIFO"))]
     #[serde(rename(deserialize = "FIFO"))]
     Fifo,
@@ -1235,6 +1292,9 @@ pub enum TaxLotMethod {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum SpecialInstruction {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "ALL_OR_NONE"))]
     #[serde(rename(deserialize = "ALL_OR_NONE"))]
     AllOrNone,
@@ -1250,6 +1310,9 @@ pub enum SpecialInstruction {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderStrategyType {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "SINGLE"))]
     #[serde(rename(deserialize = "SINGLE"))]
     Single,
@@ -1289,6 +1352,11 @@ pub enum OrderStrategyType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderStatus {
+    #[default]
+    #[serde(rename(serialize = "UNKNOWN"))]
+    #[serde(rename(deserialize = "UNKNOWN"))]
+    Unknown,
+
     #[serde(rename(serialize = "AWAITING_PARENT_ORDER"))]
     #[serde(rename(deserialize = "AWAITING_PARENT_ORDER"))]
     AwaitingParentOrder,
@@ -1368,15 +1436,13 @@ pub enum OrderStatus {
     #[serde(rename(serialize = "PENDING_RECALL"))]
     #[serde(rename(deserialize = "PENDING_RECALL"))]
     PendingRecall,
-
-    #[default]
-    #[serde(rename(serialize = "UNKNOWN"))]
-    #[serde(rename(deserialize = "UNKNOWN"))]
-    Unknown,
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum OrderInstruction {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "BUY"))]
     #[serde(rename(deserialize = "BUY"))]
     Buy,
@@ -1420,6 +1486,9 @@ pub enum OrderInstruction {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum QuantityType {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "ALL_SHARES"))]
     #[serde(rename(deserialize = "ALL_SHARES"))]
     AllShares,
@@ -1435,6 +1504,9 @@ pub enum QuantityType {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum DivCapGains {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "REINVEST"))]
     #[serde(rename(deserialize = "REINVEST"))]
     Reinvest,
@@ -1447,6 +1519,9 @@ pub enum DivCapGains {
 #[derive(Deserialize, Serialize, Debug, Default)]
 #[serde(untagged)]
 pub enum AccountsInstrument {
+    #[default]
+    Unknown,
+
     CashEquivalent {
         #[serde(rename(serialize = "assetType"))]
         #[serde(rename(deserialize = "assetType"))]
@@ -1560,6 +1635,9 @@ pub enum AccountsInstrument {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum ApiCurrencyType {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "USD"))]
     #[serde(rename(deserialize = "USD"))]
     Usd,
@@ -1744,6 +1822,9 @@ pub enum OrderDuration {
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub enum RequestedDestination {
+    #[default]
+    Unknown,
+
     #[serde(rename(serialize = "INET"))]
     #[serde(rename(deserialize = "INET"))]
     Inet,
@@ -1788,7 +1869,6 @@ pub enum RequestedDestination {
     #[serde(rename(deserialize = "C2"))]
     C2,
 
-    #[default]
     #[serde(rename(serialize = "AUTO"))]
     #[serde(rename(deserialize = "AUTO"))]
     Auto,

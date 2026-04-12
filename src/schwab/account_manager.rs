@@ -200,22 +200,32 @@ impl AccountManager {
                     iad.securities,
                 ) = securities_account.positions.iter().fold(
                     (0.0, 0.0, 0.0, HashMap::new()),
-                    |(tmv, tdc, tpl, mut s), p| {
-                        (
-                            two_decimals(tmv + p.market_value),
-                            two_decimals(tdc + p.current_day_profit_loss),
-                            two_decimals(tpl + p.long_open_profit_loss),
-                            {
-                                s.insert(
-                                    p.instrument.symbol(),
-                                    Security {
-                                        amount: p.long_quantity,
-                                        total_value: p.market_value,
-                                    },
-                                );
-                                s
-                            },
-                        )
+                    |(total_market_value, total_day_change, total_profit_loss, mut securities),
+                     position| {
+                        // skip if symbol is unknown
+                        match position.instrument.symbol() {
+                            None => (
+                                total_market_value,
+                                total_day_change,
+                                total_profit_loss,
+                                securities,
+                            ),
+                            Some(symbol) => (
+                                two_decimals(total_market_value + position.market_value),
+                                two_decimals(total_day_change + position.current_day_profit_loss),
+                                two_decimals(total_profit_loss + position.long_open_profit_loss),
+                                {
+                                    securities.insert(
+                                        symbol,
+                                        Security {
+                                            amount: position.long_quantity,
+                                            total_value: position.market_value,
+                                        },
+                                    );
+                                    securities
+                                },
+                            ),
+                        }
                     },
                 );
 
